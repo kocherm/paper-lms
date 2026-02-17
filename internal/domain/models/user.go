@@ -16,6 +16,7 @@ type User struct {
 	Email        string     `json:"email" gorm:"not null"`
 	PasswordHash string     `json:"-" gorm:"not null"`
 	AvatarURL    string     `json:"avatar_url"`
+	Role         string     `json:"role" gorm:"not null;default:'user'"` // admin, user
 	Locale       string     `json:"locale" gorm:"default:'en'"`
 	TimeZone     string     `json:"time_zone" gorm:"default:'America/New_York'"`
 	CreatedAt    time.Time  `json:"created_at"`

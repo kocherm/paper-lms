@@ -11,6 +11,7 @@ import (
 	v1 "github.com/kocherm/paper-lms/internal/api/v1"
 	"github.com/kocherm/paper-lms/internal/api/v1/handlers"
 	"github.com/kocherm/paper-lms/internal/api/v1/middleware"
+	"github.com/kocherm/paper-lms/internal/auth"
 	"github.com/kocherm/paper-lms/internal/config"
 	"github.com/kocherm/paper-lms/internal/db"
 	"github.com/kocherm/paper-lms/internal/graphql"
@@ -109,6 +110,25 @@ func main() {
 	pageViewRepo := postgres.NewPageViewRepository(database)
 	// Phase 8C repositories
 	authProviderRepo := postgres.NewAuthenticationProviderRepository(database)
+	// Phase 10 repositories
+	announcementRepo := postgres.NewAnnouncementRepository(database)
+	announcementReceiptRepo := postgres.NewAnnouncementReadReceiptRepository(database)
+	enrollmentTermRepo := postgres.NewEnrollmentTermRepository(database)
+	// Phase 9 repositories
+	discussionEntryParticipantRepo := postgres.NewDiscussionEntryParticipantRepository(database)
+	discussionTopicParticipantRepo := postgres.NewDiscussionTopicParticipantRepository(database)
+	discussionEntryVersionRepo := postgres.NewDiscussionEntryVersionRepository(database)
+	// Phase 10C repositories
+	customRoleRepo := postgres.NewCustomRoleRepository(database)
+	roleOverrideRepo := postgres.NewRoleOverrideRepository(database)
+	onerosterConnRepo := postgres.NewOneRosterConnectionRepository(database)
+	onerosterSyncLogRepo := postgres.NewOneRosterSyncLogRepository(database)
+	documentAnnotationRepo := postgres.NewDocumentAnnotationRepository(database)
+	// Phase 10B repositories
+	communicationChannelRepo := postgres.NewCommunicationChannelRepository(database)
+	notificationDeliveryRepo := postgres.NewNotificationDeliveryRepository(database)
+	auditLogRepo := postgres.NewAuditLogRepository(database)
+	gradeChangeLogRepo := postgres.NewGradeChangeLogRepository(database)
 
 	// Initialize services
 	userService := service.NewUserService(userRepo)
@@ -163,6 +183,56 @@ func main() {
 	observerService := service.NewObserverService(enrollmentRepo, courseRepo, userRepo)
 	// Phase 8C services
 	authProviderService := service.NewAuthProviderService(authProviderRepo)
+	// Phase 10 services
+	announcementService := service.NewAnnouncementService(announcementRepo, announcementReceiptRepo, enrollmentRepo)
+	enrollmentTermService := service.NewEnrollmentTermService(enrollmentTermRepo, database)
+	// Phase 10B services
+	smtpConfig := service.SMTPConfig{
+		Host:     cfg.SMTPHost,
+		Port:     cfg.SMTPPort,
+		Username: cfg.SMTPUsername,
+		Password: cfg.SMTPPassword,
+		From:     cfg.SMTPFrom,
+		Enabled:  cfg.SMTPEnabled,
+	}
+	notificationDeliveryService := service.NewNotificationDeliveryService(
+		notificationDeliveryRepo, communicationChannelRepo, notificationPrefRepo,
+		notificationRepo, userRepo, smtpConfig,
+	)
+	auditService := service.NewAuditService(auditLogRepo, gradeChangeLogRepo)
+	// Phase 10C services
+	customRoleService := service.NewCustomRoleService(customRoleRepo, roleOverrideRepo, enrollmentRepo)
+	onerosterService := service.NewOneRosterService(onerosterConnRepo, onerosterSyncLogRepo, userRepo, courseRepo, sectionRepo, enrollmentRepo, accountRepo, database)
+	documentAnnotationService := service.NewDocumentAnnotationService(documentAnnotationRepo, submissionRepo, attachmentRepo, enrollmentRepo)
+	// Phase 9 services
+	discussionV2Service := service.NewDiscussionV2Service(
+		discussionTopicRepo, discussionEntryRepo, discussionRatingRepo,
+		discussionEntryParticipantRepo, discussionTopicParticipantRepo,
+		discussionEntryVersionRepo, userRepo,
+	)
+	imsccParser := service.NewIMSCCParser(
+		courseRepo, moduleRepo, moduleItemRepo, pageRepo, assignmentRepo,
+		quizRepo, quizQuestionRepo, fileService, folderRepo, discussionTopicRepo,
+	)
+	batchService := service.NewBatchService(
+		courseRepo, moduleRepo, moduleItemRepo, assignmentRepo, quizRepo,
+		pageRepo, discussionTopicRepo, calendarEventRepo, enrollmentRepo,
+		conversationRepo, conversationParticipantRepo, conversationMessageRepo,
+		userRepo, sectionRepo,
+	)
+	// Phase 9: SSO
+	samlCfg := auth.SAMLConfig{
+		EntityID:    cfg.SAMLEntityID,
+		CertPEM:     cfg.SAMLCertFile,
+		KeyPEM:      cfg.SAMLKeyFile,
+		ACSURL:      cfg.FrontendURL + "/api/v1/auth/saml/acs",
+		FrontendURL: cfg.FrontendURL,
+		JWTSecret:   cfg.JWTSecret,
+	}
+	samlHandler := auth.NewSAMLHandler(samlCfg, userRepo, authProviderRepo)
+	ldapAuth := auth.NewLDAPAuthenticator(userRepo)
+	casAuth := auth.NewCASAuthenticator(userRepo)
+	ssoHandler := auth.NewSSOHandler(samlHandler, ldapAuth, casAuth, userRepo, authProviderRepo, cfg)
 
 	// Initialize handlers
 	userHandler := handlers.NewUserHandler(userService, cfg.JWTSecret)
@@ -219,7 +289,23 @@ func main() {
 	graphqlResolver := graphql.NewResolver(courseService, assignmentService, userService, enrollmentService, moduleService, submissionService)
 	graphqlHandler := handlers.NewGraphQLHandler(graphqlResolver)
 	authProviderHandler := handlers.NewAuthProviderHandler(authProviderService)
+	// Phase 10 handlers
+	announcementHandler := handlers.NewAnnouncementHandler(announcementService)
+	enrollmentTermHandler := handlers.NewEnrollmentTermHandler(enrollmentTermService)
+	syllabusHandler := handlers.NewSyllabusHandler(courseService, assignmentService, assignmentGroupService, calendarService, gradingService, enrollmentService, submissionService)
+	// Phase 10B handlers
+	notificationDeliveryHandler := handlers.NewNotificationDeliveryHandler(notificationDeliveryService, communicationChannelRepo)
+	auditHandler := handlers.NewAuditHandler(auditService)
+	// Phase 10C handlers
+	customRoleHandler := handlers.NewCustomRoleHandler(customRoleService)
+	onerosterHandler := handlers.NewOneRosterHandler(onerosterService)
+	documentAnnotationHandler := handlers.NewDocumentAnnotationHandler(documentAnnotationService, submissionService)
+	// Phase 9 handlers
+	discussionV2Handler := handlers.NewDiscussionV2Handler(discussionV2Service)
+	contentImportHandler := handlers.NewContentImportHandler(imsccParser, contentMigrationService, cfg.FileStoragePath)
+	batchHandler := handlers.NewBatchHandler(batchService)
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret, accessTokenService, userRepo)
+	permMiddleware := middleware.NewPermissionMiddleware(enrollmentRepo, userRepo)
 
 	// Create router
 	router := v1.NewRouter(
@@ -275,7 +361,24 @@ func main() {
 		// Phase 8C
 		graphqlHandler,
 		authProviderHandler,
+		// Phase 9
+		discussionV2Handler,
+		contentImportHandler,
+		batchHandler,
+		ssoHandler,
+		// Phase 10
+		announcementHandler,
+		enrollmentTermHandler,
+		syllabusHandler,
+		// Phase 10B
+		notificationDeliveryHandler,
+		auditHandler,
+		// Phase 10C
+		customRoleHandler,
+		onerosterHandler,
+		documentAnnotationHandler,
 		authMiddleware,
+		permMiddleware,
 	)
 
 	// Create Fiber app

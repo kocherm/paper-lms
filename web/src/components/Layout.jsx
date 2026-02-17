@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell, Menu, User, LogOut, Key, KeyRound, Upload, Calendar, Mail, Settings, Shield, Code } from 'lucide-react';
+import { Bell, Menu, User, LogOut, Key, KeyRound, Upload, Calendar, Mail, Settings, Shield, Code, Megaphone, GraduationCap } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import SkipToContent from './SkipToContent';
+import InstallPrompt from './InstallPrompt';
+import OfflineIndicator from './OfflineIndicator';
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
@@ -15,6 +17,7 @@ const Layout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <OfflineIndicator />
       <SkipToContent />
       <header className="bg-white shadow" role="banner">
         <div className="mx-auto px-4 sm:px-6 lg:px-8">
@@ -47,6 +50,10 @@ const Layout = ({ children }) => {
                 <Link to="/admin/grading_periods" className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium flex items-center gap-1">
                   <Calendar className="w-3.5 h-3.5" />
                   Grading Periods
+                </Link>
+                <Link to="/admin/terms" className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium flex items-center gap-1">
+                  <GraduationCap className="w-3.5 h-3.5" />
+                  Terms
                 </Link>
                 <span className="text-gray-300">|</span>
                 <Link to="/calendar" className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium flex items-center gap-1">
@@ -93,6 +100,7 @@ const Layout = ({ children }) => {
       <main id="main-content" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8" role="main">
         {children}
       </main>
+      <InstallPrompt />
     </div>
   );
 };

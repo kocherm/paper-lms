@@ -103,6 +103,25 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.PageView{},
 		// Phase 8C: Authentication Providers
 		&models.AuthenticationProvider{},
+		// Phase 9: Discussion V2
+		&models.DiscussionEntryParticipant{},
+		&models.DiscussionTopicParticipant{},
+		&models.DiscussionEntryVersion{},
+		// Phase 10: Announcements, Enrollment Terms
+		&models.Announcement{},
+		&models.AnnouncementReadReceipt{},
+		&models.EnrollmentTerm{},
+		// Phase 10B: Notification Delivery, Audit Logs
+		&models.CommunicationChannel{},
+		&models.NotificationDelivery{},
+		&models.AuditLog{},
+		&models.GradeChangeLog{},
+		// Phase 10C: Custom Roles, OneRoster, Document Annotations
+		&models.CustomRole{},
+		&models.RoleOverride{},
+		&models.OneRosterConnection{},
+		&models.OneRosterSyncLog{},
+		&models.DocumentAnnotation{},
 	)
 }
 

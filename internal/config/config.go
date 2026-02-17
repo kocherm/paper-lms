@@ -13,6 +13,17 @@ type Config struct {
 	FrontendURL     string
 	FileStoragePath string
 	MaxUploadSize   int
+	// SAML SSO
+	SAMLEntityID string
+	SAMLCertFile string
+	SAMLKeyFile  string
+	// SMTP Email
+	SMTPHost     string
+	SMTPPort     int
+	SMTPUsername string
+	SMTPPassword string
+	SMTPFrom     string
+	SMTPEnabled  bool
 }
 
 func Load() *Config {
@@ -24,6 +35,15 @@ func Load() *Config {
 		FrontendURL:     getEnv("FRONTEND_URL", "http://localhost:5173"),
 		FileStoragePath: getEnv("FILE_STORAGE_PATH", "./storage/files"),
 		MaxUploadSize:   getEnvInt("MAX_UPLOAD_SIZE_MB", 50),
+		SAMLEntityID:    getEnv("SAML_ENTITY_ID", ""),
+		SAMLCertFile:    getEnv("SAML_CERT_FILE", ""),
+		SAMLKeyFile:     getEnv("SAML_KEY_FILE", ""),
+		SMTPHost:        getEnv("SMTP_HOST", ""),
+		SMTPPort:        getEnvInt("SMTP_PORT", 587),
+		SMTPUsername:    getEnv("SMTP_USERNAME", ""),
+		SMTPPassword:    getEnv("SMTP_PASSWORD", ""),
+		SMTPFrom:        getEnv("SMTP_FROM", "noreply@paperlms.org"),
+		SMTPEnabled:     getEnv("SMTP_ENABLED", "false") == "true",
 	}
 }
 

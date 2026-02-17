@@ -14,21 +14,22 @@ paper-LMS/
   cmd/server/main.go                    # Composition root (wires repos, services, handlers)
   internal/
     config/config.go                    # Centralized env config
-    domain/models/                      # Canvas-compatible model structs (62 files)
+    domain/models/                      # Canvas-compatible model structs (81 files)
     repository/
       interfaces.go                     # All repository interfaces
-      postgres/                         # GORM implementations (63 files)
-    service/                            # Business logic layer (38 files)
+      postgres/                         # GORM implementations (78 files)
+    service/                            # Business logic layer (51 files)
+    auth/                               # SSO protocol implementations (SAML, LDAP, CAS)
     graphql/                            # Hand-rolled GraphQL engine (schema parser + resolver)
     api/v1/
-      router.go                         # Route registration (~267 routes)
-      middleware/                        # Auth, pagination
-      handlers/                         # HTTP handlers (45 files)
+      router.go                         # Route registration (341 routes)
+      middleware/                        # Auth, pagination, RBAC permissions
+      handlers/                         # HTTP handlers (58 files)
       responses/                        # Pagination, error format helpers
     db/postgres.go                      # PostgreSQL connection + AutoMigrate
   web/src/
-    pages/                              # React pages (32 files)
-    components/                         # Layout, ProtectedRoute, WCAG helpers
+    pages/                              # React pages (40 files)
+    components/                         # Layout, ProtectedRoute, WCAG helpers, RCE, DocViewer
     services/api.js                     # API client with Canvas Link-header pagination
     contexts/AuthContext.jsx            # JWT auth context
   deployments/docker/                   # Docker Compose setup
@@ -39,7 +40,8 @@ paper-LMS/
 - **Service layer**: Business logic with dependency injection of repository interfaces
 - **Canvas API compatibility**: All endpoints under `/api/v1/`, Canvas JSON format, Link-header pagination (RFC 5988)
 - **Error format**: `{"errors": [{"message": "..."}]}`
-- **Auth**: JWT (HS256) + OAuth2 + Personal Access Tokens via `middleware.AuthMiddleware`
+- **Auth**: JWT (HS256) + OAuth2 + Personal Access Tokens + SAML/LDAP/CAS SSO via `middleware.AuthMiddleware`
+- **RBAC**: `middleware.PermissionMiddleware` — admin/instructor/enrolled/selfOrAdmin guards on all routes
 - **Soft delete**: Via `workflow_state` field (set to "deleted"), not hard delete
 - **Pagination**: `repository.PaginatedResult[T]` generics, `middleware.GetPagination`, `responses.SetPaginationHeaders`
 
@@ -81,10 +83,23 @@ Content migration tracking (IMSCC/Common Cartridge/Canvas/QTI/Moodle), SpeedGrad
 ### Phase 8: Feature Parity (COMPLETE)
 Groups, Blueprint Courses, Course Pacing, Collaborations/Conferences, Analytics, Observer/Parent role, GraphQL API (hand-rolled recursive-descent parser), SAML/CAS/LDAP auth providers, WCAG 2.1 AA accessibility (skip-to-content, focus traps, ARIA landmarks, live regions). +13 models, ~73 endpoints, +9 frontend pages
 
+### Phase 9: Production Readiness (COMPLETE)
+Showstopper fixes for real Canvas migration: RBAC/permissions (role-based access on all 284 routes), IMSCC Common Cartridge import (manifest/QTI XML parsing, zip extraction), Discussion Board V2 rewrite (read/unread tracking, edit history with versioning, user profiles/avatars, thread collapse/expand, @mentions, subscribe/unsubscribe, IntersectionObserver auto-read, rich text compose), real SSO protocol implementation (SAML 2.0 SP with metadata/ACS/redirect, LDAP with BER protocol client and JIT provisioning, CAS 2.0 with ticket validation), PWA (manifest, service worker with network-first/cache-first strategies, offline fallback), Batch Operations (course cloning with selective content, bulk date shifting, cross-course bulk messaging, bulk enrollment, bulk assignment date updates). +3 models, +3 repos, +4 services, +4 handlers, ~17 endpoints.
+
+### Phase 10: Canvas Feature Superiority (COMPLETE)
+Features that improve on Canvas's shortcomings:
+- **10A**: Announcements (with read receipts, acknowledgement tracking, global announcements — Canvas lacks read tracking), Enrollment Terms (with SIS integration, bulk operations), Syllabus (auto-generated from assignments/calendar — Canvas requires manual creation). +5 models, ~17 endpoints, +3 frontend pages
+- **10B**: Email Notification Delivery (SMTP with digest batching — immediate/hourly/daily/weekly — and retry logic; Canvas uses external email service), Rich Content Editor (zero-dependency contentEditable with toolbar, link/image/table/equation/media insertion, accessibility checker, HTML source view — Canvas depends on TinyMCE), Audit Logs (structured course activity + grade change tracking with CSV export — Canvas buries this in admin console). +4 models, ~12 endpoints, +2 frontend pages, +2 shared components
+- **10C**: Custom Roles + Granular Permissions (36 permissions in 4 categories with permission presets/templates — Canvas has overwhelming 80+ permission grid), OneRoster 1.1 REST API Consumer (incremental sync via REST — Canvas only supports CSV bulk import), DocViewer/Document Annotations (client-side annotation layer with highlight/comment/strikethrough/freehand/point types, threaded replies, resolve/unresolve — Canvas uses closed-source DocViewer that frequently goes down). +7 models, ~28 endpoints, +3 frontend pages, +1 shared component
+
 ## Current State
-- **62 models**, **63 repository implementations**, **38 services**, **45 handlers**
-- **~267 API routes** under `/api/v1/`
-- **32 frontend pages**
+- **81 models**, **78 repository implementations**, **51 services**, **58 handlers**
+- **341 API routes** under `/api/v1/` (+ 6 public SSO routes)
+- **40 frontend pages**, **14 shared components**
+- **5 auth protocol files** (SAML, LDAP, CAS, SSO handler, sso_handler)
+- **3 middleware** (auth, pagination, RBAC permissions)
+- PWA with service worker, offline support, install prompt
+- WCAG 2.1 AA accessibility (skip-to-content, focus traps, ARIA landmarks, live regions)
 - All builds pass cleanly (`go build`, `go vet`, `npm run build`)
 
 ## Parallel Agent Strategy

@@ -1254,4 +1254,367 @@ export const api = {
     const { data } = await request(`/accounts/${accountId}/authentication_providers/${providerId}/test`, { method: 'POST' });
     return data;
   },
+
+  // Phase 9: Discussion V2 (enhanced)
+  getDiscussionFullViewV2: async (courseId, topicId) => {
+    const { data } = await request(`/courses/${courseId}/discussion_topics/${topicId}/view_v2`);
+    return data;
+  },
+  markDiscussionEntryRead: async (courseId, topicId, entryId) => {
+    const { data } = await request(`/courses/${courseId}/discussion_topics/${topicId}/entries/${entryId}/read`, { method: 'POST' });
+    return data;
+  },
+  markDiscussionTopicRead: async (courseId, topicId) => {
+    const { data } = await request(`/courses/${courseId}/discussion_topics/${topicId}/mark_all_read`, { method: 'POST' });
+    return data;
+  },
+  getDiscussionUnreadCount: async (courseId, topicId) => {
+    const { data } = await request(`/courses/${courseId}/discussion_topics/${topicId}/unread_count`);
+    return data;
+  },
+  toggleDiscussionSubscription: async (courseId, topicId, subscribed) => {
+    const { data } = await request(`/courses/${courseId}/discussion_topics/${topicId}/subscription`, {
+      method: 'PUT', body: JSON.stringify({ subscribed }),
+    });
+    return data;
+  },
+  getDiscussionEntryVersions: async (courseId, topicId, entryId) => {
+    const { data } = await request(`/courses/${courseId}/discussion_topics/${topicId}/entries/${entryId}/versions`);
+    return data;
+  },
+  updateDiscussionEntryV2: async (courseId, topicId, entryId, message) => {
+    const { data } = await request(`/courses/${courseId}/discussion_topics/${topicId}/entries/${entryId}/v2`, {
+      method: 'PUT', body: JSON.stringify({ message }),
+    });
+    return data;
+  },
+
+  // Phase 9: Content Import (IMSCC/Common Cartridge)
+  importContentPackage: async (courseId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return uploadFile(`/courses/${courseId}/content_imports`, formData);
+  },
+
+  // Phase 9: Batch Operations
+  cloneCourse: async (sourceCourseId, name, accountId = 1, include = {}) => {
+    const { data } = await request('/courses/clone', {
+      method: 'POST', body: JSON.stringify({ source_course_id: sourceCourseId, name, account_id: accountId, include }),
+    });
+    return data;
+  },
+  bulkDateShift: async (courseId, oldStartDate, newStartDate, dayShift) => {
+    const { data } = await request(`/courses/${courseId}/date_shift`, {
+      method: 'POST', body: JSON.stringify({ old_start_date: oldStartDate, new_start_date: newStartDate, day_shift: dayShift }),
+    });
+    return data;
+  },
+  bulkSendMessage: async (courseId, enrollmentTypes, subject, body) => {
+    const { data } = await request('/conversations/bulk', {
+      method: 'POST', body: JSON.stringify({ course_id: courseId, enrollment_types: enrollmentTypes, subject, body }),
+    });
+    return data;
+  },
+  bulkEnrollUsers: async (courseId, enrollments) => {
+    const { data } = await request(`/courses/${courseId}/enrollments/bulk`, {
+      method: 'POST', body: JSON.stringify({ enrollments }),
+    });
+    return data;
+  },
+  bulkUpdateAssignmentDates: async (courseId, updates) => {
+    const { data } = await request(`/courses/${courseId}/assignments/bulk_update_dates`, {
+      method: 'POST', body: JSON.stringify({ updates }),
+    });
+    return data;
+  },
+
+  // Phase 10: Announcements
+  getCourseAnnouncements: async (courseId, page = 1, perPage = 20) => {
+    return request(`/courses/${courseId}/announcements?page=${page}&per_page=${perPage}`);
+  },
+  createCourseAnnouncement: async (courseId, announcement) => {
+    const { data } = await request(`/courses/${courseId}/announcements`, {
+      method: 'POST', body: JSON.stringify({ announcement }),
+    });
+    return data;
+  },
+  getAnnouncement: async (id) => {
+    const { data } = await request(`/announcements/${id}`);
+    return data;
+  },
+  updateAnnouncement: async (id, announcement) => {
+    const { data } = await request(`/announcements/${id}`, {
+      method: 'PUT', body: JSON.stringify({ announcement }),
+    });
+    return data;
+  },
+  deleteAnnouncement: async (id) => {
+    const { data } = await request(`/announcements/${id}`, { method: 'DELETE' });
+    return data;
+  },
+  markAnnouncementRead: async (id) => {
+    const { data } = await request(`/announcements/${id}/read`, { method: 'POST' });
+    return data;
+  },
+  acknowledgeAnnouncement: async (id) => {
+    const { data } = await request(`/announcements/${id}/acknowledge`, { method: 'POST' });
+    return data;
+  },
+  getAnnouncementReadReceipts: async (id, page = 1, perPage = 50) => {
+    return request(`/announcements/${id}/read_receipts?page=${page}&per_page=${perPage}`);
+  },
+  getAccountAnnouncements: async (accountId = 1, page = 1, perPage = 20) => {
+    return request(`/accounts/${accountId}/announcements?page=${page}&per_page=${perPage}`);
+  },
+  createAccountAnnouncement: async (accountId, announcement) => {
+    const { data } = await request(`/accounts/${accountId}/announcements`, {
+      method: 'POST', body: JSON.stringify({ announcement }),
+    });
+    return data;
+  },
+
+  // Phase 10: Enrollment Terms
+  getEnrollmentTerms: async (accountId = 1, page = 1, perPage = 20) => {
+    return request(`/accounts/${accountId}/terms?page=${page}&per_page=${perPage}`);
+  },
+  createEnrollmentTerm: async (accountId, term) => {
+    const { data } = await request(`/accounts/${accountId}/terms`, {
+      method: 'POST', body: JSON.stringify({ enrollment_term: term }),
+    });
+    return data;
+  },
+  getEnrollmentTerm: async (accountId, termId) => {
+    const { data } = await request(`/accounts/${accountId}/terms/${termId}`);
+    return data;
+  },
+  updateEnrollmentTerm: async (accountId, termId, term) => {
+    const { data } = await request(`/accounts/${accountId}/terms/${termId}`, {
+      method: 'PUT', body: JSON.stringify({ enrollment_term: term }),
+    });
+    return data;
+  },
+  deleteEnrollmentTerm: async (accountId, termId) => {
+    const { data } = await request(`/accounts/${accountId}/terms/${termId}`, { method: 'DELETE' });
+    return data;
+  },
+  getCurrentEnrollmentTerm: async (accountId = 1) => {
+    const { data } = await request(`/accounts/${accountId}/terms/current`);
+    return data;
+  },
+
+  // Phase 10: Syllabus
+  getCourseSyllabus: async (courseId) => {
+    const { data } = await request(`/courses/${courseId}/syllabus`);
+    return data;
+  },
+
+  // Phase 10B: Notification Delivery
+  getNotificationDeliveries: async (page = 1, perPage = 20, status = '') => {
+    const params = new URLSearchParams({ page, per_page: perPage });
+    if (status) params.append('status', status);
+    return request(`/users/self/notification_deliveries?${params.toString()}`);
+  },
+  getNotificationDeliveryStats: async () => {
+    const { data } = await request('/admin/notification_stats');
+    return data;
+  },
+  retryFailedDeliveries: async () => {
+    const { data } = await request('/admin/notification_deliveries/retry', { method: 'POST' });
+    return data;
+  },
+
+  // Phase 10B: Communication Channels
+  getCommunicationChannels: async () => {
+    const { data } = await request('/users/self/communication_channels');
+    return data;
+  },
+  createCommunicationChannel: async (channelType, address) => {
+    const { data } = await request('/users/self/communication_channels', {
+      method: 'POST', body: JSON.stringify({ communication_channel: { channel_type: channelType, address } }),
+    });
+    return data;
+  },
+  deleteCommunicationChannel: async (id) => {
+    const { data } = await request(`/users/self/communication_channels/${id}`, { method: 'DELETE' });
+    return data;
+  },
+
+  // Phase 10B: Audit Logs
+  getCourseAuditLog: async (courseId, page = 1, perPage = 20, filters = {}) => {
+    const params = new URLSearchParams({ page, per_page: perPage });
+    if (filters.event_type) params.append('event_type', filters.event_type);
+    if (filters.user_id) params.append('user_id', filters.user_id);
+    if (filters.date_from) params.append('date_from', filters.date_from);
+    if (filters.date_to) params.append('date_to', filters.date_to);
+    return request(`/courses/${courseId}/audit_log?${params.toString()}`);
+  },
+  getCourseGradeChangeLog: async (courseId, page = 1, perPage = 20, filters = {}) => {
+    const params = new URLSearchParams({ page, per_page: perPage });
+    if (filters.student_id) params.append('student_id', filters.student_id);
+    if (filters.grader_id) params.append('grader_id', filters.grader_id);
+    if (filters.assignment_id) params.append('assignment_id', filters.assignment_id);
+    if (filters.date_from) params.append('date_from', filters.date_from);
+    if (filters.date_to) params.append('date_to', filters.date_to);
+    return request(`/courses/${courseId}/grade_change_log?${params.toString()}`);
+  },
+  getAccountAuditLog: async (accountId = 1, page = 1, perPage = 20, filters = {}) => {
+    const params = new URLSearchParams({ page, per_page: perPage });
+    if (filters.event_type) params.append('event_type', filters.event_type);
+    if (filters.user_id) params.append('user_id', filters.user_id);
+    if (filters.date_from) params.append('date_from', filters.date_from);
+    if (filters.date_to) params.append('date_to', filters.date_to);
+    return request(`/accounts/${accountId}/audit_log?${params.toString()}`);
+  },
+  getAuditLogSummary: async (dateFrom, dateTo) => {
+    const params = new URLSearchParams();
+    if (dateFrom) params.append('date_from', dateFrom);
+    if (dateTo) params.append('date_to', dateTo);
+    const { data } = await request(`/admin/audit_log/summary?${params.toString()}`);
+    return data;
+  },
+  exportCourseAuditLogCSV: (courseId) => `${API_URL}/courses/${courseId}/audit_log.csv`,
+  exportCourseGradeChangeLogCSV: (courseId) => `${API_URL}/courses/${courseId}/grade_change_log.csv`,
+
+  // Phase 10C: Custom Roles
+  getCustomRoles: async (accountId = 1, page = 1, perPage = 20) => {
+    return request(`/accounts/${accountId}/roles?page=${page}&per_page=${perPage}`);
+  },
+  createCustomRole: async (accountId, role) => {
+    const { data } = await request(`/accounts/${accountId}/roles`, {
+      method: 'POST', body: JSON.stringify({ role }),
+    });
+    return data;
+  },
+  getCustomRole: async (accountId, roleId) => {
+    const { data } = await request(`/accounts/${accountId}/roles/${roleId}`);
+    return data;
+  },
+  updateCustomRole: async (accountId, roleId, role) => {
+    const { data } = await request(`/accounts/${accountId}/roles/${roleId}`, {
+      method: 'PUT', body: JSON.stringify({ role }),
+    });
+    return data;
+  },
+  deleteCustomRole: async (accountId, roleId) => {
+    const { data } = await request(`/accounts/${accountId}/roles/${roleId}`, { method: 'DELETE' });
+    return data;
+  },
+  cloneCustomRole: async (accountId, roleId, name) => {
+    const { data } = await request(`/accounts/${accountId}/roles/${roleId}/clone`, {
+      method: 'POST', body: JSON.stringify({ name }),
+    });
+    return data;
+  },
+  getPermissionPresets: async (accountId = 1) => {
+    const { data } = await request(`/accounts/${accountId}/roles/presets`);
+    return data;
+  },
+  getRoleOverrides: async (accountId, roleId) => {
+    const { data } = await request(`/accounts/${accountId}/roles/${roleId}/overrides`);
+    return data;
+  },
+  bulkSetRoleOverrides: async (accountId, roleId, overrides) => {
+    const { data } = await request(`/accounts/${accountId}/roles/${roleId}/overrides`, {
+      method: 'PUT', body: JSON.stringify({ overrides }),
+    });
+    return data;
+  },
+  getCoursePermissions: async (courseId) => {
+    const { data } = await request(`/courses/${courseId}/permissions`);
+    return data;
+  },
+
+  // Phase 10C: OneRoster
+  getOneRosterConnections: async (accountId = 1, page = 1, perPage = 20) => {
+    return request(`/accounts/${accountId}/oneroster_connections?page=${page}&per_page=${perPage}`);
+  },
+  createOneRosterConnection: async (accountId, connection) => {
+    const { data } = await request(`/accounts/${accountId}/oneroster_connections`, {
+      method: 'POST', body: JSON.stringify({ connection }),
+    });
+    return data;
+  },
+  getOneRosterConnection: async (accountId, connectionId) => {
+    const { data } = await request(`/accounts/${accountId}/oneroster_connections/${connectionId}`);
+    return data;
+  },
+  updateOneRosterConnection: async (accountId, connectionId, connection) => {
+    const { data } = await request(`/accounts/${accountId}/oneroster_connections/${connectionId}`, {
+      method: 'PUT', body: JSON.stringify({ connection }),
+    });
+    return data;
+  },
+  deleteOneRosterConnection: async (accountId, connectionId) => {
+    const { data } = await request(`/accounts/${accountId}/oneroster_connections/${connectionId}`, { method: 'DELETE' });
+    return data;
+  },
+  testOneRosterConnection: async (accountId, connectionId) => {
+    const { data } = await request(`/accounts/${accountId}/oneroster_connections/${connectionId}/test`, { method: 'POST' });
+    return data;
+  },
+  syncOneRosterFull: async (accountId, connectionId) => {
+    const { data } = await request(`/accounts/${accountId}/oneroster_connections/${connectionId}/sync`, { method: 'POST' });
+    return data;
+  },
+  syncOneRosterIncremental: async (accountId, connectionId) => {
+    const { data } = await request(`/accounts/${accountId}/oneroster_connections/${connectionId}/sync_incremental`, { method: 'POST' });
+    return data;
+  },
+  getOneRosterSyncLogs: async (accountId, connectionId, page = 1, perPage = 20) => {
+    return request(`/accounts/${accountId}/oneroster_connections/${connectionId}/sync_logs?page=${page}&per_page=${perPage}`);
+  },
+
+  // Phase 10C: Document Annotations
+  getAnnotations: async (courseId, assignmentId, userId, page = 1, perPage = 100) => {
+    return request(`/courses/${courseId}/assignments/${assignmentId}/submissions/${userId}/annotations?page=${page}&per_page=${perPage}`);
+  },
+  createAnnotation: async (courseId, assignmentId, userId, annotation) => {
+    const { data } = await request(`/courses/${courseId}/assignments/${assignmentId}/submissions/${userId}/annotations`, {
+      method: 'POST', body: JSON.stringify({ annotation }),
+    });
+    return data;
+  },
+  getAnnotation: async (id) => {
+    const { data } = await request(`/annotations/${id}`);
+    return data;
+  },
+  updateAnnotation: async (id, annotation) => {
+    const { data } = await request(`/annotations/${id}`, {
+      method: 'PUT', body: JSON.stringify({ annotation }),
+    });
+    return data;
+  },
+  deleteAnnotation: async (id, courseId) => {
+    const { data } = await request(`/annotations/${id}?course_id=${courseId}`, { method: 'DELETE' });
+    return data;
+  },
+  resolveAnnotation: async (id) => {
+    const { data } = await request(`/annotations/${id}/resolve`, { method: 'POST' });
+    return data;
+  },
+  unresolveAnnotation: async (id) => {
+    const { data } = await request(`/annotations/${id}/resolve`, { method: 'DELETE' });
+    return data;
+  },
+  replyToAnnotation: async (id, content, courseId) => {
+    const { data } = await request(`/annotations/${id}/replies?course_id=${courseId}`, {
+      method: 'POST', body: JSON.stringify({ annotation: { content } }),
+    });
+    return data;
+  },
+  getAnnotationSummary: async (courseId, assignmentId, userId) => {
+    const { data } = await request(`/courses/${courseId}/assignments/${assignmentId}/submissions/${userId}/annotation_summary`);
+    return data;
+  },
+
+  // Phase 9: SSO
+  getSAMLLoginUrl: (providerId) => `${API_URL}/auth/saml/login?provider_id=${providerId}`,
+  getSAMLMetadataUrl: () => `${API_URL}/auth/saml/metadata`,
+  getCASLoginUrl: (providerId) => `${API_URL}/auth/cas/login?provider_id=${providerId}`,
+  ldapLogin: async (providerId, username, password) => {
+    const { data } = await request('/auth/ldap/login', {
+      method: 'POST', body: JSON.stringify({ provider_id: providerId, username, password }),
+    });
+    return data;
+  },
 };

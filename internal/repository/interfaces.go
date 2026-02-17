@@ -477,3 +477,37 @@ type BlueprintMigrationRepository interface {
 	ListByTemplateID(ctx context.Context, templateID uint, params PaginationParams) (*PaginatedResult[models.BlueprintMigration], error)
 	ListBySubscriptionID(ctx context.Context, subscriptionID uint, params PaginationParams) (*PaginatedResult[models.BlueprintMigration], error)
 }
+
+// Phase 10C: OneRoster
+
+type OneRosterConnectionRepository interface {
+	Create(ctx context.Context, conn *models.OneRosterConnection) error
+	FindByID(ctx context.Context, id uint) (*models.OneRosterConnection, error)
+	Update(ctx context.Context, conn *models.OneRosterConnection) error
+	Delete(ctx context.Context, id uint) error
+	ListByAccountID(ctx context.Context, accountID uint, params PaginationParams) (*PaginatedResult[models.OneRosterConnection], error)
+	FindByAccountAndName(ctx context.Context, accountID uint, name string) (*models.OneRosterConnection, error)
+	ListAutoSync(ctx context.Context) ([]models.OneRosterConnection, error)
+}
+
+type OneRosterSyncLogRepository interface {
+	Create(ctx context.Context, log *models.OneRosterSyncLog) error
+	Update(ctx context.Context, log *models.OneRosterSyncLog) error
+	ListByConnectionID(ctx context.Context, connectionID uint, params PaginationParams) (*PaginatedResult[models.OneRosterSyncLog], error)
+	GetLatestByConnectionID(ctx context.Context, connectionID uint) (*models.OneRosterSyncLog, error)
+}
+
+// Phase 10C: Document Annotations
+
+type DocumentAnnotationRepository interface {
+	Create(ctx context.Context, annotation *models.DocumentAnnotation) error
+	FindByID(ctx context.Context, id uint) (*models.DocumentAnnotation, error)
+	Update(ctx context.Context, annotation *models.DocumentAnnotation) error
+	Delete(ctx context.Context, id uint) error
+	ListBySubmissionID(ctx context.Context, submissionID uint, params PaginationParams) (*PaginatedResult[models.DocumentAnnotation], error)
+	ListBySubmissionAndPage(ctx context.Context, submissionID uint, pageNumber int) ([]models.DocumentAnnotation, error)
+	CountBySubmissionID(ctx context.Context, submissionID uint) (int64, error)
+	ListReplies(ctx context.Context, parentAnnotationID uint) ([]models.DocumentAnnotation, error)
+	Resolve(ctx context.Context, annotationID uint, resolvedByUserID uint) error
+	Unresolve(ctx context.Context, annotationID uint) error
+}

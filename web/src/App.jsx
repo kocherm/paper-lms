@@ -10,7 +10,7 @@ import AccessTokensPage from './pages/AccessTokensPage';
 import DeveloperKeysPage from './pages/DeveloperKeysPage';
 import ExternalToolsPage from './pages/ExternalToolsPage';
 import DiscussionsPage from './pages/DiscussionsPage';
-import DiscussionTopicPage from './pages/DiscussionTopicPage';
+import DiscussionTopicPage from './pages/DiscussionTopicPageV2';
 import FilesPage from './pages/FilesPage';
 import SISImportPage from './pages/SISImportPage';
 import QuizTakePage from './pages/QuizTakePage';
@@ -31,6 +31,14 @@ import ConferencesPage from './pages/ConferencesPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import GraphiQLPage from './pages/GraphiQLPage';
 import AuthProvidersPage from './pages/AuthProvidersPage';
+import AnnouncementsPage from './pages/AnnouncementsPage';
+import EnrollmentTermsPage from './pages/EnrollmentTermsPage';
+import SyllabusPage from './pages/SyllabusPage';
+import NotificationDeliveryPage from './pages/NotificationDeliveryPage';
+import AuditLogPage from './pages/AuditLogPage';
+import CustomRolesPage from './pages/CustomRolesPage';
+import OneRosterPage from './pages/OneRosterPage';
+import DocViewerPage from './pages/DocViewerPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useAuth } from './contexts/AuthContext';
 
@@ -294,6 +302,70 @@ const App = () => {
           element={
             <ProtectedRoute>
               <AuthProvidersPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/courses/:courseId/announcements"
+          element={
+            <ProtectedRoute>
+              <AnnouncementsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/courses/:courseId/syllabus"
+          element={
+            <ProtectedRoute>
+              <SyllabusPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/terms"
+          element={
+            <ProtectedRoute>
+              <EnrollmentTermsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/courses/:courseId/audit_log"
+          element={
+            <ProtectedRoute>
+              <AuditLogPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/roles"
+          element={
+            <ProtectedRoute>
+              <CustomRolesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/oneroster"
+          element={
+            <ProtectedRoute>
+              <OneRosterPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/courses/:courseId/assignments/:assignmentId/submissions/:userId/docviewer"
+          element={
+            <ProtectedRoute>
+              <DocViewerPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings/notification_deliveries"
+          element={
+            <ProtectedRoute>
+              <NotificationDeliveryPage />
             </ProtectedRoute>
           }
         />

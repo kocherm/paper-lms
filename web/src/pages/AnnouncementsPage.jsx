@@ -1,0 +1,577 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { Megaphone, AlertTriangle, Clock, CheckCircle, Eye, Users, Plus, Edit2, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { api } from '../services/api';
+import Layout from '../components/Layout';
+import { useAuth } from '../contexts/AuthContext';
+
+const AnnouncementsPage = () => {
+  const { courseId } = useParams();
+  const { user } = useAuth();
+  const [announcements, setAnnouncements] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [expandedReceipts, setExpandedReceipts] = useState({});
+  const [receiptData, setReceiptData] = useState({});
+  const [editingId, setEditingId] = useState(null);
+
+  const [formData, setFormData] = useState({
+    title: '',
+    message: '',
+    priority: 'normal',
+    target_audience: 'all',
+    require_acknowledgement: false,
+    allow_comments: false,
+    workflow_state: 'published',
+    delayed_post_at: '',
+    schedule: false,
+  });
+
+  const isInstructor = user?.role === 'admin' || user?.role === 'teacher';
+
+  const fetchAnnouncements = async () => {
+    try {
+      const result = await api.request(`/courses/${courseId}/announcements`);
+      setAnnouncements(result.data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnnouncements();
+  }, [courseId]);
+
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      message: '',
+      priority: 'normal',
+      target_audience: 'all',
+      require_acknowledgement: false,
+      allow_comments: false,
+      workflow_state: 'published',
+      delayed_post_at: '',
+      schedule: false,
+    });
+    setEditingId(null);
+  };
+
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    setCreating(true);
+    try {
+      const payload = {
+        title: formData.title,
+        message: formData.message,
+        priority: formData.priority,
+        target_audience: formData.target_audience,
+        require_acknowledgement: formData.require_acknowledgement,
+        allow_comments: formData.allow_comments,
+        workflow_state: formData.schedule ? 'scheduled' : 'published',
+      };
+
+      if (formData.schedule && formData.delayed_post_at) {
+        payload.delayed_post_at = new Date(formData.delayed_post_at).toISOString();
+      }
+
+      if (editingId) {
+        await api.request(`/announcements/${editingId}`, {
+          method: 'PUT',
+          body: JSON.stringify(payload),
+        });
+      } else {
+        await api.request(`/courses/${courseId}/announcements`, {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+      }
+
+      resetForm();
+      setShowForm(false);
+      setLoading(true);
+      await fetchAnnouncements();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this announcement?')) return;
+    try {
+      await api.request(`/announcements/${id}`, { method: 'DELETE' });
+      setLoading(true);
+      await fetchAnnouncements();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleEdit = (announcement) => {
+    setFormData({
+      title: announcement.title,
+      message: announcement.message,
+      priority: announcement.priority,
+      target_audience: announcement.target_audience,
+      require_acknowledgement: announcement.require_acknowledgement,
+      allow_comments: announcement.allow_comments,
+      workflow_state: announcement.workflow_state,
+      delayed_post_at: announcement.delayed_post_at || '',
+      schedule: announcement.workflow_state === 'scheduled',
+    });
+    setEditingId(announcement.id);
+    setShowForm(true);
+  };
+
+  const handleMarkRead = async (id) => {
+    try {
+      await api.request(`/announcements/${id}/read`, { method: 'POST' });
+      setAnnouncements((prev) =>
+        prev.map((a) => (a.id === id ? { ...a, is_read: true } : a))
+      );
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleAcknowledge = async (id) => {
+    try {
+      await api.request(`/announcements/${id}/acknowledge`, { method: 'POST' });
+      setAnnouncements((prev) =>
+        prev.map((a) => (a.id === id ? { ...a, is_acknowledged: true, is_read: true } : a))
+      );
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const toggleReceipts = async (id) => {
+    if (expandedReceipts[id]) {
+      setExpandedReceipts((prev) => ({ ...prev, [id]: false }));
+      return;
+    }
+
+    try {
+      const result = await api.request(`/announcements/${id}/read_receipts`);
+      setReceiptData((prev) => ({ ...prev, [id]: result.data }));
+      setExpandedReceipts((prev) => ({ ...prev, [id]: true }));
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const getPriorityStyles = (priority) => {
+    if (priority === 'urgent') {
+      return 'border-l-4 border-red-500 bg-red-50';
+    }
+    return 'border-l-4 border-blue-500 bg-white';
+  };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="text-center py-12 text-gray-500" role="status" aria-label="Loading announcements">
+          Loading announcements...
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout>
+        <div className="text-red-600 text-center py-12" role="alert">{error}</div>
+      </Layout>
+    );
+  }
+
+  return (
+    <Layout>
+      <div className="mb-6">
+        <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm">
+          &larr; Back to Course
+        </Link>
+        <div className="flex items-center justify-between mt-2">
+          <div className="flex items-center space-x-2">
+            <Megaphone className="w-6 h-6 text-gray-700" aria-hidden="true" />
+            <h2 className="text-2xl font-bold text-gray-900">Announcements</h2>
+          </div>
+          {isInstructor && (
+            <button
+              onClick={() => {
+                if (showForm) {
+                  resetForm();
+                }
+                setShowForm(!showForm);
+              }}
+              className="inline-flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium"
+              aria-expanded={showForm}
+              aria-controls="announcement-form"
+            >
+              <Plus className="w-4 h-4" aria-hidden="true" />
+              <span>{showForm ? 'Cancel' : 'New Announcement'}</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {showForm && (
+        <div id="announcement-form" className="bg-white rounded-lg shadow p-6 mb-6" role="form" aria-label={editingId ? 'Edit Announcement' : 'Create Announcement'}>
+          <h3 className="font-semibold mb-4">{editingId ? 'Edit Announcement' : 'Create Announcement'}</h3>
+          <form onSubmit={handleCreate} className="space-y-4">
+            <div>
+              <label htmlFor="ann-title" className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+              <input
+                id="ann-title"
+                type="text"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+                aria-required="true"
+              />
+            </div>
+            <div>
+              <label htmlFor="ann-message" className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+              <textarea
+                id="ann-message"
+                value={formData.message}
+                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={5}
+                required
+                aria-required="true"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="ann-priority" className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                <select
+                  id="ann-priority"
+                  value={formData.priority}
+                  onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="normal">Normal</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="ann-audience" className="block text-sm font-medium text-gray-700 mb-1">Audience</label>
+                <select
+                  id="ann-audience"
+                  value={formData.target_audience}
+                  onChange={(e) => setFormData({ ...formData, target_audience: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All</option>
+                  <option value="students">Students Only</option>
+                  <option value="teachers">Teachers Only</option>
+                  <option value="observers">Observers Only</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-6">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="ann-schedule"
+                  checked={formData.schedule}
+                  onChange={(e) => setFormData({ ...formData, schedule: e.target.checked })}
+                  className="rounded border-gray-300"
+                />
+                <label htmlFor="ann-schedule" className="text-sm text-gray-700">Schedule for later</label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="ann-require-ack"
+                  checked={formData.require_acknowledgement}
+                  onChange={(e) => setFormData({ ...formData, require_acknowledgement: e.target.checked })}
+                  className="rounded border-gray-300"
+                />
+                <label htmlFor="ann-require-ack" className="text-sm text-gray-700">Require Acknowledgement</label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="ann-allow-comments"
+                  checked={formData.allow_comments}
+                  onChange={(e) => setFormData({ ...formData, allow_comments: e.target.checked })}
+                  className="rounded border-gray-300"
+                />
+                <label htmlFor="ann-allow-comments" className="text-sm text-gray-700">Allow Comments</label>
+              </div>
+            </div>
+
+            {formData.schedule && (
+              <div>
+                <label htmlFor="ann-delayed-post" className="block text-sm font-medium text-gray-700 mb-1">
+                  <Clock className="w-4 h-4 inline mr-1" aria-hidden="true" />
+                  Scheduled Post Date
+                </label>
+                <input
+                  id="ann-delayed-post"
+                  type="datetime-local"
+                  value={formData.delayed_post_at}
+                  onChange={(e) => setFormData({ ...formData, delayed_post_at: e.target.value })}
+                  className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required={formData.schedule}
+                  aria-required={formData.schedule}
+                />
+              </div>
+            )}
+
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={() => {
+                  resetForm();
+                  setShowForm(false);
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={creating}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium disabled:opacity-50"
+              >
+                {creating ? 'Saving...' : editingId ? 'Update Announcement' : 'Post Announcement'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Urgent announcements banner */}
+      {announcements.filter((a) => a.priority === 'urgent' && !a.is_read).length > 0 && (
+        <div className="bg-red-600 text-white rounded-lg p-4 mb-6 flex items-center space-x-3" role="alert" aria-live="assertive">
+          <AlertTriangle className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
+          <div>
+            <strong>Urgent Announcements:</strong>{' '}
+            You have {announcements.filter((a) => a.priority === 'urgent' && !a.is_read).length} unread urgent announcement(s).
+          </div>
+        </div>
+      )}
+
+      {/* Announcements list */}
+      <div className="space-y-4" role="feed" aria-label="Announcements list">
+        {announcements.length === 0 ? (
+          <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
+            No announcements yet.
+          </div>
+        ) : (
+          announcements.map((announcement) => (
+            <article
+              key={announcement.id}
+              className={`rounded-lg shadow ${getPriorityStyles(announcement.priority)} relative`}
+              aria-label={`Announcement: ${announcement.title}`}
+            >
+              {/* Unread badge */}
+              {!announcement.is_read && (
+                <span className="absolute top-3 right-3 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800" aria-label="Unread">
+                  New
+                </span>
+              )}
+
+              <div className="p-5">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-2 mb-1">
+                      {announcement.priority === 'urgent' && (
+                        <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0" aria-label="Urgent" />
+                      )}
+                      <h3 className="text-lg font-semibold text-gray-900 truncate">{announcement.title}</h3>
+                      {announcement.workflow_state === 'scheduled' && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                          <Clock className="w-3 h-3 mr-1" aria-hidden="true" />
+                          Scheduled
+                        </span>
+                      )}
+                      {announcement.require_acknowledgement && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                          Ack Required
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-gray-600 text-sm mt-2 whitespace-pre-wrap">{announcement.message}</p>
+
+                    <div className="flex items-center space-x-4 mt-3 text-xs text-gray-400">
+                      <span>
+                        {announcement.posted_at
+                          ? `Posted ${formatDate(announcement.posted_at)}`
+                          : `Created ${formatDate(announcement.created_at)}`}
+                      </span>
+                      <span className="capitalize">Audience: {announcement.target_audience}</span>
+                      {announcement.delayed_post_at && announcement.workflow_state === 'scheduled' && (
+                        <span>Scheduled for {formatDate(announcement.delayed_post_at)}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-200">
+                  <div className="flex items-center space-x-3">
+                    {!announcement.is_read && (
+                      <button
+                        onClick={() => handleMarkRead(announcement.id)}
+                        className="inline-flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-800"
+                        aria-label={`Mark "${announcement.title}" as read`}
+                      >
+                        <Eye className="w-4 h-4" aria-hidden="true" />
+                        <span>Mark as Read</span>
+                      </button>
+                    )}
+                    {announcement.is_read && (
+                      <span className="inline-flex items-center space-x-1 text-sm text-green-600">
+                        <CheckCircle className="w-4 h-4" aria-hidden="true" />
+                        <span>Read</span>
+                      </span>
+                    )}
+
+                    {announcement.require_acknowledgement && !announcement.is_acknowledged && (
+                      <button
+                        onClick={() => handleAcknowledge(announcement.id)}
+                        className="inline-flex items-center space-x-1 text-sm bg-purple-600 text-white px-3 py-1 rounded-md hover:bg-purple-700"
+                        aria-label={`Acknowledge "${announcement.title}"`}
+                      >
+                        <CheckCircle className="w-4 h-4" aria-hidden="true" />
+                        <span>Acknowledge</span>
+                      </button>
+                    )}
+                    {announcement.require_acknowledgement && announcement.is_acknowledged && (
+                      <span className="inline-flex items-center space-x-1 text-sm text-purple-600">
+                        <CheckCircle className="w-4 h-4" aria-hidden="true" />
+                        <span>Acknowledged</span>
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    {isInstructor && (
+                      <>
+                        <button
+                          onClick={() => toggleReceipts(announcement.id)}
+                          className="inline-flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700"
+                          aria-expanded={expandedReceipts[announcement.id] || false}
+                          aria-controls={`receipts-${announcement.id}`}
+                          aria-label={`View read receipts for "${announcement.title}"`}
+                        >
+                          <Users className="w-4 h-4" aria-hidden="true" />
+                          <span>Read Receipts</span>
+                          {expandedReceipts[announcement.id] ? (
+                            <ChevronUp className="w-4 h-4" aria-hidden="true" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4" aria-hidden="true" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleEdit(announcement)}
+                          className="text-gray-400 hover:text-gray-600"
+                          aria-label={`Edit "${announcement.title}"`}
+                        >
+                          <Edit2 className="w-4 h-4" aria-hidden="true" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(announcement.id)}
+                          className="text-gray-400 hover:text-red-600"
+                          aria-label={`Delete "${announcement.title}"`}
+                        >
+                          <Trash2 className="w-4 h-4" aria-hidden="true" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Read receipts panel (instructor only) */}
+                {isInstructor && expandedReceipts[announcement.id] && receiptData[announcement.id] && (
+                  <div
+                    id={`receipts-${announcement.id}`}
+                    className="mt-4 pt-3 border-t border-gray-200"
+                    role="region"
+                    aria-label={`Read receipts for "${announcement.title}"`}
+                  >
+                    <div className="flex items-center space-x-4 mb-3">
+                      <div className="text-sm font-medium text-gray-700">
+                        Read: {receiptData[announcement.id].stats?.read_count || 0} / {receiptData[announcement.id].stats?.total_audience || 0}
+                      </div>
+                      {announcement.require_acknowledgement && (
+                        <div className="text-sm font-medium text-purple-700">
+                          Acknowledged: {receiptData[announcement.id].stats?.acknowledged_count || 0} / {receiptData[announcement.id].stats?.total_audience || 0}
+                        </div>
+                      )}
+                    </div>
+
+                    {receiptData[announcement.id].receipts && receiptData[announcement.id].receipts.length > 0 ? (
+                      <div className="bg-gray-50 rounded-md overflow-hidden">
+                        <table className="w-full text-sm" aria-label="Read receipt details">
+                          <thead>
+                            <tr className="border-b border-gray-200">
+                              <th className="text-left px-3 py-2 font-medium text-gray-600" scope="col">User ID</th>
+                              <th className="text-left px-3 py-2 font-medium text-gray-600" scope="col">Read At</th>
+                              {announcement.require_acknowledgement && (
+                                <th className="text-left px-3 py-2 font-medium text-gray-600" scope="col">Acknowledged</th>
+                              )}
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-200">
+                            {receiptData[announcement.id].receipts.map((receipt) => (
+                              <tr key={receipt.id}>
+                                <td className="px-3 py-2 text-gray-900">User #{receipt.user_id}</td>
+                                <td className="px-3 py-2 text-gray-500">{formatDate(receipt.read_at)}</td>
+                                {announcement.require_acknowledgement && (
+                                  <td className="px-3 py-2">
+                                    {receipt.acknowledged ? (
+                                      <span className="inline-flex items-center text-green-600">
+                                        <CheckCircle className="w-3.5 h-3.5 mr-1" aria-hidden="true" />
+                                        {formatDate(receipt.acknowledged_at)}
+                                      </span>
+                                    ) : (
+                                      <span className="text-gray-400">Not yet</span>
+                                    )}
+                                  </td>
+                                )}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500">No one has read this announcement yet.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </article>
+          ))
+        )}
+      </div>
+    </Layout>
+  );
+};
+
+export default AnnouncementsPage;

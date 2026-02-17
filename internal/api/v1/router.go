@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/kocherm/paper-lms/internal/api/v1/handlers"
 	"github.com/kocherm/paper-lms/internal/api/v1/middleware"
+	"github.com/kocherm/paper-lms/internal/auth"
 )
 
 type Router struct {
@@ -59,7 +60,24 @@ type Router struct {
 	// Phase 8C
 	graphqlHandler      *handlers.GraphQLHandler
 	authProviderHandler *handlers.AuthProviderHandler
-	authMiddleware      *middleware.AuthMiddleware
+	// Phase 9
+	discussionV2Handler  *handlers.DiscussionV2Handler
+	contentImportHandler *handlers.ContentImportHandler
+	batchHandler         *handlers.BatchHandler
+	ssoHandler           *auth.SSOHandler
+	// Phase 10
+	announcementHandler    *handlers.AnnouncementHandler
+	enrollmentTermHandler  *handlers.EnrollmentTermHandler
+	syllabusHandler        *handlers.SyllabusHandler
+	// Phase 10B
+	notificationDeliveryHandler *handlers.NotificationDeliveryHandler
+	auditHandler                *handlers.AuditHandler
+	// Phase 10C
+	customRoleHandler          *handlers.CustomRoleHandler
+	onerosterHandler           *handlers.OneRosterHandler
+	documentAnnotationHandler  *handlers.DocumentAnnotationHandler
+	authMiddleware             *middleware.AuthMiddleware
+	permMiddleware             *middleware.PermissionMiddleware
 }
 
 func NewRouter(
@@ -115,7 +133,24 @@ func NewRouter(
 	// Phase 8C
 	graphqlHandler *handlers.GraphQLHandler,
 	authProviderHandler *handlers.AuthProviderHandler,
+	// Phase 9
+	discussionV2Handler *handlers.DiscussionV2Handler,
+	contentImportHandler *handlers.ContentImportHandler,
+	batchHandler *handlers.BatchHandler,
+	ssoHandler *auth.SSOHandler,
+	// Phase 10
+	announcementHandler *handlers.AnnouncementHandler,
+	enrollmentTermHandler *handlers.EnrollmentTermHandler,
+	syllabusHandler *handlers.SyllabusHandler,
+	// Phase 10B
+	notificationDeliveryHandler *handlers.NotificationDeliveryHandler,
+	auditHandler *handlers.AuditHandler,
+	// Phase 10C
+	customRoleHandler *handlers.CustomRoleHandler,
+	onerosterHandler *handlers.OneRosterHandler,
+	documentAnnotationHandler *handlers.DocumentAnnotationHandler,
 	authMiddleware *middleware.AuthMiddleware,
+	permMiddleware *middleware.PermissionMiddleware,
 ) *Router {
 	return &Router{
 		userHandler:            userHandler,
@@ -164,12 +199,31 @@ func NewRouter(
 		observerHandler:            observerHandler,
 		graphqlHandler:             graphqlHandler,
 		authProviderHandler:        authProviderHandler,
-		authMiddleware:             authMiddleware,
+		discussionV2Handler:        discussionV2Handler,
+		contentImportHandler:       contentImportHandler,
+		batchHandler:               batchHandler,
+		ssoHandler:                 ssoHandler,
+		announcementHandler:         announcementHandler,
+		enrollmentTermHandler:       enrollmentTermHandler,
+		syllabusHandler:             syllabusHandler,
+		notificationDeliveryHandler:  notificationDeliveryHandler,
+		auditHandler:                auditHandler,
+		customRoleHandler:           customRoleHandler,
+		onerosterHandler:            onerosterHandler,
+		documentAnnotationHandler:   documentAnnotationHandler,
+		authMiddleware:              authMiddleware,
+		permMiddleware:              permMiddleware,
 	}
 }
 
 func (r *Router) Register(app *fiber.App) {
 	api := app.Group("/api/v1", middleware.PaginationParams())
+
+	// Permission middleware aliases for readability
+	admin := r.permMiddleware.RequireAdmin()
+	enrolled := r.permMiddleware.RequireEnrolled()
+	instructor := r.permMiddleware.RequireInstructor()
+	selfOrAdmin := r.permMiddleware.RequireSelfOrAdmin()
 
 	// Public auth routes
 	api.Post("/login", r.userHandler.Login)
@@ -183,109 +237,117 @@ func (r *Router) Register(app *fiber.App) {
 	api.Post("/lti/oidc/login", r.ltiHandler.OIDCLogin)
 	api.Post("/lti/launch", r.ltiHandler.LaunchDirect)
 
-	// Protected routes
+	// Public SSO endpoints (no auth required)
+	api.Get("/auth/saml/login", r.ssoHandler.HandleSAMLLogin)
+	api.Post("/auth/saml/acs", r.ssoHandler.HandleSAMLACS)
+	api.Get("/auth/saml/metadata", r.ssoHandler.HandleSAMLMetadata)
+	api.Get("/auth/cas/login", r.ssoHandler.HandleCASLogin)
+	api.Get("/auth/cas/callback", r.ssoHandler.HandleCASCallback)
+	api.Post("/auth/ldap/login", r.ssoHandler.HandleLDAPLogin)
+
+	// Protected routes (authentication required)
 	protected := api.Group("", r.authMiddleware.Protected())
 
-	// Users
+	// Users (self access or admin)
 	protected.Get("/users/self", r.userHandler.GetSelf)
-	protected.Get("/users", r.userHandler.ListUsers)
-	protected.Get("/users/:id", r.userHandler.GetUser)
-	protected.Get("/users/:id/profile", r.userHandler.GetUserProfile)
-	protected.Put("/users/:id", r.userHandler.UpdateUser)
+	protected.Get("/users", admin, r.userHandler.ListUsers)
+	protected.Get("/users/:id", selfOrAdmin, r.userHandler.GetUser)
+	protected.Get("/users/:id/profile", selfOrAdmin, r.userHandler.GetUserProfile)
+	protected.Put("/users/:id", selfOrAdmin, r.userHandler.UpdateUser)
 
-	// Personal Access Tokens
-	protected.Get("/users/:user_id/tokens", r.accessTokenHandler.ListAccessTokens)
-	protected.Post("/users/:user_id/tokens", r.accessTokenHandler.CreateAccessToken)
-	protected.Delete("/users/:user_id/tokens/:id", r.accessTokenHandler.DeleteAccessToken)
+	// Personal Access Tokens (self or admin)
+	protected.Get("/users/:user_id/tokens", selfOrAdmin, r.accessTokenHandler.ListAccessTokens)
+	protected.Post("/users/:user_id/tokens", selfOrAdmin, r.accessTokenHandler.CreateAccessToken)
+	protected.Delete("/users/:user_id/tokens/:id", selfOrAdmin, r.accessTokenHandler.DeleteAccessToken)
 
-	// Accounts
-	protected.Get("/accounts", r.accountHandler.ListAccounts)
-	protected.Get("/accounts/:id", r.accountHandler.GetAccount)
+	// Accounts (admin only)
+	protected.Get("/accounts", admin, r.accountHandler.ListAccounts)
+	protected.Get("/accounts/:id", admin, r.accountHandler.GetAccount)
 
-	// Developer Keys
-	protected.Get("/accounts/:account_id/developer_keys", r.developerKeyHandler.ListDeveloperKeys)
-	protected.Post("/accounts/:account_id/developer_keys", r.developerKeyHandler.CreateDeveloperKey)
-	protected.Get("/accounts/:account_id/developer_keys/:id", r.developerKeyHandler.GetDeveloperKey)
-	protected.Put("/accounts/:account_id/developer_keys/:id", r.developerKeyHandler.UpdateDeveloperKey)
-	protected.Delete("/accounts/:account_id/developer_keys/:id", r.developerKeyHandler.DeleteDeveloperKey)
+	// Developer Keys (admin only)
+	protected.Get("/accounts/:account_id/developer_keys", admin, r.developerKeyHandler.ListDeveloperKeys)
+	protected.Post("/accounts/:account_id/developer_keys", admin, r.developerKeyHandler.CreateDeveloperKey)
+	protected.Get("/accounts/:account_id/developer_keys/:id", admin, r.developerKeyHandler.GetDeveloperKey)
+	protected.Put("/accounts/:account_id/developer_keys/:id", admin, r.developerKeyHandler.UpdateDeveloperKey)
+	protected.Delete("/accounts/:account_id/developer_keys/:id", admin, r.developerKeyHandler.DeleteDeveloperKey)
 
 	// OAuth2 Authorization (requires auth for consent)
 	protected.Get("/login/oauth2/auth", r.oauth2Handler.Authorize)
 	protected.Post("/login/oauth2/auth", r.oauth2Handler.AuthorizePost)
 
-	// Courses
+	// Courses (list: any user sees their own; create: admin; manage: instructor)
 	protected.Get("/courses", r.courseHandler.ListCourses)
-	protected.Post("/courses", r.courseHandler.CreateCourse)
-	protected.Get("/courses/:id", r.courseHandler.GetCourse)
-	protected.Put("/courses/:id", r.courseHandler.UpdateCourse)
-	protected.Delete("/courses/:id", r.courseHandler.DeleteCourse)
+	protected.Post("/courses", admin, r.courseHandler.CreateCourse)
+	protected.Get("/courses/:id", enrolled, r.courseHandler.GetCourse)
+	protected.Put("/courses/:id", instructor, r.courseHandler.UpdateCourse)
+	protected.Delete("/courses/:id", instructor, r.courseHandler.DeleteCourse)
 
-	// External Tools
-	protected.Get("/courses/:course_id/external_tools", r.externalToolHandler.ListExternalTools)
-	protected.Post("/courses/:course_id/external_tools", r.externalToolHandler.CreateExternalTool)
-	protected.Get("/courses/:course_id/external_tools/:id", r.externalToolHandler.GetExternalTool)
-	protected.Put("/courses/:course_id/external_tools/:id", r.externalToolHandler.UpdateExternalTool)
-	protected.Delete("/courses/:course_id/external_tools/:id", r.externalToolHandler.DeleteExternalTool)
+	// External Tools (view: enrolled; manage: instructor)
+	protected.Get("/courses/:course_id/external_tools", enrolled, r.externalToolHandler.ListExternalTools)
+	protected.Post("/courses/:course_id/external_tools", instructor, r.externalToolHandler.CreateExternalTool)
+	protected.Get("/courses/:course_id/external_tools/:id", enrolled, r.externalToolHandler.GetExternalTool)
+	protected.Put("/courses/:course_id/external_tools/:id", instructor, r.externalToolHandler.UpdateExternalTool)
+	protected.Delete("/courses/:course_id/external_tools/:id", instructor, r.externalToolHandler.DeleteExternalTool)
 
-	// Sections
-	protected.Get("/courses/:course_id/sections", r.sectionHandler.ListSections)
-	protected.Post("/courses/:course_id/sections", r.sectionHandler.CreateSection)
+	// Sections (view: enrolled; create: instructor)
+	protected.Get("/courses/:course_id/sections", enrolled, r.sectionHandler.ListSections)
+	protected.Post("/courses/:course_id/sections", instructor, r.sectionHandler.CreateSection)
 	protected.Get("/sections/:id", r.sectionHandler.GetSection)
 
-	// Enrollments
-	protected.Get("/courses/:course_id/enrollments", r.enrollmentHandler.ListEnrollments)
-	protected.Post("/courses/:course_id/enrollments", r.enrollmentHandler.CreateEnrollment)
+	// Enrollments (view: enrolled; create: instructor)
+	protected.Get("/courses/:course_id/enrollments", enrolled, r.enrollmentHandler.ListEnrollments)
+	protected.Post("/courses/:course_id/enrollments", instructor, r.enrollmentHandler.CreateEnrollment)
 
-	// Modules
-	protected.Get("/courses/:course_id/modules", r.moduleHandler.ListModules)
-	protected.Post("/courses/:course_id/modules", r.moduleHandler.CreateModule)
-	protected.Get("/courses/:course_id/modules/:id", r.moduleHandler.GetModule)
-	protected.Put("/courses/:course_id/modules/:id", r.moduleHandler.UpdateModule)
-	protected.Delete("/courses/:course_id/modules/:id", r.moduleHandler.DeleteModule)
+	// Modules (view: enrolled; manage: instructor)
+	protected.Get("/courses/:course_id/modules", enrolled, r.moduleHandler.ListModules)
+	protected.Post("/courses/:course_id/modules", instructor, r.moduleHandler.CreateModule)
+	protected.Get("/courses/:course_id/modules/:id", enrolled, r.moduleHandler.GetModule)
+	protected.Put("/courses/:course_id/modules/:id", instructor, r.moduleHandler.UpdateModule)
+	protected.Delete("/courses/:course_id/modules/:id", instructor, r.moduleHandler.DeleteModule)
 
-	// Module Items
-	protected.Get("/courses/:course_id/modules/:module_id/items", r.moduleItemHandler.ListModuleItems)
-	protected.Post("/courses/:course_id/modules/:module_id/items", r.moduleItemHandler.CreateModuleItem)
-	protected.Get("/courses/:course_id/modules/:module_id/items/:item_id", r.moduleItemHandler.GetModuleItem)
+	// Module Items (view: enrolled; manage: instructor)
+	protected.Get("/courses/:course_id/modules/:module_id/items", enrolled, r.moduleItemHandler.ListModuleItems)
+	protected.Post("/courses/:course_id/modules/:module_id/items", instructor, r.moduleItemHandler.CreateModuleItem)
+	protected.Get("/courses/:course_id/modules/:module_id/items/:item_id", enrolled, r.moduleItemHandler.GetModuleItem)
 
-	// Pages
-	protected.Get("/courses/:course_id/pages", r.pageHandler.ListPages)
-	protected.Post("/courses/:course_id/pages", r.pageHandler.CreatePage)
-	protected.Get("/courses/:course_id/pages/:url_or_id", r.pageHandler.GetPage)
-	protected.Put("/courses/:course_id/pages/:url_or_id", r.pageHandler.UpdatePage)
-	protected.Delete("/courses/:course_id/pages/:url_or_id", r.pageHandler.DeletePage)
+	// Pages (view: enrolled; manage: instructor)
+	protected.Get("/courses/:course_id/pages", enrolled, r.pageHandler.ListPages)
+	protected.Post("/courses/:course_id/pages", instructor, r.pageHandler.CreatePage)
+	protected.Get("/courses/:course_id/pages/:url_or_id", enrolled, r.pageHandler.GetPage)
+	protected.Put("/courses/:course_id/pages/:url_or_id", instructor, r.pageHandler.UpdatePage)
+	protected.Delete("/courses/:course_id/pages/:url_or_id", instructor, r.pageHandler.DeletePage)
 
-	// Assignments
-	protected.Get("/courses/:course_id/assignments", r.assignmentHandler.ListAssignments)
-	protected.Post("/courses/:course_id/assignments", r.assignmentHandler.CreateAssignment)
-	protected.Get("/courses/:course_id/assignments/:id", r.assignmentHandler.GetAssignment)
-	protected.Put("/courses/:course_id/assignments/:id", r.assignmentHandler.UpdateAssignment)
-	protected.Delete("/courses/:course_id/assignments/:id", r.assignmentHandler.DeleteAssignment)
+	// Assignments (view: enrolled; manage: instructor)
+	protected.Get("/courses/:course_id/assignments", enrolled, r.assignmentHandler.ListAssignments)
+	protected.Post("/courses/:course_id/assignments", instructor, r.assignmentHandler.CreateAssignment)
+	protected.Get("/courses/:course_id/assignments/:id", enrolled, r.assignmentHandler.GetAssignment)
+	protected.Put("/courses/:course_id/assignments/:id", instructor, r.assignmentHandler.UpdateAssignment)
+	protected.Delete("/courses/:course_id/assignments/:id", instructor, r.assignmentHandler.DeleteAssignment)
 
-	// Assignment Groups
-	protected.Get("/courses/:course_id/assignment_groups", r.assignmentGroupHandler.ListAssignmentGroups)
-	protected.Post("/courses/:course_id/assignment_groups", r.assignmentGroupHandler.CreateAssignmentGroup)
-	protected.Get("/courses/:course_id/assignment_groups/:id", r.assignmentGroupHandler.GetAssignmentGroup)
-	protected.Put("/courses/:course_id/assignment_groups/:id", r.assignmentGroupHandler.UpdateAssignmentGroup)
-	protected.Delete("/courses/:course_id/assignment_groups/:id", r.assignmentGroupHandler.DeleteAssignmentGroup)
+	// Assignment Groups (view: enrolled; manage: instructor)
+	protected.Get("/courses/:course_id/assignment_groups", enrolled, r.assignmentGroupHandler.ListAssignmentGroups)
+	protected.Post("/courses/:course_id/assignment_groups", instructor, r.assignmentGroupHandler.CreateAssignmentGroup)
+	protected.Get("/courses/:course_id/assignment_groups/:id", enrolled, r.assignmentGroupHandler.GetAssignmentGroup)
+	protected.Put("/courses/:course_id/assignment_groups/:id", instructor, r.assignmentGroupHandler.UpdateAssignmentGroup)
+	protected.Delete("/courses/:course_id/assignment_groups/:id", instructor, r.assignmentGroupHandler.DeleteAssignmentGroup)
 
-	// Submissions
-	protected.Get("/courses/:course_id/assignments/:assignment_id/submissions", r.submissionHandler.ListSubmissions)
-	protected.Post("/courses/:course_id/assignments/:assignment_id/submissions", r.submissionHandler.CreateSubmission)
-	protected.Get("/courses/:course_id/assignments/:assignment_id/submissions/:user_id", r.submissionHandler.GetSubmission)
-	protected.Put("/courses/:course_id/assignments/:assignment_id/submissions/:user_id", r.submissionHandler.UpdateSubmission)
+	// Submissions (view: enrolled; create: enrolled; grade: instructor)
+	protected.Get("/courses/:course_id/assignments/:assignment_id/submissions", enrolled, r.submissionHandler.ListSubmissions)
+	protected.Post("/courses/:course_id/assignments/:assignment_id/submissions", enrolled, r.submissionHandler.CreateSubmission)
+	protected.Get("/courses/:course_id/assignments/:assignment_id/submissions/:user_id", enrolled, r.submissionHandler.GetSubmission)
+	protected.Put("/courses/:course_id/assignments/:assignment_id/submissions/:user_id", instructor, r.submissionHandler.UpdateSubmission)
 
-	// Submission Comments
-	protected.Get("/courses/:course_id/assignments/:assignment_id/submissions/:user_id/comments", r.submissionHandler.ListSubmissionComments)
-	protected.Post("/courses/:course_id/assignments/:assignment_id/submissions/:user_id/comments", r.submissionHandler.CreateSubmissionComment)
+	// Submission Comments (view/create: enrolled)
+	protected.Get("/courses/:course_id/assignments/:assignment_id/submissions/:user_id/comments", enrolled, r.submissionHandler.ListSubmissionComments)
+	protected.Post("/courses/:course_id/assignments/:assignment_id/submissions/:user_id/comments", enrolled, r.submissionHandler.CreateSubmissionComment)
 
-	// Gradebook
-	protected.Get("/courses/:course_id/gradebook", r.gradebookHandler.GetGradebook)
-	protected.Get("/courses/:course_id/students/:student_id/grade", r.gradebookHandler.GetStudentGrade)
+	// Gradebook (instructor only)
+	protected.Get("/courses/:course_id/gradebook", instructor, r.gradebookHandler.GetGradebook)
+	protected.Get("/courses/:course_id/students/:student_id/grade", instructor, r.gradebookHandler.GetStudentGrade)
 
-	// Grading Standards
-	protected.Get("/courses/:course_id/grading_standards", r.gradingStandardHandler.ListGradingStandards)
-	protected.Post("/courses/:course_id/grading_standards", r.gradingStandardHandler.CreateGradingStandard)
+	// Grading Standards (view: enrolled; manage: instructor)
+	protected.Get("/courses/:course_id/grading_standards", enrolled, r.gradingStandardHandler.ListGradingStandards)
+	protected.Post("/courses/:course_id/grading_standards", instructor, r.gradingStandardHandler.CreateGradingStandard)
 
 	// LTI AGS (Assignment and Grade Services) - protected via OAuth2 token
 	protected.Get("/lti/courses/:course_id/line_items", r.ltiHandler.ListLineItems)
@@ -296,122 +358,122 @@ func (r *Router) Register(app *fiber.App) {
 	protected.Post("/lti/courses/:course_id/line_items/:id/scores", r.ltiHandler.PostScore)
 	protected.Get("/lti/courses/:course_id/line_items/:id/results", r.ltiHandler.GetResults)
 
-	// LTI NRPS (Names and Role Provisioning Services) - protected via OAuth2 token
+	// LTI NRPS (Names and Role Provisioning Services)
 	protected.Get("/lti/courses/:course_id/memberships", r.ltiHandler.GetMemberships)
 
-	// Phase 4: Discussion Topics
-	protected.Get("/courses/:course_id/discussion_topics", r.discussionHandler.ListTopics)
-	protected.Post("/courses/:course_id/discussion_topics", r.discussionHandler.CreateTopic)
-	protected.Get("/courses/:course_id/discussion_topics/:topic_id", r.discussionHandler.GetTopic)
-	protected.Put("/courses/:course_id/discussion_topics/:topic_id", r.discussionHandler.UpdateTopic)
-	protected.Delete("/courses/:course_id/discussion_topics/:topic_id", r.discussionHandler.DeleteTopic)
-	protected.Get("/courses/:course_id/discussion_topics/:topic_id/view", r.discussionHandler.GetFullView)
+	// Phase 4: Discussion Topics (view: enrolled; manage: instructor; post: enrolled)
+	protected.Get("/courses/:course_id/discussion_topics", enrolled, r.discussionHandler.ListTopics)
+	protected.Post("/courses/:course_id/discussion_topics", instructor, r.discussionHandler.CreateTopic)
+	protected.Get("/courses/:course_id/discussion_topics/:topic_id", enrolled, r.discussionHandler.GetTopic)
+	protected.Put("/courses/:course_id/discussion_topics/:topic_id", instructor, r.discussionHandler.UpdateTopic)
+	protected.Delete("/courses/:course_id/discussion_topics/:topic_id", instructor, r.discussionHandler.DeleteTopic)
+	protected.Get("/courses/:course_id/discussion_topics/:topic_id/view", enrolled, r.discussionHandler.GetFullView)
 
-	// Discussion Entries
-	protected.Get("/courses/:course_id/discussion_topics/:topic_id/entries", r.discussionEntryHandler.ListEntries)
-	protected.Post("/courses/:course_id/discussion_topics/:topic_id/entries", r.discussionEntryHandler.CreateEntry)
-	protected.Put("/courses/:course_id/discussion_topics/:topic_id/entries/:id", r.discussionEntryHandler.UpdateEntry)
-	protected.Delete("/courses/:course_id/discussion_topics/:topic_id/entries/:id", r.discussionEntryHandler.DeleteEntry)
-	protected.Get("/courses/:course_id/discussion_topics/:topic_id/entries/:entry_id/replies", r.discussionEntryHandler.ListReplies)
-	protected.Post("/courses/:course_id/discussion_topics/:topic_id/entries/:entry_id/replies", r.discussionEntryHandler.CreateReply)
-	protected.Post("/courses/:course_id/discussion_topics/:topic_id/entries/:entry_id/rating", r.discussionEntryHandler.RateEntry)
+	// Discussion Entries (view/post: enrolled; manage: instructor)
+	protected.Get("/courses/:course_id/discussion_topics/:topic_id/entries", enrolled, r.discussionEntryHandler.ListEntries)
+	protected.Post("/courses/:course_id/discussion_topics/:topic_id/entries", enrolled, r.discussionEntryHandler.CreateEntry)
+	protected.Put("/courses/:course_id/discussion_topics/:topic_id/entries/:id", enrolled, r.discussionEntryHandler.UpdateEntry)
+	protected.Delete("/courses/:course_id/discussion_topics/:topic_id/entries/:id", instructor, r.discussionEntryHandler.DeleteEntry)
+	protected.Get("/courses/:course_id/discussion_topics/:topic_id/entries/:entry_id/replies", enrolled, r.discussionEntryHandler.ListReplies)
+	protected.Post("/courses/:course_id/discussion_topics/:topic_id/entries/:entry_id/replies", enrolled, r.discussionEntryHandler.CreateReply)
+	protected.Post("/courses/:course_id/discussion_topics/:topic_id/entries/:entry_id/rating", enrolled, r.discussionEntryHandler.RateEntry)
 
-	// Phase 4: Files
-	protected.Get("/courses/:course_id/files", r.fileHandler.ListCourseFiles)
-	protected.Post("/courses/:course_id/files", r.fileHandler.UploadCourseFile)
-	protected.Get("/courses/:course_id/files/:id", r.fileHandler.GetFile)
-	protected.Delete("/courses/:course_id/files/:id", r.fileHandler.DeleteFile)
+	// Phase 4: Files (view: enrolled; upload/delete: instructor)
+	protected.Get("/courses/:course_id/files", enrolled, r.fileHandler.ListCourseFiles)
+	protected.Post("/courses/:course_id/files", instructor, r.fileHandler.UploadCourseFile)
+	protected.Get("/courses/:course_id/files/:id", enrolled, r.fileHandler.GetFile)
+	protected.Delete("/courses/:course_id/files/:id", instructor, r.fileHandler.DeleteFile)
 	protected.Get("/files/:id/download", r.fileHandler.DownloadFile)
 	protected.Get("/folders/:folder_id/files", r.fileHandler.ListFolderFiles)
 
-	// Folders
-	protected.Get("/courses/:course_id/folders", r.folderHandler.ListCourseFolders)
-	protected.Post("/courses/:course_id/folders", r.folderHandler.CreateCourseFolder)
+	// Folders (view: enrolled; manage: instructor)
+	protected.Get("/courses/:course_id/folders", enrolled, r.folderHandler.ListCourseFolders)
+	protected.Post("/courses/:course_id/folders", instructor, r.folderHandler.CreateCourseFolder)
 	protected.Get("/folders/:id", r.folderHandler.GetFolder)
 	protected.Put("/folders/:id", r.folderHandler.UpdateFolder)
 	protected.Delete("/folders/:id", r.folderHandler.DeleteFolder)
 	protected.Get("/folders/:folder_id/folders", r.folderHandler.ListSubfolders)
 
-	// Phase 4: SIS Import/Export
-	protected.Post("/accounts/:account_id/sis_imports", r.sisImportHandler.CreateSISImport)
-	protected.Get("/accounts/:account_id/sis_imports", r.sisImportHandler.ListSISImports)
-	protected.Get("/accounts/:account_id/sis_imports/:id", r.sisImportHandler.GetSISImport)
-	protected.Get("/accounts/:account_id/sis_imports/:id/errors", r.sisImportHandler.GetSISImportErrors)
-	protected.Get("/accounts/:account_id/sis_exports/users.csv", r.sisImportHandler.ExportUsersCSV)
-	protected.Get("/accounts/:account_id/sis_exports/courses.csv", r.sisImportHandler.ExportCoursesCSV)
-	protected.Get("/accounts/:account_id/sis_exports/sections.csv", r.sisImportHandler.ExportSectionsCSV)
-	protected.Get("/accounts/:account_id/sis_exports/enrollments.csv", r.sisImportHandler.ExportEnrollmentsCSV)
+	// Phase 4: SIS Import/Export (admin only)
+	protected.Post("/accounts/:account_id/sis_imports", admin, r.sisImportHandler.CreateSISImport)
+	protected.Get("/accounts/:account_id/sis_imports", admin, r.sisImportHandler.ListSISImports)
+	protected.Get("/accounts/:account_id/sis_imports/:id", admin, r.sisImportHandler.GetSISImport)
+	protected.Get("/accounts/:account_id/sis_imports/:id/errors", admin, r.sisImportHandler.GetSISImportErrors)
+	protected.Get("/accounts/:account_id/sis_exports/users.csv", admin, r.sisImportHandler.ExportUsersCSV)
+	protected.Get("/accounts/:account_id/sis_exports/courses.csv", admin, r.sisImportHandler.ExportCoursesCSV)
+	protected.Get("/accounts/:account_id/sis_exports/sections.csv", admin, r.sisImportHandler.ExportSectionsCSV)
+	protected.Get("/accounts/:account_id/sis_exports/enrollments.csv", admin, r.sisImportHandler.ExportEnrollmentsCSV)
 
-	// Phase 5: Quizzes
-	protected.Get("/courses/:course_id/quizzes", r.quizHandler.ListQuizzes)
-	protected.Post("/courses/:course_id/quizzes", r.quizHandler.CreateQuiz)
-	protected.Get("/courses/:course_id/quizzes/:id", r.quizHandler.GetQuiz)
-	protected.Put("/courses/:course_id/quizzes/:id", r.quizHandler.UpdateQuiz)
-	protected.Delete("/courses/:course_id/quizzes/:id", r.quizHandler.DeleteQuiz)
+	// Phase 5: Quizzes (view: enrolled; manage: instructor; take: enrolled)
+	protected.Get("/courses/:course_id/quizzes", enrolled, r.quizHandler.ListQuizzes)
+	protected.Post("/courses/:course_id/quizzes", instructor, r.quizHandler.CreateQuiz)
+	protected.Get("/courses/:course_id/quizzes/:id", enrolled, r.quizHandler.GetQuiz)
+	protected.Put("/courses/:course_id/quizzes/:id", instructor, r.quizHandler.UpdateQuiz)
+	protected.Delete("/courses/:course_id/quizzes/:id", instructor, r.quizHandler.DeleteQuiz)
 
-	// Quiz Questions
-	protected.Get("/courses/:course_id/quizzes/:quiz_id/questions", r.quizQuestionHandler.ListQuestions)
-	protected.Post("/courses/:course_id/quizzes/:quiz_id/questions", r.quizQuestionHandler.CreateQuestion)
-	protected.Get("/courses/:course_id/quizzes/:quiz_id/questions/:question_id", r.quizQuestionHandler.GetQuestion)
-	protected.Put("/courses/:course_id/quizzes/:quiz_id/questions/:question_id", r.quizQuestionHandler.UpdateQuestion)
-	protected.Delete("/courses/:course_id/quizzes/:quiz_id/questions/:question_id", r.quizQuestionHandler.DeleteQuestion)
+	// Quiz Questions (view: enrolled; manage: instructor)
+	protected.Get("/courses/:course_id/quizzes/:quiz_id/questions", enrolled, r.quizQuestionHandler.ListQuestions)
+	protected.Post("/courses/:course_id/quizzes/:quiz_id/questions", instructor, r.quizQuestionHandler.CreateQuestion)
+	protected.Get("/courses/:course_id/quizzes/:quiz_id/questions/:question_id", enrolled, r.quizQuestionHandler.GetQuestion)
+	protected.Put("/courses/:course_id/quizzes/:quiz_id/questions/:question_id", instructor, r.quizQuestionHandler.UpdateQuestion)
+	protected.Delete("/courses/:course_id/quizzes/:quiz_id/questions/:question_id", instructor, r.quizQuestionHandler.DeleteQuestion)
 
-	// Quiz Submissions
-	protected.Post("/courses/:course_id/quizzes/:quiz_id/submissions", r.quizSubmissionHandler.StartSubmission)
-	protected.Get("/courses/:course_id/quizzes/:quiz_id/submissions", r.quizSubmissionHandler.ListSubmissions)
-	protected.Get("/courses/:course_id/quizzes/:quiz_id/submissions/:submission_id", r.quizSubmissionHandler.GetSubmission)
-	protected.Put("/courses/:course_id/quizzes/:quiz_id/submissions/:submission_id/questions/:question_id", r.quizSubmissionHandler.AnswerQuestion)
-	protected.Post("/courses/:course_id/quizzes/:quiz_id/submissions/:submission_id/complete", r.quizSubmissionHandler.CompleteSubmission)
+	// Quiz Submissions (take: enrolled; view: enrolled)
+	protected.Post("/courses/:course_id/quizzes/:quiz_id/submissions", enrolled, r.quizSubmissionHandler.StartSubmission)
+	protected.Get("/courses/:course_id/quizzes/:quiz_id/submissions", enrolled, r.quizSubmissionHandler.ListSubmissions)
+	protected.Get("/courses/:course_id/quizzes/:quiz_id/submissions/:submission_id", enrolled, r.quizSubmissionHandler.GetSubmission)
+	protected.Put("/courses/:course_id/quizzes/:quiz_id/submissions/:submission_id/questions/:question_id", enrolled, r.quizSubmissionHandler.AnswerQuestion)
+	protected.Post("/courses/:course_id/quizzes/:quiz_id/submissions/:submission_id/complete", enrolled, r.quizSubmissionHandler.CompleteSubmission)
 
-	// Phase 5: Rubrics
-	protected.Get("/courses/:course_id/rubrics", r.rubricHandler.ListCourseRubrics)
-	protected.Post("/courses/:course_id/rubrics", r.rubricHandler.CreateCourseRubric)
-	protected.Get("/courses/:course_id/rubrics/:rubric_id", r.rubricHandler.GetRubric)
-	protected.Put("/courses/:course_id/rubrics/:rubric_id", r.rubricHandler.UpdateRubric)
-	protected.Delete("/courses/:course_id/rubrics/:rubric_id", r.rubricHandler.DeleteRubric)
-	protected.Post("/courses/:course_id/rubrics/:rubric_id/associations", r.rubricHandler.AssociateRubric)
+	// Phase 5: Rubrics (view: enrolled; manage: instructor)
+	protected.Get("/courses/:course_id/rubrics", enrolled, r.rubricHandler.ListCourseRubrics)
+	protected.Post("/courses/:course_id/rubrics", instructor, r.rubricHandler.CreateCourseRubric)
+	protected.Get("/courses/:course_id/rubrics/:rubric_id", enrolled, r.rubricHandler.GetRubric)
+	protected.Put("/courses/:course_id/rubrics/:rubric_id", instructor, r.rubricHandler.UpdateRubric)
+	protected.Delete("/courses/:course_id/rubrics/:rubric_id", instructor, r.rubricHandler.DeleteRubric)
+	protected.Post("/courses/:course_id/rubrics/:rubric_id/associations", instructor, r.rubricHandler.AssociateRubric)
 
-	// Rubric Assessments
-	protected.Get("/courses/:course_id/rubric_associations/:association_id/rubric_assessments", r.rubricAssessmentHandler.ListAssessments)
-	protected.Post("/courses/:course_id/rubric_associations/:association_id/rubric_assessments", r.rubricAssessmentHandler.CreateAssessment)
-	protected.Get("/courses/:course_id/rubric_associations/:association_id/rubric_assessments/:assessment_id", r.rubricAssessmentHandler.GetAssessment)
-	protected.Put("/courses/:course_id/rubric_associations/:association_id/rubric_assessments/:assessment_id", r.rubricAssessmentHandler.UpdateAssessment)
+	// Rubric Assessments (view: enrolled; manage: instructor)
+	protected.Get("/courses/:course_id/rubric_associations/:association_id/rubric_assessments", enrolled, r.rubricAssessmentHandler.ListAssessments)
+	protected.Post("/courses/:course_id/rubric_associations/:association_id/rubric_assessments", instructor, r.rubricAssessmentHandler.CreateAssessment)
+	protected.Get("/courses/:course_id/rubric_associations/:association_id/rubric_assessments/:assessment_id", enrolled, r.rubricAssessmentHandler.GetAssessment)
+	protected.Put("/courses/:course_id/rubric_associations/:association_id/rubric_assessments/:assessment_id", instructor, r.rubricAssessmentHandler.UpdateAssessment)
 
-	// Phase 5: Grading Periods
-	protected.Get("/accounts/:account_id/grading_period_groups", r.gradingPeriodHandler.ListGroups)
-	protected.Post("/accounts/:account_id/grading_period_groups", r.gradingPeriodHandler.CreateGroup)
-	protected.Get("/accounts/:account_id/grading_period_groups/:group_id", r.gradingPeriodHandler.GetGroup)
-	protected.Put("/accounts/:account_id/grading_period_groups/:group_id", r.gradingPeriodHandler.UpdateGroup)
-	protected.Delete("/accounts/:account_id/grading_period_groups/:group_id", r.gradingPeriodHandler.DeleteGroup)
-	protected.Get("/accounts/:account_id/grading_period_groups/:group_id/grading_periods", r.gradingPeriodHandler.ListPeriods)
-	protected.Post("/accounts/:account_id/grading_period_groups/:group_id/grading_periods", r.gradingPeriodHandler.CreatePeriod)
-	protected.Get("/accounts/:account_id/grading_period_groups/:group_id/grading_periods/:period_id", r.gradingPeriodHandler.GetPeriod)
-	protected.Put("/accounts/:account_id/grading_period_groups/:group_id/grading_periods/:period_id", r.gradingPeriodHandler.UpdatePeriod)
-	protected.Delete("/accounts/:account_id/grading_period_groups/:group_id/grading_periods/:period_id", r.gradingPeriodHandler.DeletePeriod)
+	// Phase 5: Grading Periods (admin only)
+	protected.Get("/accounts/:account_id/grading_period_groups", admin, r.gradingPeriodHandler.ListGroups)
+	protected.Post("/accounts/:account_id/grading_period_groups", admin, r.gradingPeriodHandler.CreateGroup)
+	protected.Get("/accounts/:account_id/grading_period_groups/:group_id", admin, r.gradingPeriodHandler.GetGroup)
+	protected.Put("/accounts/:account_id/grading_period_groups/:group_id", admin, r.gradingPeriodHandler.UpdateGroup)
+	protected.Delete("/accounts/:account_id/grading_period_groups/:group_id", admin, r.gradingPeriodHandler.DeleteGroup)
+	protected.Get("/accounts/:account_id/grading_period_groups/:group_id/grading_periods", admin, r.gradingPeriodHandler.ListPeriods)
+	protected.Post("/accounts/:account_id/grading_period_groups/:group_id/grading_periods", admin, r.gradingPeriodHandler.CreatePeriod)
+	protected.Get("/accounts/:account_id/grading_period_groups/:group_id/grading_periods/:period_id", admin, r.gradingPeriodHandler.GetPeriod)
+	protected.Put("/accounts/:account_id/grading_period_groups/:group_id/grading_periods/:period_id", admin, r.gradingPeriodHandler.UpdatePeriod)
+	protected.Delete("/accounts/:account_id/grading_period_groups/:group_id/grading_periods/:period_id", admin, r.gradingPeriodHandler.DeletePeriod)
 
-	// Phase 5: Assignment Overrides
-	protected.Get("/courses/:course_id/assignments/:assignment_id/overrides", r.assignmentOverrideHandler.ListOverrides)
-	protected.Post("/courses/:course_id/assignments/:assignment_id/overrides", r.assignmentOverrideHandler.CreateOverride)
-	protected.Get("/courses/:course_id/assignments/:assignment_id/overrides/:override_id", r.assignmentOverrideHandler.GetOverride)
-	protected.Put("/courses/:course_id/assignments/:assignment_id/overrides/:override_id", r.assignmentOverrideHandler.UpdateOverride)
-	protected.Delete("/courses/:course_id/assignments/:assignment_id/overrides/:override_id", r.assignmentOverrideHandler.DeleteOverride)
+	// Phase 5: Assignment Overrides (instructor only)
+	protected.Get("/courses/:course_id/assignments/:assignment_id/overrides", instructor, r.assignmentOverrideHandler.ListOverrides)
+	protected.Post("/courses/:course_id/assignments/:assignment_id/overrides", instructor, r.assignmentOverrideHandler.CreateOverride)
+	protected.Get("/courses/:course_id/assignments/:assignment_id/overrides/:override_id", instructor, r.assignmentOverrideHandler.GetOverride)
+	protected.Put("/courses/:course_id/assignments/:assignment_id/overrides/:override_id", instructor, r.assignmentOverrideHandler.UpdateOverride)
+	protected.Delete("/courses/:course_id/assignments/:assignment_id/overrides/:override_id", instructor, r.assignmentOverrideHandler.DeleteOverride)
 
-	// Phase 5: Late Policy
-	protected.Get("/courses/:course_id/late_policy", r.latePolicyHandler.GetLatePolicy)
-	protected.Post("/courses/:course_id/late_policy", r.latePolicyHandler.CreateLatePolicy)
-	protected.Put("/courses/:course_id/late_policy", r.latePolicyHandler.UpdateLatePolicy)
-	protected.Delete("/courses/:course_id/late_policy", r.latePolicyHandler.DeleteLatePolicy)
+	// Phase 5: Late Policy (instructor only)
+	protected.Get("/courses/:course_id/late_policy", instructor, r.latePolicyHandler.GetLatePolicy)
+	protected.Post("/courses/:course_id/late_policy", instructor, r.latePolicyHandler.CreateLatePolicy)
+	protected.Put("/courses/:course_id/late_policy", instructor, r.latePolicyHandler.UpdateLatePolicy)
+	protected.Delete("/courses/:course_id/late_policy", instructor, r.latePolicyHandler.DeleteLatePolicy)
 
-	// Phase 6: Calendar Events
+	// Phase 6: Calendar Events (any authenticated user)
 	protected.Get("/calendar_events", r.calendarEventHandler.ListEvents)
 	protected.Get("/calendar_events.ics", r.calendarEventHandler.ExportAsICal)
 	protected.Post("/calendar_events", r.calendarEventHandler.CreateEvent)
 	protected.Get("/calendar_events/:id", r.calendarEventHandler.GetEvent)
 	protected.Put("/calendar_events/:id", r.calendarEventHandler.UpdateEvent)
 	protected.Delete("/calendar_events/:id", r.calendarEventHandler.DeleteEvent)
-	protected.Get("/courses/:course_id/calendar_events", r.calendarEventHandler.ListEvents)
+	protected.Get("/courses/:course_id/calendar_events", enrolled, r.calendarEventHandler.ListEvents)
 
-	// Phase 6: Conversations
+	// Phase 6: Conversations (any authenticated user)
 	protected.Get("/conversations", r.conversationHandler.ListConversations)
 	protected.Post("/conversations", r.conversationHandler.CreateConversation)
 	protected.Get("/conversations/:id", r.conversationHandler.GetConversation)
@@ -420,41 +482,41 @@ func (r *Router) Register(app *fiber.App) {
 	protected.Post("/conversations/:id/messages", r.conversationHandler.CreateMessage)
 	protected.Put("/conversations/:id/mark_as_read", r.conversationHandler.MarkAsRead)
 
-	// Phase 6: Notifications
+	// Phase 6: Notifications (any authenticated user)
 	protected.Get("/notifications", r.notificationHandler.ListNotifications)
 	protected.Put("/notifications/mark_all_as_read", r.notificationHandler.MarkAllAsRead)
 	protected.Put("/notifications/:id/mark_as_read", r.notificationHandler.MarkAsRead)
 	protected.Get("/users/self/notification_preferences", r.notificationHandler.GetPreferences)
 	protected.Put("/users/self/notification_preferences", r.notificationHandler.UpdatePreferences)
 
-	// Phase 7: Content Migrations
-	protected.Get("/courses/:course_id/content_migrations", r.contentMigrationHandler.ListMigrations)
-	protected.Post("/courses/:course_id/content_migrations", r.contentMigrationHandler.CreateMigration)
-	protected.Get("/courses/:course_id/content_migrations/:id", r.contentMigrationHandler.GetMigration)
-	protected.Put("/courses/:course_id/content_migrations/:id", r.contentMigrationHandler.UpdateMigration)
+	// Phase 7: Content Migrations (instructor only)
+	protected.Get("/courses/:course_id/content_migrations", instructor, r.contentMigrationHandler.ListMigrations)
+	protected.Post("/courses/:course_id/content_migrations", instructor, r.contentMigrationHandler.CreateMigration)
+	protected.Get("/courses/:course_id/content_migrations/:id", instructor, r.contentMigrationHandler.GetMigration)
+	protected.Put("/courses/:course_id/content_migrations/:id", instructor, r.contentMigrationHandler.UpdateMigration)
 
-	// Phase 7: Learning Outcomes
-	protected.Get("/courses/:course_id/outcome_groups", r.learningOutcomeHandler.ListGroups)
-	protected.Post("/courses/:course_id/outcome_groups", r.learningOutcomeHandler.CreateGroup)
-	protected.Get("/courses/:course_id/outcome_groups/:group_id", r.learningOutcomeHandler.GetGroup)
-	protected.Put("/courses/:course_id/outcome_groups/:group_id", r.learningOutcomeHandler.UpdateGroup)
-	protected.Delete("/courses/:course_id/outcome_groups/:group_id", r.learningOutcomeHandler.DeleteGroup)
-	protected.Get("/courses/:course_id/outcome_groups/:group_id/outcomes", r.learningOutcomeHandler.ListOutcomes)
-	protected.Post("/courses/:course_id/outcome_groups/:group_id/outcomes", r.learningOutcomeHandler.CreateOutcome)
-	protected.Get("/courses/:course_id/outcomes/:outcome_id", r.learningOutcomeHandler.GetOutcome)
-	protected.Put("/courses/:course_id/outcomes/:outcome_id", r.learningOutcomeHandler.UpdateOutcome)
-	protected.Delete("/courses/:course_id/outcomes/:outcome_id", r.learningOutcomeHandler.DeleteOutcome)
-	protected.Get("/courses/:course_id/outcome_results", r.learningOutcomeHandler.ListResults)
-	protected.Post("/courses/:course_id/outcome_results", r.learningOutcomeHandler.CreateResult)
-	protected.Get("/courses/:course_id/outcome_rollups", r.learningOutcomeHandler.GetMasteryGradebook)
+	// Phase 7: Learning Outcomes (view: enrolled; manage: instructor)
+	protected.Get("/courses/:course_id/outcome_groups", enrolled, r.learningOutcomeHandler.ListGroups)
+	protected.Post("/courses/:course_id/outcome_groups", instructor, r.learningOutcomeHandler.CreateGroup)
+	protected.Get("/courses/:course_id/outcome_groups/:group_id", enrolled, r.learningOutcomeHandler.GetGroup)
+	protected.Put("/courses/:course_id/outcome_groups/:group_id", instructor, r.learningOutcomeHandler.UpdateGroup)
+	protected.Delete("/courses/:course_id/outcome_groups/:group_id", instructor, r.learningOutcomeHandler.DeleteGroup)
+	protected.Get("/courses/:course_id/outcome_groups/:group_id/outcomes", enrolled, r.learningOutcomeHandler.ListOutcomes)
+	protected.Post("/courses/:course_id/outcome_groups/:group_id/outcomes", instructor, r.learningOutcomeHandler.CreateOutcome)
+	protected.Get("/courses/:course_id/outcomes/:outcome_id", enrolled, r.learningOutcomeHandler.GetOutcome)
+	protected.Put("/courses/:course_id/outcomes/:outcome_id", instructor, r.learningOutcomeHandler.UpdateOutcome)
+	protected.Delete("/courses/:course_id/outcomes/:outcome_id", instructor, r.learningOutcomeHandler.DeleteOutcome)
+	protected.Get("/courses/:course_id/outcome_results", enrolled, r.learningOutcomeHandler.ListResults)
+	protected.Post("/courses/:course_id/outcome_results", instructor, r.learningOutcomeHandler.CreateResult)
+	protected.Get("/courses/:course_id/outcome_rollups", enrolled, r.learningOutcomeHandler.GetMasteryGradebook)
 
-	// Phase 7: SpeedGrader
-	protected.Get("/courses/:course_id/assignments/:assignment_id/speedgrader", r.speedGraderHandler.GetSpeedGraderData)
-	protected.Get("/courses/:course_id/assignments/:assignment_id/speedgrader/submissions/:user_id", r.speedGraderHandler.GetStudentSubmission)
+	// Phase 7: SpeedGrader (instructor only)
+	protected.Get("/courses/:course_id/assignments/:assignment_id/speedgrader", instructor, r.speedGraderHandler.GetSpeedGraderData)
+	protected.Get("/courses/:course_id/assignments/:assignment_id/speedgrader/submissions/:user_id", instructor, r.speedGraderHandler.GetStudentSubmission)
 
-	// Phase 8: Groups
-	protected.Get("/courses/:course_id/group_categories", r.groupHandler.ListGroupCategories)
-	protected.Post("/courses/:course_id/group_categories", r.groupHandler.CreateGroupCategory)
+	// Phase 8: Groups (view: enrolled; manage categories: instructor; join: enrolled)
+	protected.Get("/courses/:course_id/group_categories", enrolled, r.groupHandler.ListGroupCategories)
+	protected.Post("/courses/:course_id/group_categories", instructor, r.groupHandler.CreateGroupCategory)
 	protected.Get("/group_categories/:id", r.groupHandler.GetGroupCategory)
 	protected.Put("/group_categories/:id", r.groupHandler.UpdateGroupCategory)
 	protected.Delete("/group_categories/:id", r.groupHandler.DeleteGroupCategory)
@@ -469,41 +531,41 @@ func (r *Router) Register(app *fiber.App) {
 	protected.Delete("/groups/:group_id/memberships/:membership_id", r.groupHandler.DeleteGroupMembership)
 	protected.Get("/users/self/groups", r.groupHandler.ListUserGroups)
 
-	// Phase 8: Blueprint Courses
-	protected.Get("/courses/:course_id/blueprint_templates", r.blueprintHandler.ListTemplates)
-	protected.Post("/courses/:course_id/blueprint_templates", r.blueprintHandler.CreateTemplate)
-	protected.Get("/courses/:course_id/blueprint_templates/default", r.blueprintHandler.GetDefaultTemplate)
-	protected.Put("/courses/:course_id/blueprint_templates/default", r.blueprintHandler.UpdateDefaultTemplate)
-	protected.Get("/courses/:course_id/blueprint_templates/default/associated_courses", r.blueprintHandler.GetAssociatedCourses)
-	protected.Put("/courses/:course_id/blueprint_templates/default/associated_courses", r.blueprintHandler.UpdateAssociations)
-	protected.Get("/courses/:course_id/blueprint_templates/default/migrations", r.blueprintHandler.ListMigrations)
-	protected.Post("/courses/:course_id/blueprint_templates/default/migrations", r.blueprintHandler.CreateMigration)
-	protected.Get("/courses/:course_id/blueprint_templates/default/migrations/:migration_id", r.blueprintHandler.GetMigration)
-	protected.Get("/courses/:course_id/blueprint_templates/default/unsynced_changes", r.blueprintHandler.GetUnsyncedChanges)
-	protected.Get("/courses/:course_id/blueprint_subscriptions", r.blueprintHandler.ListSubscriptions)
-	protected.Get("/courses/:course_id/blueprint_subscriptions/:subscription_id/migrations", r.blueprintHandler.GetSubscriptionMigrations)
-	protected.Get("/courses/:course_id/blueprint_subscriptions/:subscription_id/migrations/:migration_id", r.blueprintHandler.GetSubscriptionMigration)
+	// Phase 8: Blueprint Courses (instructor only)
+	protected.Get("/courses/:course_id/blueprint_templates", instructor, r.blueprintHandler.ListTemplates)
+	protected.Post("/courses/:course_id/blueprint_templates", instructor, r.blueprintHandler.CreateTemplate)
+	protected.Get("/courses/:course_id/blueprint_templates/default", instructor, r.blueprintHandler.GetDefaultTemplate)
+	protected.Put("/courses/:course_id/blueprint_templates/default", instructor, r.blueprintHandler.UpdateDefaultTemplate)
+	protected.Get("/courses/:course_id/blueprint_templates/default/associated_courses", instructor, r.blueprintHandler.GetAssociatedCourses)
+	protected.Put("/courses/:course_id/blueprint_templates/default/associated_courses", instructor, r.blueprintHandler.UpdateAssociations)
+	protected.Get("/courses/:course_id/blueprint_templates/default/migrations", instructor, r.blueprintHandler.ListMigrations)
+	protected.Post("/courses/:course_id/blueprint_templates/default/migrations", instructor, r.blueprintHandler.CreateMigration)
+	protected.Get("/courses/:course_id/blueprint_templates/default/migrations/:migration_id", instructor, r.blueprintHandler.GetMigration)
+	protected.Get("/courses/:course_id/blueprint_templates/default/unsynced_changes", instructor, r.blueprintHandler.GetUnsyncedChanges)
+	protected.Get("/courses/:course_id/blueprint_subscriptions", enrolled, r.blueprintHandler.ListSubscriptions)
+	protected.Get("/courses/:course_id/blueprint_subscriptions/:subscription_id/migrations", enrolled, r.blueprintHandler.GetSubscriptionMigrations)
+	protected.Get("/courses/:course_id/blueprint_subscriptions/:subscription_id/migrations/:migration_id", enrolled, r.blueprintHandler.GetSubscriptionMigration)
 
-	// Phase 8: Course Pacing
-	protected.Get("/courses/:course_id/course_pacing", r.coursePaceHandler.ListCoursePaces)
-	protected.Post("/courses/:course_id/course_pacing", r.coursePaceHandler.CreateCoursePace)
-	protected.Get("/courses/:course_id/course_pacing/:id", r.coursePaceHandler.GetCoursePace)
-	protected.Put("/courses/:course_id/course_pacing/:id", r.coursePaceHandler.UpdateCoursePace)
-	protected.Delete("/courses/:course_id/course_pacing/:id", r.coursePaceHandler.DeleteCoursePace)
-	protected.Post("/courses/:course_id/course_pacing/:id/publish", r.coursePaceHandler.PublishCoursePace)
-	protected.Get("/courses/:course_id/course_pacing/:id/module_items", r.coursePaceHandler.GetPaceModuleItems)
-	protected.Put("/courses/:course_id/course_pacing/:id/module_items", r.coursePaceHandler.UpdatePaceModuleItems)
+	// Phase 8: Course Pacing (instructor only)
+	protected.Get("/courses/:course_id/course_pacing", instructor, r.coursePaceHandler.ListCoursePaces)
+	protected.Post("/courses/:course_id/course_pacing", instructor, r.coursePaceHandler.CreateCoursePace)
+	protected.Get("/courses/:course_id/course_pacing/:id", instructor, r.coursePaceHandler.GetCoursePace)
+	protected.Put("/courses/:course_id/course_pacing/:id", instructor, r.coursePaceHandler.UpdateCoursePace)
+	protected.Delete("/courses/:course_id/course_pacing/:id", instructor, r.coursePaceHandler.DeleteCoursePace)
+	protected.Post("/courses/:course_id/course_pacing/:id/publish", instructor, r.coursePaceHandler.PublishCoursePace)
+	protected.Get("/courses/:course_id/course_pacing/:id/module_items", instructor, r.coursePaceHandler.GetPaceModuleItems)
+	protected.Put("/courses/:course_id/course_pacing/:id/module_items", instructor, r.coursePaceHandler.UpdatePaceModuleItems)
 
-	// Phase 8B: Collaborations
-	protected.Get("/courses/:course_id/collaborations", r.collaborationHandler.ListCollaborations)
-	protected.Post("/courses/:course_id/collaborations", r.collaborationHandler.CreateCollaboration)
+	// Phase 8B: Collaborations (view: enrolled; manage: instructor)
+	protected.Get("/courses/:course_id/collaborations", enrolled, r.collaborationHandler.ListCollaborations)
+	protected.Post("/courses/:course_id/collaborations", instructor, r.collaborationHandler.CreateCollaboration)
 	protected.Get("/collaborations/:id", r.collaborationHandler.GetCollaboration)
 	protected.Put("/collaborations/:id", r.collaborationHandler.UpdateCollaboration)
 	protected.Delete("/collaborations/:id", r.collaborationHandler.DeleteCollaboration)
 
-	// Phase 8B: Conferences
-	protected.Get("/courses/:course_id/conferences", r.conferenceHandler.ListConferences)
-	protected.Post("/courses/:course_id/conferences", r.conferenceHandler.CreateConference)
+	// Phase 8B: Conferences (view: enrolled; manage: instructor; join: enrolled)
+	protected.Get("/courses/:course_id/conferences", enrolled, r.conferenceHandler.ListConferences)
+	protected.Post("/courses/:course_id/conferences", instructor, r.conferenceHandler.CreateConference)
 	protected.Get("/conferences/:id", r.conferenceHandler.GetConference)
 	protected.Put("/conferences/:id", r.conferenceHandler.UpdateConference)
 	protected.Delete("/conferences/:id", r.conferenceHandler.DeleteConference)
@@ -512,32 +574,124 @@ func (r *Router) Register(app *fiber.App) {
 	protected.Get("/conferences/:id/recordings", r.conferenceHandler.GetRecordings)
 	protected.Get("/conferences/:id/participants", r.conferenceHandler.GetParticipants)
 
-	// Phase 8B: Analytics
-	protected.Get("/courses/:course_id/analytics/activity", r.analyticsHandler.GetCourseActivity)
-	protected.Get("/courses/:course_id/analytics/assignments", r.analyticsHandler.GetCourseAssignmentStats)
-	protected.Get("/courses/:course_id/analytics/student_summaries", r.analyticsHandler.GetStudentSummaries)
-	protected.Get("/courses/:course_id/analytics/users/:user_id/activity", r.analyticsHandler.GetStudentActivity)
-	protected.Get("/courses/:course_id/analytics/users/:user_id/assignments", r.analyticsHandler.GetStudentAssignments)
-	protected.Get("/accounts/:account_id/analytics/current/activity", r.analyticsHandler.GetDepartmentActivity)
-	protected.Get("/accounts/:account_id/analytics/current/grades", r.analyticsHandler.GetDepartmentGrades)
-	protected.Get("/accounts/:account_id/analytics/current/statistics", r.analyticsHandler.GetDepartmentStatistics)
+	// Phase 8B: Analytics (course: instructor; department: admin)
+	protected.Get("/courses/:course_id/analytics/activity", instructor, r.analyticsHandler.GetCourseActivity)
+	protected.Get("/courses/:course_id/analytics/assignments", instructor, r.analyticsHandler.GetCourseAssignmentStats)
+	protected.Get("/courses/:course_id/analytics/student_summaries", instructor, r.analyticsHandler.GetStudentSummaries)
+	protected.Get("/courses/:course_id/analytics/users/:user_id/activity", instructor, r.analyticsHandler.GetStudentActivity)
+	protected.Get("/courses/:course_id/analytics/users/:user_id/assignments", instructor, r.analyticsHandler.GetStudentAssignments)
+	protected.Get("/accounts/:account_id/analytics/current/activity", admin, r.analyticsHandler.GetDepartmentActivity)
+	protected.Get("/accounts/:account_id/analytics/current/grades", admin, r.analyticsHandler.GetDepartmentGrades)
+	protected.Get("/accounts/:account_id/analytics/current/statistics", admin, r.analyticsHandler.GetDepartmentStatistics)
 	protected.Post("/page_views", r.analyticsHandler.CreatePageView)
 	protected.Get("/users/self/page_views", r.analyticsHandler.ListUserPageViews)
 
-	// Phase 8B: Observer/Parent Role
-	protected.Post("/users/:user_id/observees", r.observerHandler.LinkObservee)
-	protected.Delete("/users/:user_id/observees/:observee_id", r.observerHandler.UnlinkObservee)
-	protected.Get("/users/:user_id/observees", r.observerHandler.ListObservees)
-	protected.Get("/users/:user_id/observees/:observee_id/courses", r.observerHandler.GetObserveeCourses)
+	// Phase 8B: Observer/Parent Role (self or admin)
+	protected.Post("/users/:user_id/observees", selfOrAdmin, r.observerHandler.LinkObservee)
+	protected.Delete("/users/:user_id/observees/:observee_id", selfOrAdmin, r.observerHandler.UnlinkObservee)
+	protected.Get("/users/:user_id/observees", selfOrAdmin, r.observerHandler.ListObservees)
+	protected.Get("/users/:user_id/observees/:observee_id/courses", selfOrAdmin, r.observerHandler.GetObserveeCourses)
 
-	// Phase 8C: GraphQL
+	// Phase 8C: GraphQL (any authenticated user)
 	protected.Post("/graphql", r.graphqlHandler.HandleQuery)
 
-	// Phase 8C: Authentication Providers
-	protected.Get("/accounts/:account_id/authentication_providers", r.authProviderHandler.ListProviders)
-	protected.Post("/accounts/:account_id/authentication_providers", r.authProviderHandler.CreateProvider)
-	protected.Get("/accounts/:account_id/authentication_providers/:id", r.authProviderHandler.GetProvider)
-	protected.Put("/accounts/:account_id/authentication_providers/:id", r.authProviderHandler.UpdateProvider)
-	protected.Delete("/accounts/:account_id/authentication_providers/:id", r.authProviderHandler.DeleteProvider)
-	protected.Post("/accounts/:account_id/authentication_providers/:id/test", r.authProviderHandler.TestConnection)
+	// Phase 8C: Authentication Providers (admin only)
+	protected.Get("/accounts/:account_id/authentication_providers", admin, r.authProviderHandler.ListProviders)
+	protected.Post("/accounts/:account_id/authentication_providers", admin, r.authProviderHandler.CreateProvider)
+	protected.Get("/accounts/:account_id/authentication_providers/:id", admin, r.authProviderHandler.GetProvider)
+	protected.Put("/accounts/:account_id/authentication_providers/:id", admin, r.authProviderHandler.UpdateProvider)
+	protected.Delete("/accounts/:account_id/authentication_providers/:id", admin, r.authProviderHandler.DeleteProvider)
+	protected.Post("/accounts/:account_id/authentication_providers/:id/test", admin, r.authProviderHandler.TestConnection)
+
+	// Phase 9: Discussion V2 (enhanced with read/unread, user profiles, edit history)
+	protected.Get("/courses/:course_id/discussion_topics/:topic_id/view_v2", enrolled, r.discussionV2Handler.GetFullViewV2)
+	protected.Post("/courses/:course_id/discussion_topics/:topic_id/entries/:entry_id/read", enrolled, r.discussionV2Handler.MarkEntryRead)
+	protected.Post("/courses/:course_id/discussion_topics/:topic_id/mark_all_read", enrolled, r.discussionV2Handler.MarkTopicRead)
+	protected.Get("/courses/:course_id/discussion_topics/:topic_id/unread_count", enrolled, r.discussionV2Handler.GetUnreadCount)
+	protected.Put("/courses/:course_id/discussion_topics/:topic_id/subscription", enrolled, r.discussionV2Handler.ToggleSubscription)
+	protected.Get("/courses/:course_id/discussion_topics/:topic_id/entries/:entry_id/versions", enrolled, r.discussionV2Handler.GetEntryVersions)
+	protected.Put("/courses/:course_id/discussion_topics/:topic_id/entries/:entry_id/v2", enrolled, r.discussionV2Handler.UpdateEntryV2)
+
+	// Phase 9: Content Import (IMSCC/Common Cartridge)
+	protected.Post("/courses/:course_id/content_imports", instructor, r.contentImportHandler.ImportPackage)
+
+	// Phase 9: Batch Operations (instructor/admin)
+	protected.Post("/courses/clone", admin, r.batchHandler.CloneCourse)
+	protected.Post("/courses/:course_id/date_shift", instructor, r.batchHandler.BulkDateShift)
+	protected.Post("/conversations/bulk", r.batchHandler.BulkSendMessage)
+	protected.Post("/courses/:course_id/enrollments/bulk", instructor, r.batchHandler.BulkEnrollUsers)
+	protected.Post("/courses/:course_id/assignments/bulk_update_dates", instructor, r.batchHandler.BulkUpdateAssignmentDates)
+
+	// Phase 10: Announcements (view: enrolled; manage: instructor; global: admin)
+	protected.Get("/courses/:course_id/announcements", enrolled, r.announcementHandler.ListCourseAnnouncements)
+	protected.Post("/courses/:course_id/announcements", instructor, r.announcementHandler.CreateCourseAnnouncement)
+	protected.Get("/announcements/:id", r.announcementHandler.GetAnnouncement)
+	protected.Put("/announcements/:id", r.announcementHandler.UpdateAnnouncement)
+	protected.Delete("/announcements/:id", r.announcementHandler.DeleteAnnouncement)
+	protected.Post("/announcements/:id/read", r.announcementHandler.MarkAsRead)
+	protected.Post("/announcements/:id/acknowledge", r.announcementHandler.AcknowledgeAnnouncement)
+	protected.Get("/announcements/:id/read_receipts", instructor, r.announcementHandler.GetReadReceipts)
+	protected.Get("/accounts/:account_id/announcements", r.announcementHandler.ListAccountAnnouncements)
+	protected.Post("/accounts/:account_id/announcements", admin, r.announcementHandler.CreateAccountAnnouncement)
+
+	// Phase 10: Enrollment Terms (admin only)
+	protected.Get("/accounts/:account_id/terms", admin, r.enrollmentTermHandler.ListTerms)
+	protected.Post("/accounts/:account_id/terms", admin, r.enrollmentTermHandler.CreateTerm)
+	protected.Get("/accounts/:account_id/terms/current", admin, r.enrollmentTermHandler.GetCurrentTerm)
+	protected.Get("/accounts/:account_id/terms/:id", admin, r.enrollmentTermHandler.GetTerm)
+	protected.Put("/accounts/:account_id/terms/:id", admin, r.enrollmentTermHandler.UpdateTerm)
+	protected.Delete("/accounts/:account_id/terms/:id", admin, r.enrollmentTermHandler.DeleteTerm)
+
+	// Phase 10: Syllabus (enrolled)
+	protected.Get("/courses/:course_id/syllabus", enrolled, r.syllabusHandler.GetSyllabus)
+
+	// Phase 10B: Notification Delivery (self or admin)
+	protected.Get("/users/self/notification_deliveries", r.notificationDeliveryHandler.ListDeliveries)
+	protected.Get("/admin/notification_stats", admin, r.notificationDeliveryHandler.GetDeliveryStats)
+	protected.Post("/admin/notification_deliveries/retry", admin, r.notificationDeliveryHandler.RetryFailedDeliveries)
+	protected.Get("/users/self/communication_channels", r.notificationDeliveryHandler.ListChannels)
+	protected.Post("/users/self/communication_channels", r.notificationDeliveryHandler.CreateChannel)
+	protected.Delete("/users/self/communication_channels/:id", r.notificationDeliveryHandler.DeleteChannel)
+
+	// Phase 10B: Audit Logs (course: instructor; account: admin)
+	protected.Get("/courses/:course_id/audit_log", instructor, r.auditHandler.GetCourseAuditLog)
+	protected.Get("/courses/:course_id/grade_change_log", instructor, r.auditHandler.GetCourseGradeChangeLog)
+	protected.Get("/courses/:course_id/audit_log.csv", instructor, r.auditHandler.ExportCourseAuditLogCSV)
+	protected.Get("/courses/:course_id/grade_change_log.csv", instructor, r.auditHandler.ExportCourseGradeChangeLogCSV)
+	protected.Get("/accounts/:account_id/audit_log", admin, r.auditHandler.GetAccountAuditLog)
+	protected.Get("/admin/audit_log/summary", admin, r.auditHandler.GetAuditLogSummary)
+
+	// Phase 10C: Custom Roles (admin only, except course permissions)
+	protected.Get("/accounts/:account_id/roles", admin, r.customRoleHandler.ListRoles)
+	protected.Post("/accounts/:account_id/roles", admin, r.customRoleHandler.CreateRole)
+	protected.Get("/accounts/:account_id/roles/presets", admin, r.customRoleHandler.GetPresets)
+	protected.Get("/accounts/:account_id/roles/:id", admin, r.customRoleHandler.GetRole)
+	protected.Put("/accounts/:account_id/roles/:id", admin, r.customRoleHandler.UpdateRole)
+	protected.Delete("/accounts/:account_id/roles/:id", admin, r.customRoleHandler.DeleteRole)
+	protected.Post("/accounts/:account_id/roles/:id/clone", admin, r.customRoleHandler.CloneRole)
+	protected.Get("/accounts/:account_id/roles/:id/overrides", admin, r.customRoleHandler.ListOverrides)
+	protected.Put("/accounts/:account_id/roles/:id/overrides", admin, r.customRoleHandler.BulkSetOverrides)
+	protected.Get("/courses/:course_id/permissions", enrolled, r.customRoleHandler.GetCoursePermissions)
+
+	// Phase 10C: OneRoster (admin only)
+	protected.Get("/accounts/:account_id/oneroster_connections", admin, r.onerosterHandler.ListConnections)
+	protected.Post("/accounts/:account_id/oneroster_connections", admin, r.onerosterHandler.CreateConnection)
+	protected.Get("/accounts/:account_id/oneroster_connections/:id", admin, r.onerosterHandler.GetConnection)
+	protected.Put("/accounts/:account_id/oneroster_connections/:id", admin, r.onerosterHandler.UpdateConnection)
+	protected.Delete("/accounts/:account_id/oneroster_connections/:id", admin, r.onerosterHandler.DeleteConnection)
+	protected.Post("/accounts/:account_id/oneroster_connections/:id/test", admin, r.onerosterHandler.TestConnection)
+	protected.Post("/accounts/:account_id/oneroster_connections/:id/sync", admin, r.onerosterHandler.SyncFull)
+	protected.Post("/accounts/:account_id/oneroster_connections/:id/sync_incremental", admin, r.onerosterHandler.SyncIncremental)
+	protected.Get("/accounts/:account_id/oneroster_connections/:id/sync_logs", admin, r.onerosterHandler.GetSyncLogs)
+
+	// Phase 10C: Document Annotations (enrolled)
+	protected.Get("/courses/:course_id/assignments/:assignment_id/submissions/:user_id/annotations", enrolled, r.documentAnnotationHandler.ListAnnotations)
+	protected.Post("/courses/:course_id/assignments/:assignment_id/submissions/:user_id/annotations", enrolled, r.documentAnnotationHandler.CreateAnnotation)
+	protected.Get("/courses/:course_id/assignments/:assignment_id/submissions/:user_id/annotation_summary", enrolled, r.documentAnnotationHandler.GetAnnotationSummary)
+	protected.Get("/annotations/:id", r.documentAnnotationHandler.GetAnnotation)
+	protected.Put("/annotations/:id", r.documentAnnotationHandler.UpdateAnnotation)
+	protected.Delete("/annotations/:id", r.documentAnnotationHandler.DeleteAnnotation)
+	protected.Post("/annotations/:id/resolve", r.documentAnnotationHandler.ResolveAnnotation)
+	protected.Delete("/annotations/:id/resolve", r.documentAnnotationHandler.UnresolveAnnotation)
+	protected.Post("/annotations/:id/replies", r.documentAnnotationHandler.ReplyToAnnotation)
 }
