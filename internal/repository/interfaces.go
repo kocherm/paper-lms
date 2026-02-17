@@ -1,0 +1,479 @@
+package repository
+
+import (
+	"context"
+	"time"
+
+	"github.com/kocherm/paper-lms/internal/domain/models"
+)
+
+type PaginationParams struct {
+	Page    int
+	PerPage int
+}
+
+type PaginatedResult[T any] struct {
+	Items      []T
+	TotalCount int64
+	Page       int
+	PerPage    int
+}
+
+type UserRepository interface {
+	Create(ctx context.Context, user *models.User) error
+	FindByID(ctx context.Context, id uint) (*models.User, error)
+	FindByLoginID(ctx context.Context, loginID string) (*models.User, error)
+	FindByEmail(ctx context.Context, email string) (*models.User, error)
+	FindBySISUserID(ctx context.Context, sisUserID string) (*models.User, error)
+	Update(ctx context.Context, user *models.User) error
+	List(ctx context.Context, params PaginationParams) (*PaginatedResult[models.User], error)
+}
+
+type AccountRepository interface {
+	Create(ctx context.Context, account *models.Account) error
+	FindByID(ctx context.Context, id uint) (*models.Account, error)
+	List(ctx context.Context, params PaginationParams) (*PaginatedResult[models.Account], error)
+}
+
+type CourseRepository interface {
+	Create(ctx context.Context, course *models.Course) error
+	FindByID(ctx context.Context, id uint) (*models.Course, error)
+	FindBySISCourseID(ctx context.Context, sisCourseID string) (*models.Course, error)
+	Update(ctx context.Context, course *models.Course) error
+	Delete(ctx context.Context, id uint) error
+	List(ctx context.Context, params PaginationParams) (*PaginatedResult[models.Course], error)
+	ListByUserID(ctx context.Context, userID uint, params PaginationParams) (*PaginatedResult[models.Course], error)
+}
+
+type SectionRepository interface {
+	Create(ctx context.Context, section *models.CourseSection) error
+	FindByID(ctx context.Context, id uint) (*models.CourseSection, error)
+	FindBySISSectionID(ctx context.Context, sisSectionID string) (*models.CourseSection, error)
+	ListByCourseID(ctx context.Context, courseID uint, params PaginationParams) (*PaginatedResult[models.CourseSection], error)
+}
+
+type EnrollmentRepository interface {
+	Create(ctx context.Context, enrollment *models.Enrollment) error
+	FindByID(ctx context.Context, id uint) (*models.Enrollment, error)
+	Update(ctx context.Context, enrollment *models.Enrollment) error
+	ListByCourseID(ctx context.Context, courseID uint, params PaginationParams) (*PaginatedResult[models.Enrollment], error)
+	ListByUserID(ctx context.Context, userID uint) ([]models.Enrollment, error)
+	FindByUserAndCourse(ctx context.Context, userID, courseID uint) (*models.Enrollment, error)
+}
+
+type ModuleRepository interface {
+	Create(ctx context.Context, module *models.ContextModule) error
+	FindByID(ctx context.Context, id uint) (*models.ContextModule, error)
+	Update(ctx context.Context, module *models.ContextModule) error
+	Delete(ctx context.Context, id uint) error
+	ListByCourseID(ctx context.Context, courseID uint, params PaginationParams) (*PaginatedResult[models.ContextModule], error)
+}
+
+type ModuleItemRepository interface {
+	Create(ctx context.Context, item *models.ContentTag) error
+	FindByID(ctx context.Context, id uint) (*models.ContentTag, error)
+	ListByModuleID(ctx context.Context, moduleID uint, params PaginationParams) (*PaginatedResult[models.ContentTag], error)
+}
+
+type PageRepository interface {
+	Create(ctx context.Context, page *models.WikiPage) error
+	FindByID(ctx context.Context, id uint) (*models.WikiPage, error)
+	FindByCourseAndURL(ctx context.Context, courseID uint, url string) (*models.WikiPage, error)
+	Update(ctx context.Context, page *models.WikiPage) error
+	Delete(ctx context.Context, id uint) error
+	ListByCourseID(ctx context.Context, courseID uint, params PaginationParams) (*PaginatedResult[models.WikiPage], error)
+}
+
+type AssignmentRepository interface {
+	Create(ctx context.Context, assignment *models.Assignment) error
+	FindByID(ctx context.Context, id uint) (*models.Assignment, error)
+	Update(ctx context.Context, assignment *models.Assignment) error
+	Delete(ctx context.Context, id uint) error
+	ListByCourseID(ctx context.Context, courseID uint, params PaginationParams) (*PaginatedResult[models.Assignment], error)
+}
+
+type AssignmentGroupRepository interface {
+	Create(ctx context.Context, group *models.AssignmentGroup) error
+	FindByID(ctx context.Context, id uint) (*models.AssignmentGroup, error)
+	Update(ctx context.Context, group *models.AssignmentGroup) error
+	Delete(ctx context.Context, id uint) error
+	ListByCourseID(ctx context.Context, courseID uint, params PaginationParams) (*PaginatedResult[models.AssignmentGroup], error)
+}
+
+type SubmissionRepository interface {
+	Create(ctx context.Context, submission *models.Submission) error
+	FindByID(ctx context.Context, id uint) (*models.Submission, error)
+	FindByAssignmentAndUser(ctx context.Context, assignmentID, userID uint) (*models.Submission, error)
+	Update(ctx context.Context, submission *models.Submission) error
+	ListByAssignmentID(ctx context.Context, assignmentID uint, params PaginationParams) (*PaginatedResult[models.Submission], error)
+	ListByUserAndCourse(ctx context.Context, userID, courseID uint) ([]models.Submission, error)
+	BulkListByCourse(ctx context.Context, courseID uint, params PaginationParams) (*PaginatedResult[models.Submission], error)
+}
+
+type SubmissionCommentRepository interface {
+	Create(ctx context.Context, comment *models.SubmissionComment) error
+	ListBySubmissionID(ctx context.Context, submissionID uint) ([]models.SubmissionComment, error)
+}
+
+type GradingStandardRepository interface {
+	Create(ctx context.Context, standard *models.GradingStandard) error
+	FindByID(ctx context.Context, id uint) (*models.GradingStandard, error)
+	ListByCourse(ctx context.Context, courseID uint) ([]models.GradingStandard, error)
+}
+
+type DeveloperKeyRepository interface {
+	Create(ctx context.Context, key *models.DeveloperKey) error
+	FindByID(ctx context.Context, id uint) (*models.DeveloperKey, error)
+	FindByClientID(ctx context.Context, clientID string) (*models.DeveloperKey, error)
+	Update(ctx context.Context, key *models.DeveloperKey) error
+	Delete(ctx context.Context, id uint) error
+	List(ctx context.Context, accountID uint, params PaginationParams) (*PaginatedResult[models.DeveloperKey], error)
+}
+
+type AccessTokenRepository interface {
+	Create(ctx context.Context, token *models.AccessToken) error
+	FindByID(ctx context.Context, id uint) (*models.AccessToken, error)
+	FindByToken(ctx context.Context, tokenHash string) (*models.AccessToken, error)
+	FindByRefreshToken(ctx context.Context, refreshToken string) (*models.AccessToken, error)
+	Update(ctx context.Context, token *models.AccessToken) error
+	Delete(ctx context.Context, id uint) error
+	ListByUserID(ctx context.Context, userID uint, params PaginationParams) (*PaginatedResult[models.AccessToken], error)
+	DeleteExpired(ctx context.Context) error
+}
+
+type LTIToolConfigurationRepository interface {
+	Create(ctx context.Context, config *models.LTIToolConfiguration) error
+	FindByID(ctx context.Context, id uint) (*models.LTIToolConfiguration, error)
+	FindByDeveloperKeyID(ctx context.Context, devKeyID uint) (*models.LTIToolConfiguration, error)
+	Update(ctx context.Context, config *models.LTIToolConfiguration) error
+	Delete(ctx context.Context, id uint) error
+}
+
+type ContextExternalToolRepository interface {
+	Create(ctx context.Context, tool *models.ContextExternalTool) error
+	FindByID(ctx context.Context, id uint) (*models.ContextExternalTool, error)
+	Update(ctx context.Context, tool *models.ContextExternalTool) error
+	Delete(ctx context.Context, id uint) error
+	ListByContext(ctx context.Context, contextType string, contextID uint, params PaginationParams) (*PaginatedResult[models.ContextExternalTool], error)
+}
+
+type LTIResourceLinkRepository interface {
+	Create(ctx context.Context, link *models.LTIResourceLink) error
+	FindByID(ctx context.Context, id uint) (*models.LTIResourceLink, error)
+	FindByResourceLinkID(ctx context.Context, resourceLinkID string) (*models.LTIResourceLink, error)
+	Delete(ctx context.Context, id uint) error
+}
+
+type LTILineItemRepository interface {
+	Create(ctx context.Context, item *models.LTILineItem) error
+	FindByID(ctx context.Context, id uint) (*models.LTILineItem, error)
+	Update(ctx context.Context, item *models.LTILineItem) error
+	Delete(ctx context.Context, id uint) error
+	ListByCourse(ctx context.Context, courseID uint, params PaginationParams) (*PaginatedResult[models.LTILineItem], error)
+	FindByAssignmentID(ctx context.Context, assignmentID uint) (*models.LTILineItem, error)
+}
+
+type LTIResultRepository interface {
+	Create(ctx context.Context, result *models.LTIResult) error
+	FindByID(ctx context.Context, id uint) (*models.LTIResult, error)
+	Upsert(ctx context.Context, result *models.LTIResult) error // Create or update by line_item_id + user_id
+	ListByLineItem(ctx context.Context, lineItemID uint, params PaginationParams) (*PaginatedResult[models.LTIResult], error)
+}
+
+type NonceRepository interface {
+	Create(ctx context.Context, nonce *models.Nonce) error
+	Exists(ctx context.Context, value string) (bool, error)
+	DeleteExpired(ctx context.Context) error
+}
+
+// Phase 4: Discussions
+
+type DiscussionTopicRepository interface {
+	Create(ctx context.Context, topic *models.DiscussionTopic) error
+	FindByID(ctx context.Context, id uint) (*models.DiscussionTopic, error)
+	Update(ctx context.Context, topic *models.DiscussionTopic) error
+	Delete(ctx context.Context, id uint) error
+	ListByCourseID(ctx context.Context, courseID uint, params PaginationParams) (*PaginatedResult[models.DiscussionTopic], error)
+}
+
+type DiscussionEntryRepository interface {
+	Create(ctx context.Context, entry *models.DiscussionEntry) error
+	FindByID(ctx context.Context, id uint) (*models.DiscussionEntry, error)
+	Update(ctx context.Context, entry *models.DiscussionEntry) error
+	Delete(ctx context.Context, id uint) error
+	ListByTopicID(ctx context.Context, topicID uint, params PaginationParams) (*PaginatedResult[models.DiscussionEntry], error)
+	ListReplies(ctx context.Context, entryID uint, params PaginationParams) (*PaginatedResult[models.DiscussionEntry], error)
+	ListAllByTopicID(ctx context.Context, topicID uint) ([]models.DiscussionEntry, error)
+}
+
+type DiscussionEntryRatingRepository interface {
+	Upsert(ctx context.Context, rating *models.DiscussionEntryRating) error
+	Delete(ctx context.Context, entryID uint, userID uint) error
+}
+
+// Phase 4: Files
+
+type FolderRepository interface {
+	Create(ctx context.Context, folder *models.Folder) error
+	FindByID(ctx context.Context, id uint) (*models.Folder, error)
+	Update(ctx context.Context, folder *models.Folder) error
+	Delete(ctx context.Context, id uint) error
+	ListByContext(ctx context.Context, contextType string, contextID uint, parentFolderID *uint, params PaginationParams) (*PaginatedResult[models.Folder], error)
+	FindRootFolder(ctx context.Context, contextType string, contextID uint) (*models.Folder, error)
+}
+
+type AttachmentRepository interface {
+	Create(ctx context.Context, attachment *models.Attachment) error
+	FindByID(ctx context.Context, id uint) (*models.Attachment, error)
+	Update(ctx context.Context, attachment *models.Attachment) error
+	Delete(ctx context.Context, id uint) error
+	ListByContext(ctx context.Context, contextType string, contextID uint, params PaginationParams) (*PaginatedResult[models.Attachment], error)
+	ListByFolderID(ctx context.Context, folderID uint, params PaginationParams) (*PaginatedResult[models.Attachment], error)
+}
+
+// Phase 4: SIS Import/Export
+
+type SISBatchRepository interface {
+	Create(ctx context.Context, batch *models.SISBatch) error
+	FindByID(ctx context.Context, id uint) (*models.SISBatch, error)
+	Update(ctx context.Context, batch *models.SISBatch) error
+	ListByAccountID(ctx context.Context, accountID uint, params PaginationParams) (*PaginatedResult[models.SISBatch], error)
+}
+
+type SISBatchErrorRepository interface {
+	Create(ctx context.Context, batchError *models.SISBatchError) error
+	ListByBatchID(ctx context.Context, batchID uint) ([]models.SISBatchError, error)
+}
+
+// Phase 5: Quiz Engine
+
+type QuizRepository interface {
+	Create(ctx context.Context, quiz *models.Quiz) error
+	FindByID(ctx context.Context, id uint) (*models.Quiz, error)
+	Update(ctx context.Context, quiz *models.Quiz) error
+	Delete(ctx context.Context, id uint) error
+	ListByCourseID(ctx context.Context, courseID uint, params PaginationParams) (*PaginatedResult[models.Quiz], error)
+}
+
+type QuizQuestionRepository interface {
+	Create(ctx context.Context, question *models.QuizQuestion) error
+	FindByID(ctx context.Context, id uint) (*models.QuizQuestion, error)
+	Update(ctx context.Context, question *models.QuizQuestion) error
+	Delete(ctx context.Context, id uint) error
+	ListByQuizID(ctx context.Context, quizID uint, params PaginationParams) (*PaginatedResult[models.QuizQuestion], error)
+}
+
+type QuizSubmissionRepository interface {
+	Create(ctx context.Context, submission *models.QuizSubmission) error
+	FindByID(ctx context.Context, id uint) (*models.QuizSubmission, error)
+	Update(ctx context.Context, submission *models.QuizSubmission) error
+	FindByQuizAndUser(ctx context.Context, quizID, userID uint) (*models.QuizSubmission, error)
+	ListByQuizID(ctx context.Context, quizID uint, params PaginationParams) (*PaginatedResult[models.QuizSubmission], error)
+}
+
+type QuizSubmissionAnswerRepository interface {
+	Create(ctx context.Context, answer *models.QuizSubmissionAnswer) error
+	BulkCreate(ctx context.Context, answers []models.QuizSubmissionAnswer) error
+	FindByID(ctx context.Context, id uint) (*models.QuizSubmissionAnswer, error)
+	Update(ctx context.Context, answer *models.QuizSubmissionAnswer) error
+	ListBySubmissionID(ctx context.Context, submissionID uint) ([]models.QuizSubmissionAnswer, error)
+	FindBySubmissionAndQuestion(ctx context.Context, submissionID, questionID uint) (*models.QuizSubmissionAnswer, error)
+}
+
+// Phase 5: Rubrics
+
+type RubricRepository interface {
+	Create(ctx context.Context, rubric *models.Rubric) error
+	FindByID(ctx context.Context, id uint) (*models.Rubric, error)
+	Update(ctx context.Context, rubric *models.Rubric) error
+	Delete(ctx context.Context, id uint) error
+	ListByContext(ctx context.Context, contextType string, contextID uint, params PaginationParams) (*PaginatedResult[models.Rubric], error)
+}
+
+type RubricAssociationRepository interface {
+	Create(ctx context.Context, assoc *models.RubricAssociation) error
+	FindByID(ctx context.Context, id uint) (*models.RubricAssociation, error)
+	Update(ctx context.Context, assoc *models.RubricAssociation) error
+	Delete(ctx context.Context, id uint) error
+	FindByAssociation(ctx context.Context, associationID uint, associationType string) (*models.RubricAssociation, error)
+}
+
+type RubricAssessmentRepository interface {
+	Create(ctx context.Context, assessment *models.RubricAssessment) error
+	FindByID(ctx context.Context, id uint) (*models.RubricAssessment, error)
+	Update(ctx context.Context, assessment *models.RubricAssessment) error
+	Delete(ctx context.Context, id uint) error
+	FindByUserAndAssociation(ctx context.Context, userID, assessorID, rubricAssocID uint) (*models.RubricAssessment, error)
+	ListByAssociationID(ctx context.Context, rubricAssocID uint, params PaginationParams) (*PaginatedResult[models.RubricAssessment], error)
+}
+
+// Phase 5: Grading Periods
+
+type GradingPeriodGroupRepository interface {
+	Create(ctx context.Context, group *models.GradingPeriodGroup) error
+	FindByID(ctx context.Context, id uint) (*models.GradingPeriodGroup, error)
+	Update(ctx context.Context, group *models.GradingPeriodGroup) error
+	Delete(ctx context.Context, id uint) error
+	ListByAccountID(ctx context.Context, accountID uint, params PaginationParams) (*PaginatedResult[models.GradingPeriodGroup], error)
+}
+
+type GradingPeriodRepository interface {
+	Create(ctx context.Context, period *models.GradingPeriod) error
+	FindByID(ctx context.Context, id uint) (*models.GradingPeriod, error)
+	Update(ctx context.Context, period *models.GradingPeriod) error
+	Delete(ctx context.Context, id uint) error
+	ListByGroupID(ctx context.Context, groupID uint) ([]models.GradingPeriod, error)
+}
+
+// Phase 5: Assignment Overrides
+
+type AssignmentOverrideRepository interface {
+	Create(ctx context.Context, override *models.AssignmentOverride) error
+	FindByID(ctx context.Context, id uint) (*models.AssignmentOverride, error)
+	Update(ctx context.Context, override *models.AssignmentOverride) error
+	Delete(ctx context.Context, id uint) error
+	ListByAssignmentID(ctx context.Context, assignmentID uint) ([]models.AssignmentOverride, error)
+}
+
+type AssignmentOverrideStudentRepository interface {
+	Create(ctx context.Context, student *models.AssignmentOverrideStudent) error
+	Delete(ctx context.Context, overrideID, userID uint) error
+	ListByOverrideID(ctx context.Context, overrideID uint) ([]models.AssignmentOverrideStudent, error)
+	ListByUserAndAssignment(ctx context.Context, userID, assignmentID uint) ([]models.AssignmentOverrideStudent, error)
+}
+
+// Phase 5: Late Policy
+
+type LatePolicyRepository interface {
+	Create(ctx context.Context, policy *models.LatePolicy) error
+	FindByCourseID(ctx context.Context, courseID uint) (*models.LatePolicy, error)
+	Update(ctx context.Context, policy *models.LatePolicy) error
+	Delete(ctx context.Context, courseID uint) error
+}
+
+// Phase 6: Calendar
+
+type CalendarEventRepository interface {
+	Create(ctx context.Context, event *models.CalendarEvent) error
+	FindByID(ctx context.Context, id uint) (*models.CalendarEvent, error)
+	Update(ctx context.Context, event *models.CalendarEvent) error
+	Delete(ctx context.Context, id uint) error
+	ListByContext(ctx context.Context, contextType string, contextID uint, params PaginationParams) (*PaginatedResult[models.CalendarEvent], error)
+	ListByContextAndDateRange(ctx context.Context, contextType string, contextID uint, startAt, endAt time.Time) ([]models.CalendarEvent, error)
+}
+
+// Phase 6: Messaging
+
+type ConversationRepository interface {
+	Create(ctx context.Context, conversation *models.Conversation) error
+	FindByID(ctx context.Context, id uint) (*models.Conversation, error)
+	Update(ctx context.Context, conversation *models.Conversation) error
+	Delete(ctx context.Context, id uint) error
+	ListByUserID(ctx context.Context, userID uint, params PaginationParams) (*PaginatedResult[models.Conversation], error)
+}
+
+type ConversationParticipantRepository interface {
+	Create(ctx context.Context, participant *models.ConversationParticipant) error
+	FindByConversationAndUser(ctx context.Context, conversationID, userID uint) (*models.ConversationParticipant, error)
+	Update(ctx context.Context, participant *models.ConversationParticipant) error
+	Delete(ctx context.Context, conversationID, userID uint) error
+	ListByConversationID(ctx context.Context, conversationID uint) ([]models.ConversationParticipant, error)
+	ListByUserID(ctx context.Context, userID uint) ([]models.ConversationParticipant, error)
+}
+
+type ConversationMessageRepository interface {
+	Create(ctx context.Context, message *models.ConversationMessage) error
+	FindByID(ctx context.Context, id uint) (*models.ConversationMessage, error)
+	Update(ctx context.Context, message *models.ConversationMessage) error
+	Delete(ctx context.Context, id uint) error
+	ListByConversationID(ctx context.Context, conversationID uint, params PaginationParams) (*PaginatedResult[models.ConversationMessage], error)
+}
+
+// Phase 6: Notifications
+
+type NotificationPreferenceRepository interface {
+	Create(ctx context.Context, prefs *models.NotificationPreference) error
+	FindByUserID(ctx context.Context, userID uint) (*models.NotificationPreference, error)
+	Update(ctx context.Context, prefs *models.NotificationPreference) error
+	Delete(ctx context.Context, userID uint) error
+}
+
+type NotificationRepository interface {
+	Create(ctx context.Context, notification *models.Notification) error
+	FindByID(ctx context.Context, id uint) (*models.Notification, error)
+	Update(ctx context.Context, notification *models.Notification) error
+	Delete(ctx context.Context, id uint) error
+	ListByUserID(ctx context.Context, userID uint, params PaginationParams) (*PaginatedResult[models.Notification], error)
+	MarkAsRead(ctx context.Context, userID, notificationID uint) error
+	MarkAllAsRead(ctx context.Context, userID uint) error
+	ListUnreadByUserID(ctx context.Context, userID uint, params PaginationParams) (*PaginatedResult[models.Notification], error)
+}
+
+// Phase 7: Content Migration
+
+type ContentMigrationRepository interface {
+	Create(ctx context.Context, migration *models.ContentMigration) error
+	FindByID(ctx context.Context, id uint) (*models.ContentMigration, error)
+	Update(ctx context.Context, migration *models.ContentMigration) error
+	Delete(ctx context.Context, id uint) error
+	ListByCourseID(ctx context.Context, courseID uint, params PaginationParams) (*PaginatedResult[models.ContentMigration], error)
+}
+
+// Phase 7: Learning Outcomes
+
+type LearningOutcomeGroupRepository interface {
+	Create(ctx context.Context, group *models.LearningOutcomeGroup) error
+	FindByID(ctx context.Context, id uint) (*models.LearningOutcomeGroup, error)
+	Update(ctx context.Context, group *models.LearningOutcomeGroup) error
+	Delete(ctx context.Context, id uint) error
+	ListByContext(ctx context.Context, contextType string, contextID uint, params PaginationParams) (*PaginatedResult[models.LearningOutcomeGroup], error)
+	FindRootGroup(ctx context.Context, contextType string, contextID uint) (*models.LearningOutcomeGroup, error)
+}
+
+type LearningOutcomeRepository interface {
+	Create(ctx context.Context, outcome *models.LearningOutcome) error
+	FindByID(ctx context.Context, id uint) (*models.LearningOutcome, error)
+	Update(ctx context.Context, outcome *models.LearningOutcome) error
+	Delete(ctx context.Context, id uint) error
+	ListByGroupID(ctx context.Context, groupID uint, params PaginationParams) (*PaginatedResult[models.LearningOutcome], error)
+	ListByContext(ctx context.Context, contextType string, contextID uint, params PaginationParams) (*PaginatedResult[models.LearningOutcome], error)
+}
+
+type LearningOutcomeResultRepository interface {
+	Create(ctx context.Context, result *models.LearningOutcomeResult) error
+	FindByID(ctx context.Context, id uint) (*models.LearningOutcomeResult, error)
+	Update(ctx context.Context, result *models.LearningOutcomeResult) error
+	Upsert(ctx context.Context, result *models.LearningOutcomeResult) error
+	ListByOutcomeID(ctx context.Context, outcomeID uint, params PaginationParams) (*PaginatedResult[models.LearningOutcomeResult], error)
+	ListByUserAndContext(ctx context.Context, userID uint, contextType string, contextID uint) ([]models.LearningOutcomeResult, error)
+}
+
+// Phase 8: Blueprint Courses
+
+type BlueprintTemplateRepository interface {
+	Create(ctx context.Context, template *models.BlueprintTemplate) error
+	FindByID(ctx context.Context, id uint) (*models.BlueprintTemplate, error)
+	FindByCourseID(ctx context.Context, courseID uint) (*models.BlueprintTemplate, error)
+	Update(ctx context.Context, template *models.BlueprintTemplate) error
+	Delete(ctx context.Context, id uint) error
+	ListByCourseID(ctx context.Context, courseID uint, params PaginationParams) (*PaginatedResult[models.BlueprintTemplate], error)
+}
+
+type BlueprintSubscriptionRepository interface {
+	Create(ctx context.Context, subscription *models.BlueprintSubscription) error
+	FindByID(ctx context.Context, id uint) (*models.BlueprintSubscription, error)
+	FindByTemplateAndChild(ctx context.Context, templateID, childCourseID uint) (*models.BlueprintSubscription, error)
+	Update(ctx context.Context, subscription *models.BlueprintSubscription) error
+	Delete(ctx context.Context, id uint) error
+	ListByTemplateID(ctx context.Context, templateID uint, params PaginationParams) (*PaginatedResult[models.BlueprintSubscription], error)
+	ListByChildCourseID(ctx context.Context, childCourseID uint, params PaginationParams) (*PaginatedResult[models.BlueprintSubscription], error)
+}
+
+type BlueprintMigrationRepository interface {
+	Create(ctx context.Context, migration *models.BlueprintMigration) error
+	FindByID(ctx context.Context, id uint) (*models.BlueprintMigration, error)
+	Update(ctx context.Context, migration *models.BlueprintMigration) error
+	Delete(ctx context.Context, id uint) error
+	ListByTemplateID(ctx context.Context, templateID uint, params PaginationParams) (*PaginatedResult[models.BlueprintMigration], error)
+	ListBySubscriptionID(ctx context.Context, subscriptionID uint, params PaginationParams) (*PaginatedResult[models.BlueprintMigration], error)
+}

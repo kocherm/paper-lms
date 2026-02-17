@@ -1,0 +1,99 @@
+import React, { useState, useEffect, useRef } from 'react';
+
+const GradeInput = ({ value, pointsPossible, onSave }) => {
+  const [editing, setEditing] = useState(false);
+  const [inputValue, setInputValue] = useState(value ?? '');
+  const [saving, setSaving] = useState(false);
+  const [feedback, setFeedback] = useState(null); // 'success' | 'error'
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    setInputValue(value ?? '');
+  }, [value]);
+
+  useEffect(() => {
+    if (editing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editing]);
+
+  useEffect(() => {
+    if (feedback) {
+      const timer = setTimeout(() => setFeedback(null), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [feedback]);
+
+  const handleSave = async () => {
+    setEditing(false);
+    const numericValue = inputValue === '' ? null : parseFloat(inputValue);
+
+    // Skip save if value hasn't changed
+    if (numericValue === value || (numericValue === null && (value === null || value === undefined))) {
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await onSave(numericValue);
+      setFeedback('success');
+    } catch (err) {
+      setFeedback('error');
+      setInputValue(value ?? '');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleSave();
+    } else if (e.key === 'Escape') {
+      setEditing(false);
+      setInputValue(value ?? '');
+    }
+  };
+
+  const feedbackClasses = {
+    success: 'ring-2 ring-green-400 bg-green-50',
+    error: 'ring-2 ring-red-400 bg-red-50',
+  };
+
+  if (editing) {
+    return (
+      <div className="flex items-center space-x-1">
+        <input
+          ref={inputRef}
+          type="number"
+          step="0.01"
+          min="0"
+          max={pointsPossible}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onBlur={handleSave}
+          onKeyDown={handleKeyDown}
+          className="w-16 text-sm border border-blue-400 rounded px-1.5 py-0.5 text-center focus:ring-2 focus:ring-blue-500 focus:outline-none"
+        />
+        <span className="text-xs text-gray-400">/{pointsPossible}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`flex items-center space-x-1 cursor-pointer rounded px-1.5 py-0.5 transition-all duration-300 ${
+        feedback ? feedbackClasses[feedback] : 'hover:bg-gray-100'
+      }`}
+      onClick={() => !saving && setEditing(true)}
+      title="Click to edit grade"
+    >
+      <span className={`text-sm ${value !== null && value !== undefined ? 'font-medium' : 'text-gray-400'}`}>
+        {saving ? '...' : (value !== null && value !== undefined ? value : '-')}
+      </span>
+      <span className="text-xs text-gray-400">/{pointsPossible}</span>
+    </div>
+  );
+};
+
+export default GradeInput;

@@ -1,0 +1,19 @@
+# Binaries
+/main
+/server
+/paper-lms
+
+# Environment
+.env
+
+# Database
+*.db
+
+# Dependencies
+web/node_modules/
+
+# Build output
+web/dist/
+
+# OS files
+.DS_Store

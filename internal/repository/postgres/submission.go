@@ -1,0 +1,94 @@
+package postgres
+
+import (
+	"context"
+
+	"github.com/kocherm/paper-lms/internal/domain/models"
+	"github.com/kocherm/paper-lms/internal/repository"
+	"gorm.io/gorm"
+)
+
+type submissionRepo struct {
+	db *gorm.DB
+}
+
+func NewSubmissionRepository(db *gorm.DB) repository.SubmissionRepository {
+	return &submissionRepo{db: db}
+}
+
+func (r *submissionRepo) Create(ctx context.Context, submission *models.Submission) error {
+	return r.db.WithContext(ctx).Create(submission).Error
+}
+
+func (r *submissionRepo) FindByID(ctx context.Context, id uint) (*models.Submission, error) {
+	var submission models.Submission
+	if err := r.db.WithContext(ctx).First(&submission, id).Error; err != nil {
+		return nil, err
+	}
+	return &submission, nil
+}
+
+func (r *submissionRepo) FindByAssignmentAndUser(ctx context.Context, assignmentID, userID uint) (*models.Submission, error) {
+	var submission models.Submission
+	if err := r.db.WithContext(ctx).Where("assignment_id = ? AND user_id = ?", assignmentID, userID).First(&submission).Error; err != nil {
+		return nil, err
+	}
+	return &submission, nil
+}
+
+func (r *submissionRepo) Update(ctx context.Context, submission *models.Submission) error {
+	return r.db.WithContext(ctx).Save(submission).Error
+}
+
+func (r *submissionRepo) ListByAssignmentID(ctx context.Context, assignmentID uint, params repository.PaginationParams) (*repository.PaginatedResult[models.Submission], error) {
+	var submissions []models.Submission
+	var count int64
+
+	query := r.db.WithContext(ctx).Model(&models.Submission{}).Where("assignment_id = ?", assignmentID)
+	query.Count(&count)
+
+	offset := (params.Page - 1) * params.PerPage
+	if err := query.Offset(offset).Limit(params.PerPage).Order("id ASC").Find(&submissions).Error; err != nil {
+		return nil, err
+	}
+
+	return &repository.PaginatedResult[models.Submission]{
+		Items:      submissions,
+		TotalCount: count,
+		Page:       params.Page,
+		PerPage:    params.PerPage,
+	}, nil
+}
+
+func (r *submissionRepo) ListByUserAndCourse(ctx context.Context, userID, courseID uint) ([]models.Submission, error) {
+	var submissions []models.Submission
+
+	subQuery := r.db.Model(&models.Assignment{}).Select("id").Where("course_id = ? AND workflow_state != ?", courseID, "deleted")
+
+	if err := r.db.WithContext(ctx).Where("user_id = ? AND assignment_id IN (?)", userID, subQuery).Find(&submissions).Error; err != nil {
+		return nil, err
+	}
+	return submissions, nil
+}
+
+func (r *submissionRepo) BulkListByCourse(ctx context.Context, courseID uint, params repository.PaginationParams) (*repository.PaginatedResult[models.Submission], error) {
+	var submissions []models.Submission
+	var count int64
+
+	subQuery := r.db.Model(&models.Assignment{}).Select("id").Where("course_id = ? AND workflow_state != ?", courseID, "deleted")
+
+	query := r.db.WithContext(ctx).Model(&models.Submission{}).Where("assignment_id IN (?)", subQuery)
+	query.Count(&count)
+
+	offset := (params.Page - 1) * params.PerPage
+	if err := query.Offset(offset).Limit(params.PerPage).Order("id ASC").Find(&submissions).Error; err != nil {
+		return nil, err
+	}
+
+	return &repository.PaginatedResult[models.Submission]{
+		Items:      submissions,
+		TotalCount: count,
+		Page:       params.Page,
+		PerPage:    params.PerPage,
+	}, nil
+}
