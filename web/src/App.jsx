@@ -39,6 +39,17 @@ import AuditLogPage from './pages/AuditLogPage';
 import CustomRolesPage from './pages/CustomRolesPage';
 import OneRosterPage from './pages/OneRosterPage';
 import DocViewerPage from './pages/DocViewerPage';
+import LoginPageSSO from './pages/LoginPageSSO';
+import AccommodationsPage from './pages/AccommodationsPage';
+import AttendancePage from './pages/AttendancePage';
+import ParentalConsentPage from './pages/ParentalConsentPage';
+import PortfoliosPage from './pages/PortfoliosPage';
+import PortfolioEditorPage from './pages/PortfolioEditorPage';
+import PortfolioPublicPage from './pages/PortfolioPublicPage';
+import FERPAPage from './pages/FERPAPage';
+import ObserverDashboardPage from './pages/ObserverDashboardPage';
+import PublicPageView from './pages/PublicPageView';
+import CourseSettingsPage from './pages/CourseSettingsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useAuth } from './contexts/AuthContext';
 
@@ -56,7 +67,10 @@ const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={user ? <Navigate to="/" replace /> : <LoginPage />} />
+        <Route path="/login" element={user ? <Navigate to="/" replace /> : <LoginPageSSO />} />
+        <Route path="/consent/verify/:token" element={<ParentalConsentPage />} />
+        <Route path="/portfolios/public/:slug" element={<PortfolioPublicPage />} />
+        <Route path="/courses/:courseId/p/:slug" element={<PublicPageView />} />
         <Route
           path="/"
           element={
@@ -78,6 +92,14 @@ const App = () => {
           element={
             <ProtectedRoute>
               <CoursePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/courses/:courseId/settings"
+          element={
+            <ProtectedRoute>
+              <CourseSettingsPage />
             </ProtectedRoute>
           }
         />
@@ -366,6 +388,54 @@ const App = () => {
           element={
             <ProtectedRoute>
               <NotificationDeliveryPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/courses/:courseId/accommodations"
+          element={
+            <ProtectedRoute>
+              <AccommodationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/courses/:courseId/attendance"
+          element={
+            <ProtectedRoute>
+              <AttendancePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/portfolios"
+          element={
+            <ProtectedRoute>
+              <PortfoliosPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/portfolios/:portfolioId/edit"
+          element={
+            <ProtectedRoute>
+              <PortfolioEditorPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/ferpa"
+          element={
+            <ProtectedRoute>
+              <FERPAPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/observer"
+          element={
+            <ProtectedRoute>
+              <ObserverDashboardPage />
             </ProtectedRoute>
           }
         />

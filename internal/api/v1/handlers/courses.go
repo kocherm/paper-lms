@@ -35,6 +35,7 @@ func courseToJSON(c *models.Course) fiber.Map {
 		"syllabus_body":  c.SyllabusBody,
 		"license":        c.License,
 		"is_public":      c.IsPublic,
+		"ui_mode":        c.UIMode,
 		"created_at":     c.CreatedAt,
 	}
 }
@@ -103,6 +104,7 @@ type createCourseRequest struct {
 		SyllabusBody  string     `json:"syllabus_body"`
 		License       string     `json:"license"`
 		IsPublic      bool       `json:"is_public"`
+		UIMode        string     `json:"ui_mode"`
 	} `json:"course"`
 }
 
@@ -123,10 +125,14 @@ func (h *CourseHandler) CreateCourse(c *fiber.Ctx) error {
 		SyllabusBody: input.Course.SyllabusBody,
 		License:      input.Course.License,
 		IsPublic:     input.Course.IsPublic,
+		UIMode:       input.Course.UIMode,
 	}
 
 	if course.DefaultView == "" {
 		course.DefaultView = "modules"
+	}
+	if course.UIMode == "" {
+		course.UIMode = "standard"
 	}
 
 	if err := h.courseService.Create(c.Context(), course, userID); err != nil {
@@ -157,6 +163,7 @@ func (h *CourseHandler) UpdateCourse(c *fiber.Ctx) error {
 			SyllabusBody  *string    `json:"syllabus_body"`
 			License       *string    `json:"license"`
 			IsPublic      *bool      `json:"is_public"`
+			UIMode        *string    `json:"ui_mode"`
 			WorkflowState *string    `json:"workflow_state"`
 		} `json:"course"`
 	}
@@ -188,6 +195,9 @@ func (h *CourseHandler) UpdateCourse(c *fiber.Ctx) error {
 	}
 	if input.Course.IsPublic != nil {
 		course.IsPublic = *input.Course.IsPublic
+	}
+	if input.Course.UIMode != nil {
+		course.UIMode = *input.Course.UIMode
 	}
 	if input.Course.WorkflowState != nil {
 		course.WorkflowState = *input.Course.WorkflowState

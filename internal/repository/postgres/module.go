@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"time"
 
 	"github.com/kocherm/paper-lms/internal/domain/models"
 	"github.com/kocherm/paper-lms/internal/repository"
@@ -58,4 +59,15 @@ func (r *moduleRepo) ListByCourseID(ctx context.Context, courseID uint, params r
 		Page:       params.Page,
 		PerPage:    params.PerPage,
 	}, nil
+}
+
+func (r *moduleRepo) FindActiveByDateRange(ctx context.Context, courseID uint, date time.Time) (*models.ContextModule, error) {
+	var module models.ContextModule
+	if err := r.db.WithContext(ctx).
+		Where("course_id = ? AND workflow_state != ? AND unlock_at <= ? AND (end_at IS NULL OR end_at >= ?)", courseID, "deleted", date, date).
+		Order("position ASC").
+		First(&module).Error; err != nil {
+		return nil, err
+	}
+	return &module, nil
 }

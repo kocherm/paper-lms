@@ -1,11 +1,10 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
 const getHeaders = () => {
+  const headers = { 'Content-Type': 'application/json' };
   const token = localStorage.getItem('token');
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return headers;
 };
 
 function parseLinkHeader(header) {
@@ -24,6 +23,7 @@ function parseLinkHeader(header) {
 async function request(path, options = {}) {
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
+    credentials: 'include',
     headers: { ...getHeaders(), ...options.headers },
   });
 
@@ -43,6 +43,7 @@ async function request(path, options = {}) {
 async function requestRaw(path, options = {}) {
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
+    credentials: 'include',
     headers: { ...getHeaders(), ...options.headers },
   });
   if (!response.ok) {
@@ -54,12 +55,9 @@ async function requestRaw(path, options = {}) {
 }
 
 async function uploadFile(path, formData) {
-  const token = localStorage.getItem('token');
   const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    credentials: 'include',
     body: formData,
   });
   if (!response.ok) {
@@ -85,6 +83,11 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ name, email, password }),
     });
+    return data;
+  },
+
+  logout: async () => {
+    const { data } = await request('/logout', { method: 'POST' });
     return data;
   },
 
@@ -229,6 +232,11 @@ export const api = {
 
   deletePage: async (courseId, urlOrId) => {
     const { data } = await request(`/courses/${courseId}/pages/${urlOrId}`, { method: 'DELETE' });
+    return data;
+  },
+
+  getPublicPage: async (courseId, slug) => {
+    const { data } = await request(`/courses/${courseId}/p/${slug}`);
     return data;
   },
 
@@ -1607,6 +1615,237 @@ export const api = {
     return data;
   },
 
+  // Phase 12: COPPA / Parental Consent
+  requestConsent: async (userId) => {
+    const { data } = await request('/consent/request', {
+      method: 'POST', body: JSON.stringify({ user_id: userId }),
+    });
+    return data;
+  },
+  listConsents: async (page = 1, perPage = 20) => {
+    return request(`/consent?page=${page}&per_page=${perPage}`);
+  },
+  verifyConsent: async (token, granted) => {
+    const { data } = await request(`/consent/verify/${token}`, {
+      method: 'POST', body: JSON.stringify({ granted }),
+    });
+    return data;
+  },
+  revokeConsent: async (id) => {
+    const { data } = await request(`/consent/${id}`, { method: 'DELETE' });
+    return data;
+  },
+
+  // Phase 12: FERPA
+  createDataExportRequest: async (userId) => {
+    const { data } = await request(`/users/${userId}/data_export`, { method: 'POST' });
+    return data;
+  },
+  getDataExportRequest: async (userId, id) => {
+    const { data } = await request(`/users/${userId}/data_export/${id}`);
+    return data;
+  },
+  createDataDeletionRequest: async (userId, reason) => {
+    const { data } = await request(`/users/${userId}/data_deletion`, {
+      method: 'POST', body: JSON.stringify({ reason }),
+    });
+    return data;
+  },
+  getPendingDeletionRequests: async (page = 1, perPage = 20) => {
+    return request(`/admin/data_deletion_requests?page=${page}&per_page=${perPage}`);
+  },
+  approveDeletionRequest: async (id) => {
+    const { data } = await request(`/admin/data_deletion_requests/${id}/approve`, { method: 'POST' });
+    return data;
+  },
+  getRetentionPolicies: async (page = 1, perPage = 20) => {
+    return request(`/admin/retention_policies?page=${page}&per_page=${perPage}`);
+  },
+  createRetentionPolicy: async (policy) => {
+    const { data } = await request('/admin/retention_policies', {
+      method: 'POST', body: JSON.stringify({ policy }),
+    });
+    return data;
+  },
+  updateRetentionPolicy: async (id, policy) => {
+    const { data } = await request(`/admin/retention_policies/${id}`, {
+      method: 'PUT', body: JSON.stringify({ policy }),
+    });
+    return data;
+  },
+  deleteRetentionPolicy: async (id) => {
+    const { data } = await request(`/admin/retention_policies/${id}`, { method: 'DELETE' });
+    return data;
+  },
+
+  // Phase 12: Accommodations
+  getUserAccommodations: async (userId, page = 1, perPage = 20) => {
+    return request(`/users/${userId}/accommodations?page=${page}&per_page=${perPage}`);
+  },
+  createAccommodation: async (userId, accommodation) => {
+    const { data } = await request(`/users/${userId}/accommodations`, {
+      method: 'POST', body: JSON.stringify({ accommodation }),
+    });
+    return data;
+  },
+  getAccommodation: async (id) => {
+    const { data } = await request(`/accommodations/${id}`);
+    return data;
+  },
+  updateAccommodation: async (id, accommodation) => {
+    const { data } = await request(`/accommodations/${id}`, {
+      method: 'PUT', body: JSON.stringify({ accommodation }),
+    });
+    return data;
+  },
+  deleteAccommodation: async (id) => {
+    const { data } = await request(`/accommodations/${id}`, { method: 'DELETE' });
+    return data;
+  },
+  getCourseAccommodations: async (courseId, page = 1, perPage = 50) => {
+    return request(`/courses/${courseId}/accommodations?page=${page}&per_page=${perPage}`);
+  },
+  applyAccommodationsToAssignment: async (courseId, assignmentId) => {
+    const { data } = await request(`/courses/${courseId}/assignments/${assignmentId}/apply_accommodations`, { method: 'POST' });
+    return data;
+  },
+
+  // Phase 12: Attendance
+  recordAttendance: async (courseId, attendance) => {
+    const { data } = await request(`/courses/${courseId}/attendance`, {
+      method: 'POST', body: JSON.stringify({ attendance }),
+    });
+    return data;
+  },
+  getClassAttendance: async (courseId, date) => {
+    const params = date ? `?date=${date}` : '';
+    const { data } = await request(`/courses/${courseId}/attendance${params}`);
+    return data;
+  },
+  getStudentAttendance: async (courseId, userId, page = 1, perPage = 50) => {
+    return request(`/courses/${courseId}/attendance/users/${userId}?page=${page}&per_page=${perPage}`);
+  },
+  getStudentAttendanceSummary: async (courseId, userId) => {
+    const { data } = await request(`/courses/${courseId}/attendance/users/${userId}/summary`);
+    return data;
+  },
+  exportAttendanceCSV: (courseId) => `${API_URL}/courses/${courseId}/attendance/export.csv`,
+
+  // Phase 12: Portfolios
+  listPortfolios: async (page = 1, perPage = 20) => {
+    return request(`/users/self/portfolios?page=${page}&per_page=${perPage}`);
+  },
+  createPortfolio: async (portfolio) => {
+    const { data } = await request('/users/self/portfolios', {
+      method: 'POST', body: JSON.stringify({ portfolio }),
+    });
+    return data;
+  },
+  getPortfolio: async (id) => {
+    const { data } = await request(`/portfolios/${id}`);
+    return data;
+  },
+  updatePortfolio: async (id, portfolio) => {
+    const { data } = await request(`/portfolios/${id}`, {
+      method: 'PUT', body: JSON.stringify({ portfolio }),
+    });
+    return data;
+  },
+  deletePortfolio: async (id) => {
+    const { data } = await request(`/portfolios/${id}`, { method: 'DELETE' });
+    return data;
+  },
+  publishPortfolio: async (id) => {
+    const { data } = await request(`/portfolios/${id}/publish`, { method: 'POST' });
+    return data;
+  },
+  unpublishPortfolio: async (id) => {
+    const { data } = await request(`/portfolios/${id}/publish`, { method: 'DELETE' });
+    return data;
+  },
+  addPortfolioSection: async (id, section) => {
+    const { data } = await request(`/portfolios/${id}/sections`, {
+      method: 'POST', body: JSON.stringify({ section }),
+    });
+    return data;
+  },
+  updatePortfolioSection: async (id, sectionId, section) => {
+    const { data } = await request(`/portfolios/${id}/sections/${sectionId}`, {
+      method: 'PUT', body: JSON.stringify({ section }),
+    });
+    return data;
+  },
+  deletePortfolioSection: async (id, sectionId) => {
+    const { data } = await request(`/portfolios/${id}/sections/${sectionId}`, { method: 'DELETE' });
+    return data;
+  },
+  addPortfolioArtifact: async (id, artifact) => {
+    const { data } = await request(`/portfolios/${id}/artifacts`, {
+      method: 'POST', body: JSON.stringify({ artifact }),
+    });
+    return data;
+  },
+  updatePortfolioArtifact: async (id, artifactId, artifact) => {
+    const { data } = await request(`/portfolios/${id}/artifacts/${artifactId}`, {
+      method: 'PUT', body: JSON.stringify({ artifact }),
+    });
+    return data;
+  },
+  deletePortfolioArtifact: async (id, artifactId) => {
+    const { data } = await request(`/portfolios/${id}/artifacts/${artifactId}`, { method: 'DELETE' });
+    return data;
+  },
+  addPortfolioReflection: async (id, artifactId, reflection) => {
+    const { data } = await request(`/portfolios/${id}/artifacts/${artifactId}/reflections`, {
+      method: 'POST', body: JSON.stringify({ reflection }),
+    });
+    return data;
+  },
+  importPortfolioFromCourse: async (id, courseId) => {
+    const { data } = await request(`/portfolios/${id}/import`, {
+      method: 'POST', body: JSON.stringify({ course_id: courseId }),
+    });
+    return data;
+  },
+  exportPortfolioHTML: async (id) => {
+    return requestRaw(`/portfolios/${id}/export/html`);
+  },
+  exportPortfolioPDF: async (id) => {
+    return requestRaw(`/portfolios/${id}/export/pdf`);
+  },
+  getPortfolioComments: async (id, page = 1, perPage = 50) => {
+    return request(`/portfolios/${id}/comments?page=${page}&per_page=${perPage}`);
+  },
+  addPortfolioComment: async (id, content) => {
+    const { data } = await request(`/portfolios/${id}/comments`, {
+      method: 'POST', body: JSON.stringify({ comment: { content } }),
+    });
+    return data;
+  },
+  getPortfolioTemplates: async (page = 1, perPage = 20) => {
+    return request(`/portfolio_templates?page=${page}&per_page=${perPage}`);
+  },
+  createPortfolioFromTemplate: async (templateId, name) => {
+    const { data } = await request(`/portfolio_templates/${templateId}/create`, {
+      method: 'POST', body: JSON.stringify({ name }),
+    });
+    return data;
+  },
+  getPublicPortfolio: async (slug) => {
+    const { data } = await request(`/portfolios/public/${slug}`);
+    return data;
+  },
+  recordPortfolioView: async (slug) => {
+    const { data } = await request(`/portfolios/public/${slug}`, { method: 'POST' });
+    return data;
+  },
+  duplicatePortfolio: async (id) => {
+    const { data } = await request(`/portfolios/${id}/import`, {
+      method: 'POST', body: JSON.stringify({ duplicate: true }),
+    });
+    return data;
+  },
+
   // Phase 9: SSO
   getSAMLLoginUrl: (providerId) => `${API_URL}/auth/saml/login?provider_id=${providerId}`,
   getSAMLMetadataUrl: () => `${API_URL}/auth/saml/metadata`,
@@ -1615,6 +1854,58 @@ export const api = {
     const { data } = await request('/auth/ldap/login', {
       method: 'POST', body: JSON.stringify({ provider_id: providerId, username, password }),
     });
+    return data;
+  },
+
+  // Course Home Engine
+  getCourseHomeData: async (courseId) => {
+    const { data } = await request(`/courses/${courseId}/home`);
+    return data;
+  },
+  recordCourseVisit: async (courseId, visit) => {
+    const { data } = await request(`/courses/${courseId}/home/visit`, {
+      method: 'POST', body: JSON.stringify(visit),
+    });
+    return data;
+  },
+  getCourseHomeButtons: async (courseId) => {
+    return await request(`/courses/${courseId}/home/buttons`);
+  },
+  createCourseHomeButton: async (courseId, button) => {
+    return await request(`/courses/${courseId}/home/buttons`, {
+      method: 'POST', body: JSON.stringify(button),
+    });
+  },
+  updateCourseHomeButton: async (courseId, buttonId, button) => {
+    return await request(`/courses/${courseId}/home/buttons/${buttonId}`, {
+      method: 'PUT', body: JSON.stringify(button),
+    });
+  },
+  deleteCourseHomeButton: async (courseId, buttonId) => {
+    const { data } = await request(`/courses/${courseId}/home/buttons/${buttonId}`, { method: 'DELETE' });
+    return data;
+  },
+  reorderCourseHomeButtons: async (courseId, positions) => {
+    const { data } = await request(`/courses/${courseId}/home/buttons/reorder`, {
+      method: 'PUT', body: JSON.stringify({ positions }),
+    });
+    return data;
+  },
+  getTodaysLessonOverrides: async (courseId) => {
+    return await request(`/courses/${courseId}/home/overrides`);
+  },
+  createTodaysLessonOverride: async (courseId, override) => {
+    return await request(`/courses/${courseId}/home/overrides`, {
+      method: 'POST', body: JSON.stringify(override),
+    });
+  },
+  updateTodaysLessonOverride: async (courseId, overrideId, override) => {
+    return await request(`/courses/${courseId}/home/overrides/${overrideId}`, {
+      method: 'PUT', body: JSON.stringify(override),
+    });
+  },
+  deleteTodaysLessonOverride: async (courseId, overrideId) => {
+    const { data } = await request(`/courses/${courseId}/home/overrides/${overrideId}`, { method: 'DELETE' });
     return data;
   },
 };

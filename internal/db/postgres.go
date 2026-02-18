@@ -122,6 +122,27 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.OneRosterConnection{},
 		&models.OneRosterSyncLog{},
 		&models.DocumentAnnotation{},
+		// Phase 12: COPPA, FERPA, Accommodations, Attendance, Portfolios
+		&models.ParentalConsent{},
+		&models.DataProcessingAgreement{},
+		&models.AgeVerification{},
+		&models.DataRetentionPolicy{},
+		&models.DataDeletionRequest{},
+		&models.DataExportRequest{},
+		&models.PIIAccessLog{},
+		&models.StudentAccommodation{},
+		&models.AccommodationApplication{},
+		&models.AttendanceRecord{},
+		&models.Portfolio{},
+		&models.PortfolioSection{},
+		&models.PortfolioArtifact{},
+		&models.PortfolioReflection{},
+		&models.PortfolioTemplate{},
+		&models.PortfolioComment{},
+		// Course Home Engine
+		&models.CourseHomeButton{},
+		&models.TodaysLessonOverride{},
+		&models.CourseVisit{},
 	)
 }
 

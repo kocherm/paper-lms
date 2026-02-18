@@ -8,6 +8,7 @@ type ContextModule struct {
 	Name                       string    `json:"name" gorm:"not null"`
 	Position                   int       `json:"position"`
 	UnlockAt                   *time.Time `json:"unlock_at"`
+	EndAt                      *time.Time `json:"end_at"`
 	RequireSequentialProgress  bool      `json:"require_sequential_progress" gorm:"default:false"`
 	WorkflowState              string    `json:"workflow_state" gorm:"not null;default:'active'"`
 	CreatedAt                  time.Time `json:"created_at"`

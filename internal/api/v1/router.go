@@ -76,6 +76,14 @@ type Router struct {
 	customRoleHandler          *handlers.CustomRoleHandler
 	onerosterHandler           *handlers.OneRosterHandler
 	documentAnnotationHandler  *handlers.DocumentAnnotationHandler
+	// Phase 12
+	coppaHandler          *handlers.COPPAHandler
+	ferpaHandler          *handlers.FERPAHandler
+	accommodationHandler  *handlers.AccommodationHandler
+	attendanceHandler     *handlers.AttendanceHandler
+	portfolioHandler      *handlers.PortfolioHandler
+	// Course Home Engine
+	courseHomeHandler     *handlers.CourseHomeHandler
 	authMiddleware             *middleware.AuthMiddleware
 	permMiddleware             *middleware.PermissionMiddleware
 }
@@ -149,6 +157,14 @@ func NewRouter(
 	customRoleHandler *handlers.CustomRoleHandler,
 	onerosterHandler *handlers.OneRosterHandler,
 	documentAnnotationHandler *handlers.DocumentAnnotationHandler,
+	// Phase 12
+	coppaHandler *handlers.COPPAHandler,
+	ferpaHandler *handlers.FERPAHandler,
+	accommodationHandler *handlers.AccommodationHandler,
+	attendanceHandler *handlers.AttendanceHandler,
+	portfolioHandler *handlers.PortfolioHandler,
+	// Course Home Engine
+	courseHomeHandler *handlers.CourseHomeHandler,
 	authMiddleware *middleware.AuthMiddleware,
 	permMiddleware *middleware.PermissionMiddleware,
 ) *Router {
@@ -211,6 +227,12 @@ func NewRouter(
 		customRoleHandler:           customRoleHandler,
 		onerosterHandler:            onerosterHandler,
 		documentAnnotationHandler:   documentAnnotationHandler,
+		coppaHandler:                coppaHandler,
+		ferpaHandler:                ferpaHandler,
+		accommodationHandler:        accommodationHandler,
+		attendanceHandler:           attendanceHandler,
+		portfolioHandler:            portfolioHandler,
+		courseHomeHandler:           courseHomeHandler,
 		authMiddleware:              authMiddleware,
 		permMiddleware:              permMiddleware,
 	}
@@ -225,9 +247,11 @@ func (r *Router) Register(app *fiber.App) {
 	instructor := r.permMiddleware.RequireInstructor()
 	selfOrAdmin := r.permMiddleware.RequireSelfOrAdmin()
 
-	// Public auth routes
-	api.Post("/login", r.userHandler.Login)
-	api.Post("/register", r.userHandler.Register)
+	// Public auth routes (rate-limited to prevent brute-force)
+	authLimit := middleware.AuthRateLimit()
+	api.Post("/login", authLimit, r.userHandler.Login)
+	api.Post("/register", authLimit, r.userHandler.Register)
+	api.Post("/logout", r.userHandler.Logout)
 
 	// Public OAuth2 token endpoint (no auth required)
 	api.Post("/login/oauth2/token", r.oauth2Handler.Token)
@@ -244,6 +268,9 @@ func (r *Router) Register(app *fiber.App) {
 	api.Get("/auth/cas/login", r.ssoHandler.HandleCASLogin)
 	api.Get("/auth/cas/callback", r.ssoHandler.HandleCASCallback)
 	api.Post("/auth/ldap/login", r.ssoHandler.HandleLDAPLogin)
+
+	// Public page endpoint (no auth required)
+	api.Get("/courses/:course_id/p/:slug", r.pageHandler.GetPublicPage)
 
 	// Protected routes (authentication required)
 	protected := api.Group("", r.authMiddleware.Protected())
@@ -304,6 +331,19 @@ func (r *Router) Register(app *fiber.App) {
 	protected.Get("/courses/:course_id/modules/:id", enrolled, r.moduleHandler.GetModule)
 	protected.Put("/courses/:course_id/modules/:id", instructor, r.moduleHandler.UpdateModule)
 	protected.Delete("/courses/:course_id/modules/:id", instructor, r.moduleHandler.DeleteModule)
+
+	// Course Home Engine (view: enrolled; manage: instructor)
+	protected.Get("/courses/:course_id/home", enrolled, r.courseHomeHandler.GetHomeData)
+	protected.Post("/courses/:course_id/home/visit", enrolled, r.courseHomeHandler.RecordVisit)
+	protected.Get("/courses/:course_id/home/buttons", enrolled, r.courseHomeHandler.ListButtons)
+	protected.Post("/courses/:course_id/home/buttons", instructor, r.courseHomeHandler.CreateButton)
+	protected.Put("/courses/:course_id/home/buttons/reorder", instructor, r.courseHomeHandler.ReorderButtons)
+	protected.Put("/courses/:course_id/home/buttons/:id", instructor, r.courseHomeHandler.UpdateButton)
+	protected.Delete("/courses/:course_id/home/buttons/:id", instructor, r.courseHomeHandler.DeleteButton)
+	protected.Get("/courses/:course_id/home/overrides", instructor, r.courseHomeHandler.ListOverrides)
+	protected.Post("/courses/:course_id/home/overrides", instructor, r.courseHomeHandler.CreateOverride)
+	protected.Put("/courses/:course_id/home/overrides/:id", instructor, r.courseHomeHandler.UpdateOverride)
+	protected.Delete("/courses/:course_id/home/overrides/:id", instructor, r.courseHomeHandler.DeleteOverride)
 
 	// Module Items (view: enrolled; manage: instructor)
 	protected.Get("/courses/:course_id/modules/:module_id/items", enrolled, r.moduleItemHandler.ListModuleItems)
@@ -694,4 +734,68 @@ func (r *Router) Register(app *fiber.App) {
 	protected.Post("/annotations/:id/resolve", r.documentAnnotationHandler.ResolveAnnotation)
 	protected.Delete("/annotations/:id/resolve", r.documentAnnotationHandler.UnresolveAnnotation)
 	protected.Post("/annotations/:id/replies", r.documentAnnotationHandler.ReplyToAnnotation)
+
+	// Phase 12: COPPA / Parental Consent (admin + public verify)
+	protected.Post("/consent/request", admin, r.coppaHandler.RequestConsent)
+	protected.Get("/consent", admin, r.coppaHandler.ListConsents)
+	protected.Post("/consent/verify/:token", r.coppaHandler.VerifyConsent)
+	protected.Delete("/consent/:id", admin, r.coppaHandler.RevokeConsent)
+	protected.Get("/data_processing_agreements", admin, r.coppaHandler.ListDPAs)
+	protected.Post("/data_processing_agreements", admin, r.coppaHandler.CreateDPA)
+	protected.Put("/data_processing_agreements/:id", admin, r.coppaHandler.UpdateDPA)
+
+	// Phase 12: FERPA Compliance (self/admin)
+	protected.Post("/users/:user_id/data_export", selfOrAdmin, r.ferpaHandler.CreateExportRequest)
+	protected.Get("/users/:user_id/data_export/:id", selfOrAdmin, r.ferpaHandler.GetExportRequest)
+	protected.Post("/users/:user_id/data_deletion", selfOrAdmin, r.ferpaHandler.CreateDeletionRequest)
+	protected.Get("/admin/data_deletion_requests", admin, r.ferpaHandler.ListPendingDeletionRequests)
+	protected.Post("/admin/data_deletion_requests/:id/approve", admin, r.ferpaHandler.ApproveDeletionRequest)
+	protected.Get("/users/:user_id/pii_access_log", admin, r.ferpaHandler.GetPIIAccessLog)
+	protected.Get("/admin/retention_policies", admin, r.ferpaHandler.ListRetentionPolicies)
+	protected.Post("/admin/retention_policies", admin, r.ferpaHandler.CreateRetentionPolicy)
+	protected.Get("/admin/retention_policies/:id", admin, r.ferpaHandler.GetRetentionPolicy)
+	protected.Put("/admin/retention_policies/:id", admin, r.ferpaHandler.UpdateRetentionPolicy)
+	protected.Delete("/admin/retention_policies/:id", admin, r.ferpaHandler.DeleteRetentionPolicy)
+
+	// Phase 12: Student Accommodations (instructor/admin)
+	protected.Get("/users/:user_id/accommodations", selfOrAdmin, r.accommodationHandler.ListUserAccommodations)
+	protected.Post("/users/:user_id/accommodations", admin, r.accommodationHandler.CreateAccommodation)
+	protected.Get("/accommodations/:id", r.accommodationHandler.GetAccommodation)
+	protected.Put("/accommodations/:id", admin, r.accommodationHandler.UpdateAccommodation)
+	protected.Delete("/accommodations/:id", admin, r.accommodationHandler.DeleteAccommodation)
+	protected.Get("/courses/:course_id/accommodations", instructor, r.accommodationHandler.ListCourseAccommodations)
+	protected.Post("/courses/:course_id/assignments/:assignment_id/apply_accommodations", instructor, r.accommodationHandler.ApplyAccommodationsToAssignment)
+
+	// Phase 12: Attendance (view: enrolled; manage: instructor)
+	protected.Post("/courses/:course_id/attendance", instructor, r.attendanceHandler.RecordAttendance)
+	protected.Get("/courses/:course_id/attendance", enrolled, r.attendanceHandler.GetClassAttendance)
+	protected.Get("/courses/:course_id/attendance/users/:user_id", enrolled, r.attendanceHandler.GetStudentAttendance)
+	protected.Get("/courses/:course_id/attendance/users/:user_id/summary", enrolled, r.attendanceHandler.GetStudentAttendanceSummary)
+	protected.Get("/courses/:course_id/attendance/export.csv", instructor, r.attendanceHandler.ExportAttendanceCSV)
+
+	// Phase 12: Portfolios (self + public)
+	protected.Get("/users/self/portfolios", r.portfolioHandler.ListUserPortfolios)
+	protected.Post("/users/self/portfolios", r.portfolioHandler.CreatePortfolio)
+	protected.Get("/portfolios/:id", r.portfolioHandler.GetPortfolio)
+	protected.Put("/portfolios/:id", r.portfolioHandler.UpdatePortfolio)
+	protected.Delete("/portfolios/:id", r.portfolioHandler.DeletePortfolio)
+	protected.Post("/portfolios/:id/publish", r.portfolioHandler.PublishPortfolio)
+	protected.Post("/portfolios/:id/sections", r.portfolioHandler.AddSection)
+	protected.Put("/portfolios/:id/sections/:section_id", r.portfolioHandler.UpdateSection)
+	protected.Delete("/portfolios/:id/sections/:section_id", r.portfolioHandler.DeleteSection)
+	protected.Put("/portfolios/:id/sections/reorder", r.portfolioHandler.ReorderSections)
+	protected.Post("/portfolios/:id/artifacts", r.portfolioHandler.AddArtifact)
+	protected.Put("/portfolios/:id/artifacts/:artifact_id", r.portfolioHandler.UpdateArtifact)
+	protected.Delete("/portfolios/:id/artifacts/:artifact_id", r.portfolioHandler.DeleteArtifact)
+	protected.Post("/portfolios/:id/artifacts/:artifact_id/reflections", r.portfolioHandler.AddReflection)
+	protected.Post("/portfolios/:id/import", r.portfolioHandler.ImportFromCourse)
+	protected.Get("/portfolios/:id/export/html", r.portfolioHandler.ExportAsHTML)
+	protected.Get("/portfolios/:id/export/pdf", r.portfolioHandler.ExportAsPDF)
+	protected.Get("/portfolios/:id/comments", r.portfolioHandler.ListComments)
+	protected.Post("/portfolios/:id/comments", r.portfolioHandler.AddComment)
+	protected.Get("/portfolio_templates", r.portfolioHandler.ListTemplates)
+	protected.Post("/portfolio_templates/:template_id/create", r.portfolioHandler.CreateFromTemplate)
+
+	// Public portfolio view (no auth required)
+	api.Get("/portfolios/public/:slug", r.portfolioHandler.GetPublicPortfolio)
 }

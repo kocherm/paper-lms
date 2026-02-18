@@ -12,6 +12,7 @@ type Course struct {
 	StartAt       *time.Time `json:"start_at"`
 	EndAt         *time.Time `json:"end_at"`
 	DefaultView   string     `json:"default_view" gorm:"default:'modules'"`
+	UIMode        string     `json:"ui_mode" gorm:"default:'standard'"` // "standard", "k2", "3-5"
 	SyllabusBody  string     `json:"syllabus_body" gorm:"type:text"`
 	License       string     `json:"license" gorm:"default:'private'"`
 	IsPublic      bool       `json:"is_public" gorm:"default:false"`

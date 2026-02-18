@@ -25,6 +25,7 @@ func moduleToJSON(m *models.ContextModule) fiber.Map {
 		"name":                        m.Name,
 		"position":                    m.Position,
 		"unlock_at":                   m.UnlockAt,
+		"end_at":                      m.EndAt,
 		"require_sequential_progress": m.RequireSequentialProgress,
 		"workflow_state":              m.WorkflowState,
 		"published":                   m.WorkflowState == "active",
@@ -131,6 +132,7 @@ func (h *ModuleHandler) CreateModule(c *fiber.Ctx) error {
 			Name                      string     `json:"name"`
 			Position                  int        `json:"position"`
 			UnlockAt                  *time.Time `json:"unlock_at"`
+			EndAt                     *time.Time `json:"end_at"`
 			RequireSequentialProgress bool       `json:"require_sequential_progress"`
 		} `json:"module"`
 	}
@@ -144,6 +146,7 @@ func (h *ModuleHandler) CreateModule(c *fiber.Ctx) error {
 		Name:                     input.Module.Name,
 		Position:                 input.Module.Position,
 		UnlockAt:                 input.Module.UnlockAt,
+		EndAt:                    input.Module.EndAt,
 		RequireSequentialProgress: input.Module.RequireSequentialProgress,
 		WorkflowState:            "active",
 	}
@@ -171,6 +174,7 @@ func (h *ModuleHandler) UpdateModule(c *fiber.Ctx) error {
 			Name                      *string    `json:"name"`
 			Position                  *int       `json:"position"`
 			UnlockAt                  *time.Time `json:"unlock_at"`
+			EndAt                     *time.Time `json:"end_at"`
 			RequireSequentialProgress *bool      `json:"require_sequential_progress"`
 			Published                 *bool      `json:"published"`
 		} `json:"module"`
@@ -188,6 +192,9 @@ func (h *ModuleHandler) UpdateModule(c *fiber.Ctx) error {
 	}
 	if input.Module.UnlockAt != nil {
 		module.UnlockAt = input.Module.UnlockAt
+	}
+	if input.Module.EndAt != nil {
+		module.EndAt = input.Module.EndAt
 	}
 	if input.Module.RequireSequentialProgress != nil {
 		module.RequireSequentialProgress = *input.Module.RequireSequentialProgress

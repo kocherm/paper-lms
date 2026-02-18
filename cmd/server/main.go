@@ -23,6 +23,7 @@ func main() {
 	_ = godotenv.Load()
 
 	cfg := config.Load()
+	cfg.Validate()
 
 	// Connect to PostgreSQL
 	database, err := db.Connect(cfg.DatabaseURL)
@@ -129,6 +130,27 @@ func main() {
 	notificationDeliveryRepo := postgres.NewNotificationDeliveryRepository(database)
 	auditLogRepo := postgres.NewAuditLogRepository(database)
 	gradeChangeLogRepo := postgres.NewGradeChangeLogRepository(database)
+	// Phase 12 repositories
+	parentalConsentRepo := postgres.NewParentalConsentRepository(database)
+	dpaRepo := postgres.NewDataProcessingAgreementRepository(database)
+	ageVerificationRepo := postgres.NewAgeVerificationRepository(database)
+	retentionPolicyRepo := postgres.NewDataRetentionPolicyRepository(database)
+	deletionRequestRepo := postgres.NewDataDeletionRequestRepository(database)
+	exportRequestRepo := postgres.NewDataExportRequestRepository(database)
+	piiAccessLogRepo := postgres.NewPIIAccessLogRepository(database)
+	studentAccommodationRepo := postgres.NewStudentAccommodationRepository(database)
+	accommodationApplicationRepo := postgres.NewAccommodationApplicationRepository(database)
+	attendanceRepo := postgres.NewAttendanceRepository(database)
+	portfolioRepo := postgres.NewPortfolioRepository(database)
+	portfolioSectionRepo := postgres.NewPortfolioSectionRepository(database)
+	portfolioArtifactRepo := postgres.NewPortfolioArtifactRepository(database)
+	portfolioReflectionRepo := postgres.NewPortfolioReflectionRepository(database)
+	portfolioTemplateRepo := postgres.NewPortfolioTemplateRepository(database)
+	portfolioCommentRepo := postgres.NewPortfolioCommentRepository(database)
+	// Course Home Engine repositories
+	courseHomeButtonRepo := postgres.NewCourseHomeButtonRepository(database)
+	todaysLessonOverrideRepo := postgres.NewTodaysLessonOverrideRepository(database)
+	courseVisitRepo := postgres.NewCourseVisitRepository(database)
 
 	// Initialize services
 	userService := service.NewUserService(userRepo)
@@ -214,6 +236,14 @@ func main() {
 		courseRepo, moduleRepo, moduleItemRepo, pageRepo, assignmentRepo,
 		quizRepo, quizQuestionRepo, fileService, folderRepo, discussionTopicRepo,
 	)
+	// Phase 12 services
+	coppaService := service.NewCOPPAService(parentalConsentRepo, dpaRepo, ageVerificationRepo)
+	ferpaService := service.NewFERPAService(retentionPolicyRepo, deletionRequestRepo, exportRequestRepo, piiAccessLogRepo)
+	accommodationService := service.NewAccommodationService(studentAccommodationRepo, accommodationApplicationRepo)
+	attendanceService := service.NewAttendanceService(attendanceRepo)
+	portfolioService := service.NewPortfolioService(portfolioRepo, portfolioSectionRepo, portfolioArtifactRepo, portfolioReflectionRepo, portfolioTemplateRepo, portfolioCommentRepo, submissionRepo, assignmentRepo)
+	courseHomeService := service.NewCourseHomeService(courseRepo, courseHomeButtonRepo, todaysLessonOverrideRepo, courseVisitRepo, moduleRepo)
+
 	batchService := service.NewBatchService(
 		courseRepo, moduleRepo, moduleItemRepo, assignmentRepo, quizRepo,
 		pageRepo, discussionTopicRepo, calendarEventRepo, enrollmentRepo,
@@ -234,8 +264,11 @@ func main() {
 	casAuth := auth.NewCASAuthenticator(userRepo)
 	ssoHandler := auth.NewSSOHandler(samlHandler, ldapAuth, casAuth, userRepo, authProviderRepo, cfg)
 
+	// Initialize token blacklist for session revocation on logout
+	tokenBlacklist := service.NewTokenBlacklist()
+
 	// Initialize handlers
-	userHandler := handlers.NewUserHandler(userService, cfg.JWTSecret)
+	userHandler := handlers.NewUserHandler(userService, cfg.JWTSecret, cfg.Environment, tokenBlacklist)
 	accountHandler := handlers.NewAccountHandler(accountRepo)
 	courseHandler := handlers.NewCourseHandler(courseService, enrollmentService)
 	sectionHandler := handlers.NewSectionHandler(sectionRepo)
@@ -304,7 +337,14 @@ func main() {
 	discussionV2Handler := handlers.NewDiscussionV2Handler(discussionV2Service)
 	contentImportHandler := handlers.NewContentImportHandler(imsccParser, contentMigrationService, cfg.FileStoragePath)
 	batchHandler := handlers.NewBatchHandler(batchService)
-	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret, accessTokenService, userRepo)
+	// Phase 12 handlers
+	coppaHandler := handlers.NewCOPPAHandler(coppaService)
+	ferpaHandler := handlers.NewFERPAHandler(ferpaService)
+	accommodationHandler := handlers.NewAccommodationHandler(accommodationService, assignmentService)
+	attendanceHandler := handlers.NewAttendanceHandler(attendanceService)
+	portfolioHandler := handlers.NewPortfolioHandler(portfolioService)
+	courseHomeHandler := handlers.NewCourseHomeHandler(courseHomeService)
+	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret, accessTokenService, userRepo, tokenBlacklist)
 	permMiddleware := middleware.NewPermissionMiddleware(enrollmentRepo, userRepo)
 
 	// Create router
@@ -377,6 +417,14 @@ func main() {
 		customRoleHandler,
 		onerosterHandler,
 		documentAnnotationHandler,
+		// Phase 12
+		coppaHandler,
+		ferpaHandler,
+		accommodationHandler,
+		attendanceHandler,
+		portfolioHandler,
+		// Course Home Engine
+		courseHomeHandler,
 		authMiddleware,
 		permMiddleware,
 	)
@@ -396,6 +444,8 @@ func main() {
 	})
 
 	// Middleware
+	app.Use(middleware.SecurityHeaders(middleware.SecurityConfig{Environment: cfg.Environment}))
+	app.Use(middleware.InputValidation())
 	app.Use(fiberlogger.New())
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     cfg.FrontendURL,

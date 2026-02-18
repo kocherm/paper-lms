@@ -2,6 +2,7 @@
 /main
 /server
 /paper-lms
+/paper-lms-server
 
 # Environment
 .env
