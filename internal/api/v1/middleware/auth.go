@@ -13,33 +13,41 @@ type AuthMiddleware struct {
 	jwtSecret          string
 	accessTokenService *service.AccessTokenService
 	userRepo           repository.UserRepository
+	tokenBlacklist     *service.TokenBlacklist
 }
 
-func NewAuthMiddleware(jwtSecret string, accessTokenService *service.AccessTokenService, userRepo repository.UserRepository) *AuthMiddleware {
+func NewAuthMiddleware(jwtSecret string, accessTokenService *service.AccessTokenService, userRepo repository.UserRepository, tokenBlacklist *service.TokenBlacklist) *AuthMiddleware {
 	return &AuthMiddleware{
 		jwtSecret:          jwtSecret,
 		accessTokenService: accessTokenService,
 		userRepo:           userRepo,
+		tokenBlacklist:     tokenBlacklist,
 	}
 }
 
 func (m *AuthMiddleware) Protected() fiber.Handler {
 	return func(c *fiber.Ctx) error {
+		var tokenStr string
+
+		// 1. Check Authorization header first (API tokens, OAuth2, programmatic access)
 		authHeader := c.Get("Authorization")
-		if authHeader == "" {
+		if authHeader != "" {
+			tokenParts := strings.SplitN(authHeader, " ", 2)
+			if len(tokenParts) == 2 && tokenParts[0] == "Bearer" {
+				tokenStr = tokenParts[1]
+			}
+		}
+
+		// 2. Fall back to httpOnly session cookie (browser-based access)
+		if tokenStr == "" {
+			tokenStr = c.Cookies("paper_session")
+		}
+
+		if tokenStr == "" {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"errors": []fiber.Map{{"message": "Unauthorized - no token provided"}},
 			})
 		}
-
-		tokenParts := strings.SplitN(authHeader, " ", 2)
-		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"errors": []fiber.Map{{"message": "Invalid token format"}},
-			})
-		}
-
-		tokenStr := tokenParts[1]
 
 		// Try JWT first (session tokens from login)
 		jwtToken, jwtErr := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
@@ -50,11 +58,34 @@ func (m *AuthMiddleware) Protected() fiber.Handler {
 		})
 
 		if jwtErr == nil && jwtToken.Valid {
-			claims := jwtToken.Claims.(jwt.MapClaims)
-			c.Locals("user_id", uint(claims["id"].(float64)))
-			c.Locals("user_email", claims["email"].(string))
+			// Check if token was revoked via logout
+			if m.tokenBlacklist != nil && m.tokenBlacklist.IsRevoked(tokenStr) {
+				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+					"errors": []fiber.Map{{"message": "Token has been revoked"}},
+				})
+			}
+			claims, ok := jwtToken.Claims.(jwt.MapClaims)
+			if !ok {
+				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+					"errors": []fiber.Map{{"message": "Invalid token claims"}},
+				})
+			}
+			idFloat, ok := claims["id"].(float64)
+			if !ok {
+				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+					"errors": []fiber.Map{{"message": "Invalid token: missing user ID"}},
+				})
+			}
+			email, _ := claims["email"].(string)
+			c.Locals("user_id", uint(idFloat))
+			c.Locals("user_email", email)
 			if name, ok := claims["name"].(string); ok {
 				c.Locals("user_name", name)
+			}
+			// If this is a masquerade token, set the masquerade_by local
+			// so handlers can detect masquerade sessions
+			if masqueradeBy, ok := claims["masquerade_by"].(float64); ok {
+				c.Locals("masquerade_by", uint(masqueradeBy))
 			}
 			return c.Next()
 		}

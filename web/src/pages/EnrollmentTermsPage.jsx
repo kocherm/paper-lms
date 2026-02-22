@@ -27,9 +27,7 @@ const EnrollmentTermsPage = () => {
   const fetchTerms = async () => {
     try {
       const response = await fetch(`/api/v1/accounts/${accountId}/terms?per_page=100`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        credentials: 'include',
       });
       if (!response.ok) throw new Error('Failed to fetch terms');
       const data = await response.json();
@@ -44,9 +42,7 @@ const EnrollmentTermsPage = () => {
   const fetchCurrentTerm = async () => {
     try {
       const response = await fetch(`/api/v1/accounts/${accountId}/terms/current`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        credentials: 'include',
       });
       if (response.ok) {
         const data = await response.json();
@@ -90,10 +86,8 @@ const EnrollmentTermsPage = () => {
 
       const response = await fetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
@@ -127,9 +121,7 @@ const EnrollmentTermsPage = () => {
     try {
       const response = await fetch(`/api/v1/accounts/${accountId}/terms/${termId}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        credentials: 'include',
       });
       if (!response.ok) throw new Error('Failed to delete term');
       fetchTerms();

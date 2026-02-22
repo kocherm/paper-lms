@@ -10,12 +10,14 @@ import (
 )
 
 type CoursePaceService struct {
-	paceRepo     repository.CoursePaceRepository
-	paceItemRepo repository.CoursePaceModuleItemRepository
+	paceRepo       repository.CoursePaceRepository
+	paceItemRepo   repository.CoursePaceModuleItemRepository
+	moduleItemRepo repository.ModuleItemRepository
+	assignmentRepo repository.AssignmentRepository
 }
 
-func NewCoursePaceService(paceRepo repository.CoursePaceRepository, paceItemRepo repository.CoursePaceModuleItemRepository) *CoursePaceService {
-	return &CoursePaceService{paceRepo: paceRepo, paceItemRepo: paceItemRepo}
+func NewCoursePaceService(paceRepo repository.CoursePaceRepository, paceItemRepo repository.CoursePaceModuleItemRepository, moduleItemRepo repository.ModuleItemRepository, assignmentRepo repository.AssignmentRepository) *CoursePaceService {
+	return &CoursePaceService{paceRepo: paceRepo, paceItemRepo: paceItemRepo, moduleItemRepo: moduleItemRepo, assignmentRepo: assignmentRepo}
 }
 
 func (s *CoursePaceService) Create(ctx context.Context, pace *models.CoursePace) error {
@@ -69,7 +71,52 @@ func (s *CoursePaceService) PublishPace(ctx context.Context, id uint) (*models.C
 	if err := s.paceRepo.Update(ctx, pace); err != nil {
 		return nil, err
 	}
+
+	// Apply computed dates to linked assignments
+	s.applyPaceDates(ctx, pace)
+
 	return pace, nil
+}
+
+// applyPaceDates computes the timeline and updates assignment due dates for each
+// module item that links to an assignment.
+func (s *CoursePaceService) applyPaceDates(ctx context.Context, pace *models.CoursePace) {
+	if s.moduleItemRepo == nil || s.assignmentRepo == nil {
+		return
+	}
+
+	items, err := s.paceItemRepo.ListByPaceID(ctx, pace.ID)
+	if err != nil || len(items) == 0 {
+		return
+	}
+
+	startDate := time.Now()
+	if pace.PublishedAt != nil {
+		startDate = *pace.PublishedAt
+	}
+
+	currentDate := startDate
+	for _, item := range items {
+		currentDate = addBusinessDays(currentDate, item.Duration, pace.ExcludeWeekends)
+
+		// Look up the module item (ContentTag) to find linked assignment
+		moduleItem, err := s.moduleItemRepo.FindByID(ctx, item.ModuleItemID)
+		if err != nil || moduleItem == nil {
+			continue
+		}
+		if moduleItem.ContentType != "Assignment" || moduleItem.ContentID == nil {
+			continue
+		}
+
+		assignment, err := s.assignmentRepo.FindByID(ctx, *moduleItem.ContentID)
+		if err != nil || assignment == nil {
+			continue
+		}
+
+		projectedDate := currentDate
+		assignment.DueAt = &projectedDate
+		_ = s.assignmentRepo.Update(ctx, assignment)
+	}
 }
 
 func (s *CoursePaceService) GetPaceItems(ctx context.Context, paceID uint) ([]models.CoursePaceModuleItem, error) {

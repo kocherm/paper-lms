@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { Folder, File, Upload, Trash2, ChevronRight, Plus, X } from 'lucide-react';
 import { api } from '../services/api';
+import useIsTeacher from '../hooks/useIsTeacher';
 import Layout from '../components/Layout';
+import CourseNav from '../components/CourseNav';
 
 function formatFileSize(bytes) {
   if (bytes === 0) return '0 Bytes';
@@ -14,6 +16,7 @@ function formatFileSize(bytes) {
 
 const FilesPage = () => {
   const { courseId } = useParams();
+  const isTeacher = useIsTeacher(courseId);
   const [currentFolderId, setCurrentFolderId] = useState(null);
   const [folders, setFolders] = useState([]);
   const [files, setFiles] = useState([]);
@@ -141,13 +144,18 @@ const FilesPage = () => {
   };
 
   if (loading) {
-    return <Layout><div className="text-center py-12 text-gray-500">Loading files...</div></Layout>;
+    return <Layout><div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+  Loading files...
+</div></Layout>;
   }
 
   return (
     <Layout>
+      <CourseNav />
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Files</h2>
+        <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm">&larr; Back to Course</Link>
+        <h2 className="text-2xl font-bold text-gray-900 mt-2">Files</h2>
       </div>
 
       {error && (
@@ -178,25 +186,27 @@ const FilesPage = () => {
       </div>
 
       {/* Actions bar */}
-      <div className="flex items-center space-x-3 mb-4">
-        <button
-          onClick={() => setShowNewFolder(true)}
-          className="inline-flex items-center space-x-1 bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-md hover:bg-gray-50 text-sm font-medium shadow-sm"
-        >
-          <Plus className="w-4 h-4" />
-          <span>New Folder</span>
-        </button>
-        <label className="inline-flex items-center space-x-1 bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 text-sm font-medium shadow-sm cursor-pointer">
-          <Upload className="w-4 h-4" />
-          <span>{uploading ? 'Uploading...' : 'Upload File'}</span>
-          <input
-            type="file"
-            className="hidden"
-            onChange={handleUpload}
-            disabled={uploading}
-          />
-        </label>
-      </div>
+      {isTeacher && (
+        <div className="flex items-center space-x-3 mb-4">
+          <button
+            onClick={() => setShowNewFolder(true)}
+            className="inline-flex items-center space-x-1 bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-md hover:bg-gray-50 text-sm font-medium shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            <span>New Folder</span>
+          </button>
+          <label className="inline-flex items-center space-x-1 bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 text-sm font-medium shadow-sm cursor-pointer">
+            <Upload className="w-4 h-4" />
+            <span>{uploading ? 'Uploading...' : 'Upload File'}</span>
+            <input
+              type="file"
+              className="hidden"
+              onChange={handleUpload}
+              disabled={uploading}
+            />
+          </label>
+        </div>
+      )}
 
       {/* New folder form */}
       {showNewFolder && (
@@ -247,13 +257,15 @@ const FilesPage = () => {
                   <Folder className="w-5 h-5 text-blue-500" />
                   <span className="text-sm font-medium text-gray-900">{folder.name}</span>
                 </button>
-                <button
-                  onClick={() => handleDeleteFolder(folder.id)}
-                  className="text-gray-400 hover:text-red-600 p-1"
-                  title="Delete folder"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                {isTeacher && (
+                  <button
+                    onClick={() => handleDeleteFolder(folder.id)}
+                    className="text-gray-400 hover:text-red-600 p-1"
+                    title="Delete folder"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             ))}
 
@@ -280,13 +292,15 @@ const FilesPage = () => {
                   >
                     Download
                   </a>
-                  <button
-                    onClick={() => handleDeleteFile(file.id)}
-                    className="text-gray-400 hover:text-red-600 p-1"
-                    title="Delete file"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {isTeacher && (
+                    <button
+                      onClick={() => handleDeleteFile(file.id)}
+                      className="text-gray-400 hover:text-red-600 p-1"
+                      title="Delete file"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

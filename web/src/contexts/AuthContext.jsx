@@ -8,38 +8,75 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      const userData = JSON.parse(localStorage.getItem('user'));
-      setUser(userData);
-    }
-    setLoading(false);
+    // On mount, verify session by calling /users/self
+    // The httpOnly cookie will be sent automatically
+    api.getSelf()
+      .then((data) => {
+        setUser(data);
+      })
+      .catch(() => {
+        // Not authenticated or token expired — clear any stale localStorage
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUser(null);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
+
+  // Listen for 401 responses from the API client to auto-logout
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setUser(null);
+    };
+    window.addEventListener('auth:session-expired', handleSessionExpired);
+    return () => window.removeEventListener('auth:session-expired', handleSessionExpired);
   }, []);
 
   const login = async (email, password) => {
     const data = await api.login(email, password);
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
+    // Auth is handled by httpOnly cookie set by the server — no localStorage needed
     setUser(data.user);
     return data;
   };
 
   const register = async (name, email, password) => {
     const data = await api.register(name, email, password);
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
+    // Auth is handled by httpOnly cookie set by the server — no localStorage needed
     setUser(data.user);
     return data;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await api.logout();
+    } catch (_) {
+      // Ignore errors on logout
+    }
+    // Clear any legacy localStorage data
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
   };
 
+  // refreshUser re-fetches /users/self and updates the user context.
+  // Used after masquerade start/end to reflect the new identity.
+  const refreshUser = async () => {
+    try {
+      const data = await api.getSelf();
+      setUser(data);
+      return data;
+    } catch {
+      setUser(null);
+      return null;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, setUser, login, register, logout, loading, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

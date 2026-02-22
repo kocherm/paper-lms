@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Mail, Send, Plus, MessageSquare, Check, X } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Mail, Send, Plus, MessageSquare, X, Search, ArrowLeft, Loader2 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
@@ -15,8 +15,19 @@ const InboxPage = () => {
   const [replyText, setReplyText] = useState('');
   const [sending, setSending] = useState(false);
   const [showNewForm, setShowNewForm] = useState(false);
-  const [newConv, setNewConv] = useState({ subject: '', recipients: '', body: '' });
+  const [newSubject, setNewSubject] = useState('');
+  const [newBody, setNewBody] = useState('');
   const [creating, setCreating] = useState(false);
+
+  // Recipient picker state
+  const [selectedRecipients, setSelectedRecipients] = useState([]);
+  const [recipientSearch, setRecipientSearch] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const searchRef = useRef(null);
+  const dropdownRef = useRef(null);
+  const searchTimerRef = useRef(null);
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -33,6 +44,62 @@ const InboxPage = () => {
     fetchConversations();
   }, [fetchConversations]);
 
+  // Debounced user search
+  useEffect(() => {
+    if (recipientSearch.trim().length < 2) {
+      setSearchResults([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const result = await api.searchUsers(recipientSearch.trim(), 1, 8);
+        const users = Array.isArray(result) ? result : (result.data || []);
+        // Filter out already-selected recipients and self
+        const filtered = users.filter(
+          (u) => u.id !== user?.id && !selectedRecipients.some((r) => r.id === u.id)
+        );
+        setSearchResults(filtered);
+        setShowDropdown(filtered.length > 0);
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 300);
+
+    return () => { if (searchTimerRef.current) clearTimeout(searchTimerRef.current); };
+  }, [recipientSearch, selectedRecipients, user?.id]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        dropdownRef.current && !dropdownRef.current.contains(e.target) &&
+        searchRef.current && !searchRef.current.contains(e.target)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const addRecipient = (u) => {
+    setSelectedRecipients((prev) => [...prev, u]);
+    setRecipientSearch('');
+    setSearchResults([]);
+    setShowDropdown(false);
+    searchRef.current?.focus();
+  };
+
+  const removeRecipient = (id) => {
+    setSelectedRecipients((prev) => prev.filter((r) => r.id !== id));
+  };
+
   const selectConversation = async (conv) => {
     setSelectedConv(conv);
     setMessagesLoading(true);
@@ -40,7 +107,6 @@ const InboxPage = () => {
     try {
       const { data } = await api.getConversationMessages(conv.id);
       setMessages(data);
-      // Mark as read
       await api.markConversationAsRead(conv.id);
     } catch (err) {
       setError(err.message);
@@ -57,7 +123,6 @@ const InboxPage = () => {
       const newMsg = await api.createConversationMessage(selectedConv.id, replyText);
       setMessages((prev) => [...prev, newMsg]);
       setReplyText('');
-      // Refresh conversation list to update last_message_at
       fetchConversations();
     } catch (err) {
       setError(err.message);
@@ -68,30 +133,27 @@ const InboxPage = () => {
 
   const handleCreateConversation = async (e) => {
     e.preventDefault();
+    if (selectedRecipients.length === 0) return;
     setCreating(true);
     try {
-      const recipientIDs = newConv.recipients
-        .split(',')
-        .map((s) => parseInt(s.trim(), 10))
-        .filter((n) => !isNaN(n));
-
+      const recipientIDs = selectedRecipients.map((r) => r.id);
       const conv = await api.createConversation({
-        subject: newConv.subject,
+        subject: newSubject,
         recipients: recipientIDs,
       });
 
-      // Send initial message if provided
-      if (newConv.body.trim()) {
-        await api.createConversationMessage(conv.id, newConv.body);
+      if (newBody.trim()) {
+        await api.createConversationMessage(conv.id, newBody);
       }
 
-      setNewConv({ subject: '', recipients: '', body: '' });
+      setNewSubject('');
+      setNewBody('');
+      setSelectedRecipients([]);
       setShowNewForm(false);
       setLoading(true);
       await fetchConversations();
-      // Select the newly created conversation
       setSelectedConv(conv);
-      if (newConv.body.trim()) {
+      if (newBody.trim()) {
         const { data } = await api.getConversationMessages(conv.id);
         setMessages(data);
       } else {
@@ -102,6 +164,15 @@ const InboxPage = () => {
     } finally {
       setCreating(false);
     }
+  };
+
+  const resetNewForm = () => {
+    setShowNewForm(false);
+    setNewSubject('');
+    setNewBody('');
+    setSelectedRecipients([]);
+    setRecipientSearch('');
+    setSearchResults([]);
   };
 
   const formatDate = (dateStr) => {
@@ -123,7 +194,10 @@ const InboxPage = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="text-center py-12 text-gray-500">Loading inbox...</div>
+        <div className="flex items-center justify-center py-12 text-gray-500">
+          <Loader2 className="w-6 h-6 animate-spin mr-2" />
+          <span>Loading inbox...</span>
+        </div>
       </Layout>
     );
   }
@@ -137,10 +211,11 @@ const InboxPage = () => {
         </h2>
         <button
           onClick={() => {
-            setShowNewForm(!showNewForm);
-            if (showNewForm) setNewConv({ subject: '', recipients: '', body: '' });
+            if (showNewForm) resetNewForm();
+            else setShowNewForm(true);
           }}
           className="inline-flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium"
+          aria-label="Compose message"
         >
           {showNewForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
           <span>{showNewForm ? 'Cancel' : 'New Conversation'}</span>
@@ -148,7 +223,15 @@ const InboxPage = () => {
       </div>
 
       {error && (
-        <div className="bg-red-50 text-red-600 rounded-md p-3 mb-4 text-sm">{error}</div>
+        <div className="bg-red-50 text-red-600 rounded-md p-3 mb-4 text-sm flex items-center justify-between">
+          <span>{error}</span>
+          <button
+            onClick={() => { setError(null); setLoading(true); fetchConversations(); }}
+            className="ml-3 text-red-700 hover:text-red-900 font-medium underline text-sm flex-shrink-0"
+          >
+            Retry
+          </button>
+        </div>
       )}
 
       {showNewForm && (
@@ -156,57 +239,105 @@ const InboxPage = () => {
           <h3 className="font-semibold mb-4">New Conversation</h3>
           <form onSubmit={handleCreateConversation} className="space-y-4">
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">To</label>
+              <div className="border border-gray-300 rounded-md px-2 py-1.5 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500">
+                <div className="flex flex-wrap gap-1.5 items-center">
+                  {selectedRecipients.map((r) => (
+                    <span
+                      key={r.id}
+                      className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full"
+                    >
+                      {r.name}
+                      <button
+                        type="button"
+                        onClick={() => removeRecipient(r.id)}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                  <div className="relative flex-1 min-w-[150px]">
+                    <input
+                      ref={searchRef}
+                      type="text"
+                      value={recipientSearch}
+                      onChange={(e) => setRecipientSearch(e.target.value)}
+                      onFocus={() => { if (searchResults.length > 0) setShowDropdown(true); }}
+                      className="w-full border-0 px-1 py-0.5 text-sm focus:outline-none focus:ring-0"
+                      placeholder={selectedRecipients.length === 0 ? 'Search by name or email...' : 'Add more...'}
+                    />
+                    {showDropdown && (
+                      <div
+                        ref={dropdownRef}
+                        className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto"
+                      >
+                        {searching ? (
+                          <div className="px-3 py-2 text-sm text-gray-500">Searching...</div>
+                        ) : (
+                          searchResults.map((u) => (
+                            <button
+                              key={u.id}
+                              type="button"
+                              onClick={() => addRecipient(u)}
+                              className="w-full text-left px-3 py-2 hover:bg-blue-50 flex items-center gap-2 text-sm"
+                            >
+                              <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600 flex-shrink-0">
+                                {(u.name || '?')[0].toUpperCase()}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-medium text-gray-900 truncate">{u.name}</p>
+                                <p className="text-xs text-gray-500 truncate">{u.email}</p>
+                              </div>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              {selectedRecipients.length === 0 && (
+                <p className="text-xs text-gray-500 mt-1">Type at least 2 characters to search</p>
+              )}
+            </div>
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
               <input
                 type="text"
-                value={newConv.subject}
-                onChange={(e) => setNewConv({ ...newConv, subject: e.target.value })}
+                value={newSubject}
+                onChange={(e) => setNewSubject(e.target.value)}
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
                 placeholder="Conversation subject"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Recipient IDs (comma-separated)
-              </label>
-              <input
-                type="text"
-                value={newConv.recipients}
-                onChange={(e) => setNewConv({ ...newConv, recipients: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-                placeholder="e.g. 2, 3, 5"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Message (optional)
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
               <textarea
-                value={newConv.body}
-                onChange={(e) => setNewConv({ ...newConv, body: e.target.value })}
+                value={newBody}
+                onChange={(e) => setNewBody(e.target.value)}
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows={3}
-                placeholder="Write your first message..."
+                placeholder="Write your message..."
               />
             </div>
             <div className="flex justify-end">
               <button
                 type="submit"
-                disabled={creating}
+                disabled={creating || selectedRecipients.length === 0}
                 className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium disabled:opacity-50"
               >
-                {creating ? 'Creating...' : 'Create Conversation'}
+                {creating ? 'Sending...' : 'Send Message'}
               </button>
             </div>
           </form>
         </div>
       )}
 
-      <div className="flex bg-white rounded-lg shadow overflow-hidden" style={{ minHeight: '500px' }}>
+      <div className="flex flex-col md:flex-row bg-white rounded-lg shadow overflow-hidden" style={{ minHeight: '500px' }}>
         {/* Left panel - conversation list */}
-        <div className="w-1/3 border-r border-gray-200 overflow-y-auto">
+        <div className={`w-full md:w-1/3 border-r border-gray-200 overflow-y-auto ${selectedConv ? 'hidden md:block' : 'block'}`}>
           {conversations.length === 0 ? (
             <div className="p-6 text-center text-gray-500 text-sm">
               <MessageSquare className="w-8 h-8 mx-auto mb-2 text-gray-300" />
@@ -228,7 +359,9 @@ const InboxPage = () => {
                         {conv.subject || '(No subject)'}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
-                        From user #{conv.created_by_user_id}
+                        {conv.participants?.length
+                          ? conv.participants.map((p) => p.name || `User #${p.id}`).join(', ')
+                          : `From user #${conv.created_by_user_id}`}
                       </p>
                     </div>
                     <span className="text-xs text-gray-400 ml-2 flex-shrink-0">
@@ -242,24 +375,34 @@ const InboxPage = () => {
         </div>
 
         {/* Right panel - message thread */}
-        <div className="flex-1 flex flex-col">
+        <div className={`flex-1 ${!selectedConv ? 'hidden md:flex' : 'flex'} flex-col`}>
           {selectedConv ? (
             <>
               {/* Thread header */}
               <div className="p-4 border-b border-gray-200 bg-gray-50">
+                <button
+                  onClick={() => setSelectedConv(null)}
+                  className="md:hidden flex items-center text-sm text-blue-600 hover:text-blue-800 mb-2"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-1" />
+                  Back to conversations
+                </button>
                 <h3 className="font-semibold text-gray-900">
                   {selectedConv.subject || '(No subject)'}
                 </h3>
                 <p className="text-xs text-gray-500 mt-1">
-                  Started by user #{selectedConv.created_by_user_id}
+                  {selectedConv.participants?.length
+                    ? selectedConv.participants.map((p) => p.name || `User #${p.id}`).join(', ')
+                    : `Started by user #${selectedConv.created_by_user_id}`}
                 </p>
               </div>
 
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {messagesLoading ? (
-                  <div className="text-center text-gray-500 py-8 text-sm">
-                    Loading messages...
+                  <div className="flex items-center justify-center text-gray-500 py-8 text-sm">
+                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                    <span>Loading messages...</span>
                   </div>
                 ) : messages.length === 0 ? (
                   <div className="text-center text-gray-400 py-8 text-sm">
@@ -282,7 +425,7 @@ const InboxPage = () => {
                         >
                           {!isOwn && (
                             <p className="text-xs font-medium text-gray-500 mb-1">
-                              User #{msg.user_id}
+                              {msg.user_name || msg.author_name || `User #${msg.user_id}`}
                             </p>
                           )}
                           <p className="text-sm whitespace-pre-wrap">{msg.body}</p>

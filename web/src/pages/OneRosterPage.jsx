@@ -2,10 +2,9 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { RefreshCw, Plus, Trash2, Edit3, AlertTriangle, X, Check, Clock, Loader2, ChevronDown, ChevronRight, Database } from 'lucide-react';
 import Layout from '../components/Layout';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
 const getHeaders = () => ({
   'Content-Type': 'application/json',
-  Authorization: `Bearer ${localStorage.getItem('token')}`,
 });
 
 const ACCOUNT_ID = 1;
@@ -56,7 +55,7 @@ const OneRosterPage = () => {
   const fetchConnections = useCallback(async () => {
     try {
       const res = await fetch(`${API_URL}/accounts/${ACCOUNT_ID}/oneroster_connections?per_page=100`, {
-        headers: getHeaders(),
+        credentials: 'include', headers: getHeaders(),
       });
       if (!res.ok) throw new Error('Failed to fetch OneRoster connections');
       const data = await res.json();
@@ -72,7 +71,7 @@ const OneRosterPage = () => {
     setSyncLogsLoading(true);
     try {
       const res = await fetch(`${API_URL}/accounts/${ACCOUNT_ID}/oneroster_connections/${connectionId}/sync_logs?per_page=20`, {
-        headers: getHeaders(),
+        credentials: 'include', headers: getHeaders(),
       });
       if (!res.ok) throw new Error('Failed to fetch sync logs');
       const data = await res.json();
@@ -87,7 +86,7 @@ const OneRosterPage = () => {
   const pollSyncStatus = useCallback(async (connectionId) => {
     try {
       const res = await fetch(`${API_URL}/accounts/${ACCOUNT_ID}/oneroster_connections/${connectionId}/sync_logs?per_page=1`, {
-        headers: getHeaders(),
+        credentials: 'include', headers: getHeaders(),
       });
       if (!res.ok) return;
       const data = await res.json();
@@ -158,13 +157,13 @@ const OneRosterPage = () => {
         }
         res = await fetch(`${API_URL}/accounts/${ACCOUNT_ID}/oneroster_connections/${editingId}`, {
           method: 'PUT',
-          headers: getHeaders(),
+          credentials: 'include', headers: getHeaders(),
           body: JSON.stringify(updateBody),
         });
       } else {
         res = await fetch(`${API_URL}/accounts/${ACCOUNT_ID}/oneroster_connections`, {
           method: 'POST',
-          headers: getHeaders(),
+          credentials: 'include', headers: getHeaders(),
           body: JSON.stringify(body),
         });
       }
@@ -190,7 +189,7 @@ const OneRosterPage = () => {
     try {
       const res = await fetch(`${API_URL}/accounts/${ACCOUNT_ID}/oneroster_connections/${id}`, {
         method: 'DELETE',
-        headers: getHeaders(),
+        credentials: 'include', headers: getHeaders(),
       });
       if (!res.ok) throw new Error('Failed to delete connection');
       setDeleteConfirm(null);
@@ -214,7 +213,7 @@ const OneRosterPage = () => {
     try {
       const res = await fetch(`${API_URL}/accounts/${ACCOUNT_ID}/oneroster_connections/${id}/test`, {
         method: 'POST',
-        headers: getHeaders(),
+        credentials: 'include', headers: getHeaders(),
       });
       if (!res.ok) throw new Error('Failed to test connection');
       const data = await res.json();
@@ -238,7 +237,7 @@ const OneRosterPage = () => {
       const endpoint = type === 'incremental' ? 'sync_incremental' : 'sync';
       const res = await fetch(`${API_URL}/accounts/${ACCOUNT_ID}/oneroster_connections/${id}/${endpoint}`, {
         method: 'POST',
-        headers: getHeaders(),
+        credentials: 'include', headers: getHeaders(),
       });
       if (!res.ok) {
         const errData = await res.json();
@@ -532,7 +531,10 @@ const OneRosterPage = () => {
 
       {/* Connections List */}
       {loading ? (
-        <div className="text-center py-12 text-gray-500">Loading OneRoster connections...</div>
+        <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+  Loading OneRoster connections...
+</div>
       ) : connections.length === 0 && !showForm ? (
         <div className="bg-white rounded-lg shadow p-12 text-center">
           <Database className="w-12 h-12 text-gray-300 mx-auto mb-4" />

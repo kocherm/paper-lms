@@ -27,11 +27,14 @@ type UserRepository interface {
 	FindBySISUserID(ctx context.Context, sisUserID string) (*models.User, error)
 	Update(ctx context.Context, user *models.User) error
 	List(ctx context.Context, params PaginationParams) (*PaginatedResult[models.User], error)
+	FindByResetToken(ctx context.Context, token string) (*models.User, error)
+	Search(ctx context.Context, searchTerm string, params PaginationParams) (*PaginatedResult[models.User], error)
 }
 
 type AccountRepository interface {
 	Create(ctx context.Context, account *models.Account) error
 	FindByID(ctx context.Context, id uint) (*models.Account, error)
+	Update(ctx context.Context, account *models.Account) error
 	List(ctx context.Context, params PaginationParams) (*PaginatedResult[models.Account], error)
 }
 
@@ -59,6 +62,7 @@ type EnrollmentRepository interface {
 	ListByCourseID(ctx context.Context, courseID uint, params PaginationParams) (*PaginatedResult[models.Enrollment], error)
 	ListByUserID(ctx context.Context, userID uint) ([]models.Enrollment, error)
 	FindByUserAndCourse(ctx context.Context, userID, courseID uint) (*models.Enrollment, error)
+	CountByCourseIDs(ctx context.Context, courseIDs []uint) (map[uint]int64, error)
 }
 
 type ModuleRepository interface {
@@ -68,12 +72,17 @@ type ModuleRepository interface {
 	Delete(ctx context.Context, id uint) error
 	ListByCourseID(ctx context.Context, courseID uint, params PaginationParams) (*PaginatedResult[models.ContextModule], error)
 	FindActiveByDateRange(ctx context.Context, courseID uint, date time.Time) (*models.ContextModule, error)
+	ReorderModules(ctx context.Context, courseID uint, moduleIDs []uint) error
 }
 
 type ModuleItemRepository interface {
 	Create(ctx context.Context, item *models.ContentTag) error
 	FindByID(ctx context.Context, id uint) (*models.ContentTag, error)
+	Update(ctx context.Context, item *models.ContentTag) error
+	Delete(ctx context.Context, id uint) error
 	ListByModuleID(ctx context.Context, moduleID uint, params PaginationParams) (*PaginatedResult[models.ContentTag], error)
+	ReorderItems(ctx context.Context, moduleID uint, itemIDs []uint) error
+	MoveItemToModule(ctx context.Context, itemID uint, targetModuleID uint, position int) error
 }
 
 type PageRepository interface {
@@ -110,6 +119,7 @@ type SubmissionRepository interface {
 	ListByAssignmentID(ctx context.Context, assignmentID uint, params PaginationParams) (*PaginatedResult[models.Submission], error)
 	ListByUserAndCourse(ctx context.Context, userID, courseID uint) ([]models.Submission, error)
 	BulkListByCourse(ctx context.Context, courseID uint, params PaginationParams) (*PaginatedResult[models.Submission], error)
+	PostGradesByAssignment(ctx context.Context, assignmentID uint, postedAt *time.Time) error
 }
 
 type SubmissionCommentRepository interface {
@@ -120,7 +130,10 @@ type SubmissionCommentRepository interface {
 type GradingStandardRepository interface {
 	Create(ctx context.Context, standard *models.GradingStandard) error
 	FindByID(ctx context.Context, id uint) (*models.GradingStandard, error)
+	Update(ctx context.Context, standard *models.GradingStandard) error
+	Delete(ctx context.Context, id uint) error
 	ListByCourse(ctx context.Context, courseID uint) ([]models.GradingStandard, error)
+	FindActiveByCourse(ctx context.Context, courseID uint) (*models.GradingStandard, error)
 }
 
 type DeveloperKeyRepository interface {
@@ -263,6 +276,7 @@ type QuizQuestionRepository interface {
 	Update(ctx context.Context, question *models.QuizQuestion) error
 	Delete(ctx context.Context, id uint) error
 	ListByQuizID(ctx context.Context, quizID uint, params PaginationParams) (*PaginatedResult[models.QuizQuestion], error)
+	ListByGroupID(ctx context.Context, groupID uint) ([]models.QuizQuestion, error)
 }
 
 type QuizSubmissionRepository interface {
@@ -271,6 +285,7 @@ type QuizSubmissionRepository interface {
 	Update(ctx context.Context, submission *models.QuizSubmission) error
 	FindByQuizAndUser(ctx context.Context, quizID, userID uint) (*models.QuizSubmission, error)
 	ListByQuizID(ctx context.Context, quizID uint, params PaginationParams) (*PaginatedResult[models.QuizSubmission], error)
+	ListCompletedByQuizID(ctx context.Context, quizID uint) ([]models.QuizSubmission, error)
 }
 
 type QuizSubmissionAnswerRepository interface {
@@ -280,6 +295,7 @@ type QuizSubmissionAnswerRepository interface {
 	Update(ctx context.Context, answer *models.QuizSubmissionAnswer) error
 	ListBySubmissionID(ctx context.Context, submissionID uint) ([]models.QuizSubmissionAnswer, error)
 	FindBySubmissionAndQuestion(ctx context.Context, submissionID, questionID uint) (*models.QuizSubmissionAnswer, error)
+	ListBySubmissionIDs(ctx context.Context, submissionIDs []uint) ([]models.QuizSubmissionAnswer, error)
 }
 
 // Phase 5: Rubrics
@@ -450,6 +466,13 @@ type LearningOutcomeResultRepository interface {
 	ListByUserAndContext(ctx context.Context, userID uint, contextType string, contextID uint) ([]models.LearningOutcomeResult, error)
 }
 
+type OutcomeAlignmentRepository interface {
+	Create(ctx context.Context, alignment *models.OutcomeAlignment) error
+	Delete(ctx context.Context, id uint) error
+	ListByAssignmentID(ctx context.Context, assignmentID uint) ([]models.OutcomeAlignment, error)
+	ListByCourseID(ctx context.Context, courseID uint) ([]models.OutcomeAlignment, error)
+}
+
 // Phase 8: Blueprint Courses
 
 type BlueprintTemplateRepository interface {
@@ -593,4 +616,92 @@ type TodaysLessonOverrideRepository interface {
 type CourseVisitRepository interface {
 	Upsert(ctx context.Context, visit *models.CourseVisit) error
 	FindByUserAndCourse(ctx context.Context, userID, courseID uint) (*models.CourseVisit, error)
+}
+
+// Peer Reviews
+
+type PeerReviewRepository interface {
+	Create(ctx context.Context, pr *models.PeerReview) error
+	FindByID(ctx context.Context, id uint) (*models.PeerReview, error)
+	Update(ctx context.Context, pr *models.PeerReview) error
+	ListByAssignment(ctx context.Context, assignmentID uint) ([]models.PeerReview, error)
+	ListByReviewer(ctx context.Context, assignmentID, reviewerID uint) ([]models.PeerReview, error)
+	FindByAssignmentAndReviewerAndReviewee(ctx context.Context, assignmentID, reviewerID, revieweeID uint) (*models.PeerReview, error)
+	DeleteByAssignment(ctx context.Context, assignmentID uint) error
+}
+
+// Question Banks
+
+type QuestionBankRepository interface {
+	Create(ctx context.Context, qb *models.QuestionBank) error
+	FindByID(ctx context.Context, id uint) (*models.QuestionBank, error)
+	Update(ctx context.Context, qb *models.QuestionBank) error
+	Delete(ctx context.Context, id uint) error
+	ListByCourse(ctx context.Context, courseID uint, params PaginationParams) (*PaginatedResult[models.QuestionBank], error)
+}
+
+type QuestionBankEntryRepository interface {
+	Create(ctx context.Context, entry *models.QuestionBankEntry) error
+	FindByID(ctx context.Context, id uint) (*models.QuestionBankEntry, error)
+	Update(ctx context.Context, entry *models.QuestionBankEntry) error
+	Delete(ctx context.Context, id uint) error
+	ListByBankID(ctx context.Context, bankID uint) ([]models.QuestionBankEntry, error)
+}
+
+// Quiz Question Groups
+
+type QuizQuestionGroupRepository interface {
+	Create(ctx context.Context, group *models.QuizQuestionGroup) error
+	FindByID(ctx context.Context, id uint) (*models.QuizQuestionGroup, error)
+	Update(ctx context.Context, group *models.QuizQuestionGroup) error
+	Delete(ctx context.Context, id uint) error
+	ListByQuizID(ctx context.Context, quizID uint) ([]models.QuizQuestionGroup, error)
+}
+
+// Module Prerequisites
+
+type ModulePrerequisiteRepository interface {
+	SetPrerequisites(ctx context.Context, moduleID uint, prerequisiteModuleIDs []uint) error
+	GetPrerequisites(ctx context.Context, moduleID uint) ([]uint, error)
+	GetModulesWithPrerequisite(ctx context.Context, prerequisiteModuleID uint) ([]uint, error)
+}
+
+// Comment Bank Items
+
+type CommentBankItemRepository interface {
+	Create(ctx context.Context, item *models.CommentBankItem) error
+	FindByID(ctx context.Context, id uint) (*models.CommentBankItem, error)
+	Update(ctx context.Context, item *models.CommentBankItem) error
+	Delete(ctx context.Context, id uint) error
+	ListByUserID(ctx context.Context, userID uint, params PaginationParams) (*PaginatedResult[models.CommentBankItem], error)
+	SearchByUser(ctx context.Context, userID uint, query string) ([]models.CommentBankItem, error)
+}
+
+// Planner
+
+type PlannerNoteRepository interface {
+	Create(ctx context.Context, note *models.PlannerNote) error
+	FindByID(ctx context.Context, id uint) (*models.PlannerNote, error)
+	Update(ctx context.Context, note *models.PlannerNote) error
+	Delete(ctx context.Context, id uint) error
+	ListByUserID(ctx context.Context, userID uint, params PaginationParams) (*PaginatedResult[models.PlannerNote], error)
+}
+
+type PlannerOverrideRepository interface {
+	Create(ctx context.Context, override *models.PlannerOverride) error
+	FindByID(ctx context.Context, id uint) (*models.PlannerOverride, error)
+	Update(ctx context.Context, override *models.PlannerOverride) error
+	Delete(ctx context.Context, id uint) error
+	FindByUserAndPlannable(ctx context.Context, userID uint, plannableType string, plannableID uint) (*models.PlannerOverride, error)
+	ListByUserID(ctx context.Context, userID uint) ([]models.PlannerOverride, error)
+}
+
+// Wiki Page Revisions
+
+type WikiPageRevisionRepository interface {
+	Create(ctx context.Context, revision *models.WikiPageRevision) error
+	FindByID(ctx context.Context, id uint) (*models.WikiPageRevision, error)
+	ListByPageID(ctx context.Context, pageID uint, params PaginationParams) (*PaginatedResult[models.WikiPageRevision], error)
+	GetLatestRevision(ctx context.Context, pageID uint) (*models.WikiPageRevision, error)
+	GetRevisionByNumber(ctx context.Context, pageID uint, revisionNumber int) (*models.WikiPageRevision, error)
 }

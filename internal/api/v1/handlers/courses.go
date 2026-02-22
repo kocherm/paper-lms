@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"encoding/json"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -23,6 +25,14 @@ func NewCourseHandler(courseService *service.CourseService, enrollmentService *s
 }
 
 func courseToJSON(c *models.Course) fiber.Map {
+	// Parse navigation_tabs JSON string into a raw value for the response
+	var navTabs interface{}
+	if c.NavigationTabs != "" {
+		if err := json.Unmarshal([]byte(c.NavigationTabs), &navTabs); err != nil {
+			navTabs = nil
+		}
+	}
+
 	return fiber.Map{
 		"id":             c.ID,
 		"account_id":     c.AccountID,
@@ -35,23 +45,28 @@ func courseToJSON(c *models.Course) fiber.Map {
 		"syllabus_body":  c.SyllabusBody,
 		"license":        c.License,
 		"is_public":      c.IsPublic,
-		"ui_mode":        c.UIMode,
-		"created_at":     c.CreatedAt,
+		"ui_mode":                          c.UIMode,
+		"apply_assignment_group_weights":   c.ApplyGroupWeights,
+		"navigation_tabs":                  navTabs,
+		"created_at":                       c.CreatedAt,
 	}
 }
 
 func (h *CourseHandler) ListCourses(c *fiber.Ctx) error {
 	params := middleware.GetPagination(c)
-	userID := c.Locals("user_id").(uint)
-
-	enrollmentType := c.Query("enrollment_type")
+	userID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 
 	var items []models.Course
 	var totalCount int64
 	var page, perPage int
 
-	if enrollmentType != "" || c.Query("as_student") == "true" {
-		r, err := h.courseService.ListForUser(c.Context(), userID, params)
+	// Default: return user's enrolled courses (matches Canvas behavior)
+	// Use ?scope=all to get all courses (admin use case, e.g. course browser)
+	if c.Query("scope") == "all" {
+		r, err := h.courseService.List(c.Context(), params)
 		if err != nil {
 			return responses.InternalError(c, "Could not fetch courses")
 		}
@@ -60,7 +75,7 @@ func (h *CourseHandler) ListCourses(c *fiber.Ctx) error {
 		page = r.Page
 		perPage = r.PerPage
 	} else {
-		r, err := h.courseService.List(c.Context(), params)
+		r, err := h.courseService.ListForUser(c.Context(), userID, params)
 		if err != nil {
 			return responses.InternalError(c, "Could not fetch courses")
 		}
@@ -72,9 +87,21 @@ func (h *CourseHandler) ListCourses(c *fiber.Ctx) error {
 
 	responses.SetPaginationHeaders(c, totalCount, page, perPage)
 
+	// Batch-fetch student enrollment counts (single GROUP BY query)
+	courseIDs := make([]uint, len(items))
+	for i, course := range items {
+		courseIDs[i] = course.ID
+	}
+	studentCounts, _ := h.enrollmentService.CountStudentsByCourseIDs(c.Context(), courseIDs)
+	if studentCounts == nil {
+		studentCounts = map[uint]int64{}
+	}
+
 	courses := make([]fiber.Map, len(items))
 	for i, course := range items {
-		courses[i] = courseToJSON(&course)
+		cj := courseToJSON(&course)
+		cj["total_students"] = studentCounts[course.ID]
+		courses[i] = cj
 	}
 
 	return c.JSON(courses)
@@ -103,8 +130,9 @@ type createCourseRequest struct {
 		DefaultView   string     `json:"default_view"`
 		SyllabusBody  string     `json:"syllabus_body"`
 		License       string     `json:"license"`
-		IsPublic      bool       `json:"is_public"`
-		UIMode        string     `json:"ui_mode"`
+		IsPublic          bool       `json:"is_public"`
+		UIMode            string     `json:"ui_mode"`
+		ApplyGroupWeights bool       `json:"apply_assignment_group_weights"`
 	} `json:"course"`
 }
 
@@ -114,7 +142,14 @@ func (h *CourseHandler) CreateCourse(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid input")
 	}
 
-	userID := c.Locals("user_id").(uint)
+	if strings.TrimSpace(input.Course.Name) == "" {
+		return responses.BadRequest(c, "Course name is required")
+	}
+
+	userID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 
 	course := &models.Course{
 		Name:         input.Course.Name,
@@ -124,8 +159,9 @@ func (h *CourseHandler) CreateCourse(c *fiber.Ctx) error {
 		DefaultView:  input.Course.DefaultView,
 		SyllabusBody: input.Course.SyllabusBody,
 		License:      input.Course.License,
-		IsPublic:     input.Course.IsPublic,
-		UIMode:       input.Course.UIMode,
+		IsPublic:          input.Course.IsPublic,
+		UIMode:            input.Course.UIMode,
+		ApplyGroupWeights: input.Course.ApplyGroupWeights,
 	}
 
 	if course.DefaultView == "" {
@@ -163,8 +199,10 @@ func (h *CourseHandler) UpdateCourse(c *fiber.Ctx) error {
 			SyllabusBody  *string    `json:"syllabus_body"`
 			License       *string    `json:"license"`
 			IsPublic      *bool      `json:"is_public"`
-			UIMode        *string    `json:"ui_mode"`
-			WorkflowState *string    `json:"workflow_state"`
+			UIMode            *string          `json:"ui_mode"`
+			WorkflowState     *string          `json:"workflow_state"`
+			ApplyGroupWeights *bool            `json:"apply_assignment_group_weights"`
+			NavigationTabs    *json.RawMessage `json:"navigation_tabs"`
 		} `json:"course"`
 	}
 
@@ -201,6 +239,12 @@ func (h *CourseHandler) UpdateCourse(c *fiber.Ctx) error {
 	}
 	if input.Course.WorkflowState != nil {
 		course.WorkflowState = *input.Course.WorkflowState
+	}
+	if input.Course.ApplyGroupWeights != nil {
+		course.ApplyGroupWeights = *input.Course.ApplyGroupWeights
+	}
+	if input.Course.NavigationTabs != nil {
+		course.NavigationTabs = string(*input.Course.NavigationTabs)
 	}
 
 	if err := h.courseService.Update(c.Context(), course); err != nil {

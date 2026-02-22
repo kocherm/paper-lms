@@ -2,8 +2,11 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/kocherm/paper-lms/internal/domain/models"
 	"github.com/kocherm/paper-lms/internal/repository"
@@ -20,6 +23,9 @@ func NewUserService(repo repository.UserRepository) *UserService {
 func (s *UserService) Register(ctx context.Context, name, email, password string) (*models.User, error) {
 	if name == "" || email == "" || password == "" {
 		return nil, errors.New("name, email, and password are required")
+	}
+	if len(password) < 8 {
+		return nil, errors.New("password must be at least 8 characters")
 	}
 
 	existing, _ := s.repo.FindByEmail(ctx, email)
@@ -78,4 +84,57 @@ func (s *UserService) Update(ctx context.Context, user *models.User) error {
 
 func (s *UserService) List(ctx context.Context, params repository.PaginationParams) (*repository.PaginatedResult[models.User], error) {
 	return s.repo.List(ctx, params)
+}
+
+func (s *UserService) Search(ctx context.Context, searchTerm string, params repository.PaginationParams) (*repository.PaginatedResult[models.User], error) {
+	return s.repo.Search(ctx, searchTerm, params)
+}
+
+func (s *UserService) RequestPasswordReset(ctx context.Context, email string) (string, error) {
+	user, err := s.repo.FindByEmail(ctx, email)
+	if err != nil {
+		// Don't reveal whether the email exists
+		return "", nil
+	}
+
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", errors.New("could not generate reset token")
+	}
+	token := hex.EncodeToString(b)
+	expires := time.Now().Add(1 * time.Hour)
+
+	user.ResetToken = token
+	user.ResetTokenExpiresAt = &expires
+	if err := s.repo.Update(ctx, user); err != nil {
+		return "", errors.New("could not save reset token")
+	}
+
+	return token, nil
+}
+
+func (s *UserService) ResetPassword(ctx context.Context, token, newPassword string) error {
+	if token == "" {
+		return errors.New("reset token is required")
+	}
+	if len(newPassword) < 8 {
+		return errors.New("password must be at least 8 characters")
+	}
+
+	user, err := s.repo.FindByResetToken(ctx, token)
+	if err != nil {
+		return errors.New("invalid or expired reset token")
+	}
+
+	if user.ResetTokenExpiresAt == nil || user.ResetTokenExpiresAt.Before(time.Now()) {
+		return errors.New("reset token has expired")
+	}
+
+	if err := user.HashPassword(newPassword); err != nil {
+		return err
+	}
+
+	user.ResetToken = ""
+	user.ResetTokenExpiresAt = nil
+	return s.repo.Update(ctx, user)
 }

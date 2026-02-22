@@ -9,7 +9,7 @@ type Enrollment struct {
 	CourseSectionID *uint      `json:"course_section_id" gorm:"index"`
 	Type            string     `json:"type" gorm:"not null"` // StudentEnrollment, TeacherEnrollment, TaEnrollment, ObserverEnrollment, DesignerEnrollment
 	Role            string     `json:"role" gorm:"not null"`
-	WorkflowState   string     `json:"workflow_state" gorm:"not null;default:'active'"`
+	WorkflowState   string     `json:"workflow_state" gorm:"not null;default:'active';index"`
 	CreatedAt       time.Time  `json:"created_at"`
 	UpdatedAt       time.Time  `json:"updated_at"`
 	LastActivityAt   *time.Time `json:"last_activity_at"`

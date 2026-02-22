@@ -12,10 +12,11 @@ import (
 
 type CollaborationHandler struct {
 	collaborationService *service.CollaborationService
+	authz                *ResourceAuthorizer
 }
 
-func NewCollaborationHandler(collaborationService *service.CollaborationService) *CollaborationHandler {
-	return &CollaborationHandler{collaborationService: collaborationService}
+func NewCollaborationHandler(collaborationService *service.CollaborationService, authz *ResourceAuthorizer) *CollaborationHandler {
+	return &CollaborationHandler{collaborationService: collaborationService, authz: authz}
 }
 
 func collaborationToJSON(c *models.Collaboration) fiber.Map {
@@ -115,6 +116,13 @@ func (h *CollaborationHandler) GetCollaboration(c *fiber.Ctx) error {
 		return responses.NotFound(c, "collaboration")
 	}
 
+	// Authorization: require enrollment for course-scoped collaborations
+	if collaboration.ContextType == "Course" {
+		if err := h.authz.RequireCourseEnrolled(c, collaboration.ContextID); err != nil {
+			return err
+		}
+	}
+
 	return c.JSON(collaborationToJSON(collaboration))
 }
 
@@ -129,6 +137,13 @@ func (h *CollaborationHandler) UpdateCollaboration(c *fiber.Ctx) error {
 	collaboration, err := h.collaborationService.GetByID(c.Context(), uint(id))
 	if err != nil {
 		return responses.NotFound(c, "collaboration")
+	}
+
+	// Authorization: require instructor for course-scoped collaborations
+	if collaboration.ContextType == "Course" {
+		if err := h.authz.RequireCourseInstructor(c, collaboration.ContextID); err != nil {
+			return err
+		}
 	}
 
 	var input struct {
@@ -180,7 +195,20 @@ func (h *CollaborationHandler) DeleteCollaboration(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid collaboration ID")
 	}
 
-	if err := h.collaborationService.Delete(c.Context(), uint(id)); err != nil {
+	// Fetch first to check authorization
+	collaboration, err := h.collaborationService.GetByID(c.Context(), uint(id))
+	if err != nil {
+		return responses.NotFound(c, "collaboration")
+	}
+
+	// Authorization: require instructor for course-scoped collaborations
+	if collaboration.ContextType == "Course" {
+		if err := h.authz.RequireCourseInstructor(c, collaboration.ContextID); err != nil {
+			return err
+		}
+	}
+
+	if err := h.collaborationService.Delete(c.Context(), collaboration.ID); err != nil {
 		return responses.NotFound(c, "collaboration")
 	}
 

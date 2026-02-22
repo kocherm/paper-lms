@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, Navigate } from 'react-router-dom';
 import { Puzzle, Plus, Trash2, Pencil, AlertTriangle, X, ArrowLeft } from 'lucide-react';
 import { api } from '../services/api';
+import useIsTeacher from '../hooks/useIsTeacher';
 import Layout from '../components/Layout';
+import CourseNav from '../components/CourseNav';
 
 const ExternalToolsPage = () => {
   const { courseId } = useParams();
+  const isTeacher = useIsTeacher(courseId);
   const [course, setCourse] = useState(null);
   const [tools, setTools] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -114,8 +117,15 @@ const ExternalToolsPage = () => {
     });
   };
 
+  if (isTeacher === false) return <Navigate to={`/courses/${courseId}`} replace />;
+  if (isTeacher === null) return <Layout><div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+  Loading...
+</div></Layout>;
+
   return (
     <Layout>
+      <CourseNav />
       <div className="mb-6">
         <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm flex items-center gap-1 mb-2">
           <ArrowLeft className="w-3 h-3" />
@@ -130,16 +140,18 @@ const ExternalToolsPage = () => {
               Manage LTI tools installed in this course.
             </p>
           </div>
-          <button
-            onClick={() => {
-              setEditingTool(null);
-              setShowForm(!showForm);
-            }}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm"
-          >
-            <Plus className="w-4 h-4" />
-            Install New Tool
-          </button>
+          {isTeacher && (
+            <button
+              onClick={() => {
+                setEditingTool(null);
+                setShowForm(!showForm);
+              }}
+              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm"
+            >
+              <Plus className="w-4 h-4" />
+              Install New Tool
+            </button>
+          )}
         </div>
       </div>
 
@@ -280,7 +292,10 @@ const ExternalToolsPage = () => {
 
       {/* Tools List */}
       {loading ? (
-        <div className="text-center py-12 text-gray-500">Loading external tools...</div>
+        <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+  Loading external tools...
+</div>
       ) : tools.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-12 text-center">
           <Puzzle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
@@ -309,9 +324,11 @@ const ExternalToolsPage = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Installed
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
+                {isTeacher && (
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -353,24 +370,26 @@ const ExternalToolsPage = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {formatDate(tool.created_at)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => handleEdit(tool)}
-                        className="text-gray-500 hover:text-blue-600 p-1"
-                        title="Edit tool"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => setDeleteConfirm(tool.id)}
-                        className="text-red-500 hover:text-red-700 p-1"
-                        title="Remove tool"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
+                  {isTeacher && (
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleEdit(tool)}
+                          className="text-gray-500 hover:text-blue-600 p-1"
+                          title="Edit tool"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirm(tool.id)}
+                          className="text-red-500 hover:text-red-700 p-1"
+                          title="Remove tool"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

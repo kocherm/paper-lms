@@ -10,8 +10,9 @@ import (
 
 // SpeedGraderData holds the complete data set needed for the SpeedGrader view.
 type SpeedGraderData struct {
-	Assignment *models.Assignment   `json:"assignment"`
-	Students   []SpeedGraderStudent `json:"students"`
+	Assignment  *models.Assignment   `json:"assignment"`
+	Students    []SpeedGraderStudent `json:"students"`
+	UserNameMap map[uint]string      `json:"-"` // all enrolled user names (teachers, TAs, students)
 }
 
 // SpeedGraderStudent represents a single student's submission data in SpeedGrader.
@@ -86,19 +87,33 @@ func (s *SpeedGraderService) GetSpeedGraderData(ctx context.Context, courseID, a
 		submissionsByUser[sub.UserID] = &submissionResult.Items[i]
 	}
 
+	// Build name lookup from ALL enrollments (teachers, TAs, students)
+	userNameMap := make(map[uint]string)
+	for _, enrollment := range enrollments.Items {
+		if enrollment.User != nil && enrollment.User.Name != "" {
+			userNameMap[enrollment.UserID] = enrollment.User.Name
+		}
+	}
+
 	// Build student list from enrollments (only StudentEnrollment types)
 	students := make([]SpeedGraderStudent, 0)
+	anonymousIndex := 0
 	for _, enrollment := range enrollments.Items {
 		if enrollment.Type != "StudentEnrollment" {
 			continue
 		}
 
+		anonymousIndex++
 		userName := ""
-		if enrollment.User != nil {
-			userName = enrollment.User.Name
-		}
-		if userName == "" {
-			userName = fmt.Sprintf("User %d", enrollment.UserID)
+		if assignment.AnonymousGrading {
+			userName = fmt.Sprintf("Student %d", anonymousIndex)
+		} else {
+			if enrollment.User != nil {
+				userName = enrollment.User.Name
+			}
+			if userName == "" {
+				userName = fmt.Sprintf("User %d", enrollment.UserID)
+			}
 		}
 
 		student := SpeedGraderStudent{
@@ -122,8 +137,9 @@ func (s *SpeedGraderService) GetSpeedGraderData(ctx context.Context, courseID, a
 	}
 
 	return &SpeedGraderData{
-		Assignment: assignment,
-		Students:   students,
+		Assignment:  assignment,
+		Students:    students,
+		UserNameMap: userNameMap,
 	}, nil
 }
 

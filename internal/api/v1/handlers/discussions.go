@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -105,6 +106,10 @@ func (h *DiscussionHandler) CreateTopic(c *fiber.Ctx) error {
 
 	if err := c.BodyParser(&input); err != nil {
 		return responses.BadRequest(c, "Invalid input")
+	}
+
+	if strings.TrimSpace(input.DiscussionTopic.Title) == "" {
+		return responses.BadRequest(c, "Discussion title is required")
 	}
 
 	userID, _ := c.Locals("user_id").(uint)

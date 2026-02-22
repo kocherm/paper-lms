@@ -92,3 +92,62 @@ func (h *GradingStandardHandler) CreateGradingStandard(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusCreated).JSON(gradingStandardToJSON(standard))
 }
+
+func (h *GradingStandardHandler) UpdateGradingStandard(c *fiber.Ctx) error {
+	_, err := c.ParamsInt("course_id")
+	if err != nil {
+		return responses.BadRequest(c, "Invalid course ID")
+	}
+
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return responses.BadRequest(c, "Invalid grading standard ID")
+	}
+
+	standard, err := h.repo.FindByID(c.Context(), uint(id))
+	if err != nil {
+		return responses.NotFound(c, "grading standard")
+	}
+
+	var input struct {
+		GradingStandard struct {
+			Title *string          `json:"title"`
+			Data  json.RawMessage  `json:"data"`
+		} `json:"grading_standard"`
+	}
+
+	if err := c.BodyParser(&input); err != nil {
+		return responses.BadRequest(c, "Invalid input")
+	}
+
+	if input.GradingStandard.Title != nil {
+		standard.Title = *input.GradingStandard.Title
+	}
+	if len(input.GradingStandard.Data) > 0 && string(input.GradingStandard.Data) != "null" {
+		standard.Data = string(input.GradingStandard.Data)
+	}
+
+	if err := h.repo.Update(c.Context(), standard); err != nil {
+		return responses.InternalError(c, "Could not update grading standard")
+	}
+
+	return c.JSON(gradingStandardToJSON(standard))
+}
+
+func (h *GradingStandardHandler) DeleteGradingStandard(c *fiber.Ctx) error {
+	_, err := c.ParamsInt("course_id")
+	if err != nil {
+		return responses.BadRequest(c, "Invalid course ID")
+	}
+
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return responses.BadRequest(c, "Invalid grading standard ID")
+	}
+
+	if err := h.repo.Delete(c.Context(), uint(id)); err != nil {
+		return responses.InternalError(c, "Could not delete grading standard")
+	}
+
+	return c.JSON(fiber.Map{"delete": true})
+}

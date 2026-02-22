@@ -141,9 +141,16 @@ func (pm *PermissionMiddleware) RequireSelfOrAdmin() fiber.Handler {
 		}
 
 		// Check if the URL user_id matches or is "self"
+		// Routes may use :user_id or :id — check both
 		paramUserID := c.Params("user_id")
-		if paramUserID == "self" || paramUserID == "" {
+		if paramUserID == "" {
+			paramUserID = c.Params("id")
+		}
+		if paramUserID == "self" {
 			return c.Next()
+		}
+		if paramUserID == "" {
+			return forbidden(c, "missing user identifier in URL")
 		}
 
 		targetID, err := strconv.ParseUint(paramUserID, 10, 64)

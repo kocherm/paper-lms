@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, Navigate } from 'react-router-dom';
 import {
   ArrowLeft,
   BarChart3,
@@ -14,7 +14,10 @@ import {
   Minus,
 } from 'lucide-react';
 import { api } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import useIsTeacher from '../hooks/useIsTeacher';
 import Layout from '../components/Layout';
+import CourseNav from '../components/CourseNav';
 
 const TAB_ACTIVITY = 'activity';
 const TAB_ASSIGNMENTS = 'assignments';
@@ -22,6 +25,8 @@ const TAB_STUDENTS = 'students';
 
 const AnalyticsPage = () => {
   const { courseId } = useParams();
+  const { user } = useAuth();
+  const isTeacher = useIsTeacher(courseId);
   const [course, setCourse] = useState(null);
   const [activeTab, setActiveTab] = useState(TAB_ACTIVITY);
   const [loading, setLoading] = useState(true);
@@ -112,10 +117,19 @@ const AnalyticsPage = () => {
     1
   );
 
+  if (isTeacher === false) return <Navigate to={`/courses/${courseId}`} replace />;
+  if (isTeacher === null) return <Layout><div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+  Loading...
+</div></Layout>;
+
   if (loading) {
     return (
       <Layout>
-        <div className="text-center py-12 text-gray-500">Loading analytics...</div>
+        <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+  Loading analytics...
+</div>
       </Layout>
     );
   }
@@ -123,13 +137,17 @@ const AnalyticsPage = () => {
   if (error) {
     return (
       <Layout>
-        <div className="text-red-600 text-center py-12">{error}</div>
+        <div className="text-center py-12">
+          <p className="text-red-600 mb-3">{error}</p>
+          <button onClick={() => window.location.reload()} className="text-blue-600 hover:text-blue-800 text-sm font-medium">Try Again</button>
+        </div>
       </Layout>
     );
   }
 
   return (
     <Layout>
+      <CourseNav />
       <div className="mb-6">
         <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm flex items-center space-x-1">
           <ArrowLeft className="w-3.5 h-3.5" />
@@ -171,7 +189,10 @@ const AnalyticsPage = () => {
       {activeTab === TAB_ACTIVITY && (
         <div>
           {activityLoading ? (
-            <div className="text-center py-12 text-gray-500">Loading activity data...</div>
+            <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+  Loading activity data...
+</div>
           ) : activityData.length === 0 ? (
             <div className="bg-white rounded-lg shadow p-8 text-center">
               <Activity className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -240,7 +261,10 @@ const AnalyticsPage = () => {
       {activeTab === TAB_ASSIGNMENTS && (
         <div>
           {assignmentLoading ? (
-            <div className="text-center py-12 text-gray-500">Loading assignment data...</div>
+            <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+  Loading assignment data...
+</div>
           ) : assignmentStats.length === 0 ? (
             <div className="bg-white rounded-lg shadow p-8 text-center">
               <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -382,7 +406,10 @@ const AnalyticsPage = () => {
       {activeTab === TAB_STUDENTS && (
         <div>
           {studentLoading ? (
-            <div className="text-center py-12 text-gray-500">Loading student data...</div>
+            <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+  Loading student data...
+</div>
           ) : studentSummaries.length === 0 ? (
             <div className="bg-white rounded-lg shadow p-8 text-center">
               <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -393,7 +420,7 @@ const AnalyticsPage = () => {
             <div className="bg-white rounded-lg shadow overflow-hidden">
               <div className="px-6 py-4 border-b bg-gray-50">
                 <h3 className="text-lg font-semibold text-gray-900">Student Summaries</h3>
-                <p className="text-sm text-gray-500 mt-1">{studentSummaries.length} students</p>
+                <p className="text-sm text-gray-500 mt-1">{studentSummaries.length} {studentSummaries.length === 1 ? 'student' : 'students'}</p>
               </div>
 
               <div className="overflow-x-auto">

@@ -3,113 +3,362 @@
 ## Project Overview
 Paper LMS is a production-ready, Canvas LMS-backwards-compatible learning management system for K-12 schools. Built with Go (backend) and React (frontend), targeting exact Canvas API compatibility so teachers can migrate from Canvas without losing content, LTI tools, or SIS integrations.
 
-## Architecture
-- **Backend**: Go 1.23.6 + Fiber v2.52.6 + GORM v1.25.10 + PostgreSQL
+## Tech Stack
+- **Backend**: Go 1.24 + Fiber v2.52.6 + GORM v1.25.10 + PostgreSQL
 - **Frontend**: React 18 + React Router 7 + Tailwind CSS 3.4.1 + Vite
 - **Module path**: `github.com/kocherm/paper-lms`
 
-### Project Structure
+## Project Structure
 ```
 paper-LMS/
-  cmd/server/main.go                    # Composition root (wires repos, services, handlers)
+  cmd/
+    server/main.go                    # Composition root (wires repos → services → handlers → router)
+    migrate/main.go                   # Database migration CLI tool
+    genschema/main.go                 # Schema SQL generator (dev tool)
   internal/
-    config/config.go                    # Centralized env config
-    domain/models/                      # Canvas-compatible model structs (81 files)
+    config/config.go                  # Centralized env config
+    domain/models/                    # Canvas-compatible model structs (84 files)
     repository/
-      interfaces.go                     # All repository interfaces
-      postgres/                         # GORM implementations (78 files)
-    service/                            # Business logic layer (51 files)
-    auth/                               # SSO protocol implementations (SAML, LDAP, CAS)
-    graphql/                            # Hand-rolled GraphQL engine (schema parser + resolver)
+      interfaces.go                   # All repository interfaces
+      postgres/                       # GORM implementations (81 files)
+    service/                          # Business logic layer (52 files)
+    auth/                             # SSO: SAML 2.0, LDAP, CAS 2.0
+    graphql/                          # Hand-rolled GraphQL engine
     api/v1/
-      router.go                         # Route registration (341 routes)
-      middleware/                        # Auth, pagination, RBAC permissions
-      handlers/                         # HTTP handlers (58 files)
-      responses/                        # Pagination, error format helpers
-    db/postgres.go                      # PostgreSQL connection + AutoMigrate
+      router.go                       # Route registration (360 routes)
+      middleware/                     # Auth, pagination, RBAC, rate limiting, security headers
+      handlers/                       # HTTP handlers (60 files)
+      responses/                      # Pagination, error format helpers
+    db/
+      postgres.go                     # PostgreSQL connection + AutoMigrate
+      migrate.go                      # golang-migrate runner (embedded SQL)
+      migrations/                     # Versioned SQL migration files
+    storage/                          # Pluggable file storage (local disk, S3/MinIO/R2)
+    testutil/                         # Test mocks & utilities
   web/src/
-    pages/                              # React pages (40 files)
-    components/                         # Layout, ProtectedRoute, WCAG helpers, RCE, DocViewer
-    services/api.js                     # API client with Canvas Link-header pagination
-    contexts/AuthContext.jsx            # JWT auth context
-  deployments/docker/                   # Docker Compose setup
+    pages/                            # React pages (67 files)
+    components/                       # Layout, ProtectedRoute, RichContentEditor, CourseNav, etc. (27 files)
+    services/api.js                   # API client with Canvas Link-header pagination
+    hooks/                            # useIsTeacher, useUnsavedChanges, useCourseVisitTracker
+    contexts/                         # AuthContext (JWT), CourseUIContext (K-2/3-5 mode)
+    utils/                            # Shared utilities (grading.js, etc.)
+  deployments/docker/                 # Dockerfiles, nginx.conf, docker-compose.prod.yml
+  .github/workflows/ci.yml           # GitHub Actions (lint, test, build, docker)
 ```
-
-### Key Patterns
-- **Repository pattern**: Interfaces in `interfaces.go`, GORM implementations in `postgres/`
-- **Service layer**: Business logic with dependency injection of repository interfaces
-- **Canvas API compatibility**: All endpoints under `/api/v1/`, Canvas JSON format, Link-header pagination (RFC 5988)
-- **Error format**: `{"errors": [{"message": "..."}]}`
-- **Auth**: JWT (HS256) + OAuth2 + Personal Access Tokens + SAML/LDAP/CAS SSO via `middleware.AuthMiddleware`
-- **RBAC**: `middleware.PermissionMiddleware` — admin/instructor/enrolled/selfOrAdmin guards on all routes
-- **Soft delete**: Via `workflow_state` field (set to "deleted"), not hard delete
-- **Pagination**: `repository.PaginatedResult[T]` generics, `middleware.GetPagination`, `responses.SetPaginationHeaders`
 
 ## Build Commands
 ```bash
 # Backend
-go build ./...
-go vet ./...
-go test ./...
+go build ./...                        # or: make build
+go vet ./...                          # or: make vet
+go test ./...                         # or: make test
 
 # Frontend
-cd web && npm run build
-cd web && npm run dev    # development server
+cd web && npm run build               # or: make frontend-build
+cd web && npm run dev                  # or: make frontend-dev
+
+# Database migrations
+make migrate-up                       # Apply all pending migrations
+make migrate-down                     # Roll back last migration
+make migrate-create                   # Create new migration files
+
+# Docker
+docker compose -f deployments/docker/docker-compose.prod.yml up
 ```
 
-## Implementation Phases
+## Key Patterns
 
-### Phase 1: Foundation (COMPLETE)
-PostgreSQL, clean architecture, Docker, Canvas API paths, 10 models, ~35 endpoints
+### Architecture (Clean Architecture)
+- **Repository pattern**: Interfaces in `interfaces.go`, GORM implementations in `postgres/`
+- **Service layer**: Business logic with dependency injection of repository interfaces
+- **Handler layer**: Fiber HTTP handlers that parse requests, call services, format responses
+- **Wiring**: `cmd/server/main.go` wires repos → services → handlers → router → Fiber app
 
-### Phase 2: Submissions & Grading (COMPLETE)
-Assignment groups, submissions, gradebook, grading standards. +4 models, ~18 endpoints
+### Canvas API Compatibility
+- All endpoints under `/api/v1/`
+- Error format: `{"errors": [{"message": "..."}]}`
+- Pagination: Link headers (RFC 5988) via `responses.SetPaginationHeaders`
+- Soft deletes via `workflow_state` field (set to "deleted", never hard delete)
 
-### Phase 3: OAuth2 & LTI 1.3 (COMPLETE)
-OAuth2 authorization code flow, personal access tokens, LTI 1.3 platform (OIDC, AGS, NRPS, Deep Linking). +4 models, ~15 endpoints
+### Auth & RBAC
+- JWT (HS256) httpOnly cookie `paper_session` + OAuth2 + Personal Access Tokens + SAML/LDAP/CAS SSO
+- RBAC middleware: `RequireAdmin`, `RequireInstructor`, `RequireEnrolled`, `RequireSelfOrAdmin`
+- Frontend: `useAuth()` context, `useIsTeacher(courseId)` hook for role detection
 
-### Phase 4: Discussions, Files, SIS (COMPLETE)
-Threaded discussions, file management (local storage), SIS CSV import/export. +7 models, ~27 endpoints
+### Frontend Conventions
+- Role detection: `useIsTeacher(courseId)` returns `null` (loading) / `true` / `false`
+- API responses: always use `result.data || []` fallback for null safety
+- Code splitting: `React.lazy()` for non-hot-path pages, static imports for Dashboard/Course/Assignments
+- Icons: Lucide React (import individually, e.g., `import { Eye } from 'lucide-react'`)
+- Loading states: animated SVG spinner (never plain "Loading..." text)
+- Error states: always include "Try Again" button
 
-### Phase 5: Quiz Engine, Rubrics, Grading Periods (COMPLETE)
-Quiz auto-grading, rubric assessments, grading periods, assignment overrides, late policies. +11 models, ~35 endpoints
+## Environment Variables
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `AUTO_MIGRATE` | `true` | GORM AutoMigrate (dev). Set `false` for SQL migrations (prod). |
+| `STORAGE_BACKEND` | `local` | File storage: `local` or `s3` |
+| `S3_BUCKET` | | S3 bucket name |
+| `S3_ENDPOINT` | | Custom endpoint for MinIO/R2/GCS |
+| `JWT_SECRET` | | Required in production (auto-generates in dev) |
+| `FRONTEND_URL` | | Required in production for CORS |
+| `SMTP_HOST` | | SMTP server for email notifications |
 
-### Phase 6: Calendar, Messaging, Notifications (COMPLETE)
-Calendar events (with iCal export), conversations/inbox, notification preferences. +6 models, ~19 endpoints
+---
 
-### Phase 7: Content Migration, SpeedGrader, Learning Outcomes (COMPLETE)
-Content migration tracking (IMSCC/Common Cartridge/Canvas/QTI/Moodle), SpeedGrader UI with inline grading and comments, learning outcomes with outcome groups, mastery gradebook rollups (decaying_average/n_mastery/latest/highest calculation methods). +4 models, ~19 endpoints, +2 frontend pages
+## Cookbook: Adding a New Feature
 
-### Phase 8: Feature Parity (COMPLETE)
-Groups, Blueprint Courses, Course Pacing, Collaborations/Conferences, Analytics, Observer/Parent role, GraphQL API (hand-rolled recursive-descent parser), SAML/CAS/LDAP auth providers, WCAG 2.1 AA accessibility (skip-to-content, focus traps, ARIA landmarks, live regions). +13 models, ~73 endpoints, +9 frontend pages
+### Recipe: New API Endpoint (full stack)
 
-### Phase 9: Production Readiness (COMPLETE)
-Showstopper fixes for real Canvas migration: RBAC/permissions (role-based access on all 284 routes), IMSCC Common Cartridge import (manifest/QTI XML parsing, zip extraction), Discussion Board V2 rewrite (read/unread tracking, edit history with versioning, user profiles/avatars, thread collapse/expand, @mentions, subscribe/unsubscribe, IntersectionObserver auto-read, rich text compose), real SSO protocol implementation (SAML 2.0 SP with metadata/ACS/redirect, LDAP with BER protocol client and JIT provisioning, CAS 2.0 with ticket validation), PWA (manifest, service worker with network-first/cache-first strategies, offline fallback), Batch Operations (course cloning with selective content, bulk date shifting, cross-course bulk messaging, bulk enrollment, bulk assignment date updates). +3 models, +3 repos, +4 services, +4 handlers, ~17 endpoints.
+**Step 1: Model** — `internal/domain/models/thing.go`
+```go
+package models
 
-### Phase 10: Canvas Feature Superiority (COMPLETE)
-Features that improve on Canvas's shortcomings:
-- **10A**: Announcements (with read receipts, acknowledgement tracking, global announcements — Canvas lacks read tracking), Enrollment Terms (with SIS integration, bulk operations), Syllabus (auto-generated from assignments/calendar — Canvas requires manual creation). +5 models, ~17 endpoints, +3 frontend pages
-- **10B**: Email Notification Delivery (SMTP with digest batching — immediate/hourly/daily/weekly — and retry logic; Canvas uses external email service), Rich Content Editor (zero-dependency contentEditable with toolbar, link/image/table/equation/media insertion, accessibility checker, HTML source view — Canvas depends on TinyMCE), Audit Logs (structured course activity + grade change tracking with CSV export — Canvas buries this in admin console). +4 models, ~12 endpoints, +2 frontend pages, +2 shared components
-- **10C**: Custom Roles + Granular Permissions (36 permissions in 4 categories with permission presets/templates — Canvas has overwhelming 80+ permission grid), OneRoster 1.1 REST API Consumer (incremental sync via REST — Canvas only supports CSV bulk import), DocViewer/Document Annotations (client-side annotation layer with highlight/comment/strikethrough/freehand/point types, threaded replies, resolve/unresolve — Canvas uses closed-source DocViewer that frequently goes down). +7 models, ~28 endpoints, +3 frontend pages, +1 shared component
+import "time"
 
-## Current State
-- **81 models**, **78 repository implementations**, **51 services**, **58 handlers**
-- **341 API routes** under `/api/v1/` (+ 6 public SSO routes)
-- **40 frontend pages**, **14 shared components**
-- **5 auth protocol files** (SAML, LDAP, CAS, SSO handler, sso_handler)
-- **3 middleware** (auth, pagination, RBAC permissions)
-- PWA with service worker, offline support, install prompt
-- WCAG 2.1 AA accessibility (skip-to-content, focus traps, ARIA landmarks, live regions)
-- All builds pass cleanly (`go build`, `go vet`, `npm run build`)
+type Thing struct {
+    ID            uint      `json:"id" gorm:"primaryKey"`
+    CourseID      uint      `json:"course_id" gorm:"not null;index"`
+    Title         string    `json:"title" gorm:"not null"`
+    Description   string    `json:"description" gorm:"type:text"`
+    WorkflowState string    `json:"workflow_state" gorm:"not null;default:'active'"`
+    CreatedAt     time.Time `json:"created_at"`
+    UpdatedAt     time.Time `json:"updated_at"`
+}
+```
 
-## Parallel Agent Strategy
-When implementing a new phase, use 3 parallel agents for independent domain files (models, repos, services, handlers, pages) while the main thread modifies shared files:
+**Step 2: Repository interface** — Add to `internal/repository/interfaces.go`
+```go
+type ThingRepository interface {
+    Create(ctx context.Context, thing *models.Thing) error
+    FindByID(ctx context.Context, id uint) (*models.Thing, error)
+    Update(ctx context.Context, thing *models.Thing) error
+    Delete(ctx context.Context, id uint) error
+    ListByCourseID(ctx context.Context, courseID uint, params PaginationParams) (*PaginatedResult[models.Thing], error)
+}
+```
+
+**Step 3: Repository implementation** — `internal/repository/postgres/thing_repo.go`
+```go
+package postgres
+
+import (
+    "context"
+    "github.com/kocherm/paper-lms/internal/domain/models"
+    "github.com/kocherm/paper-lms/internal/repository"
+    "gorm.io/gorm"
+)
+
+type thingRepo struct{ db *gorm.DB }
+
+func NewThingRepository(db *gorm.DB) *thingRepo {
+    return &thingRepo{db: db}
+}
+
+func (r *thingRepo) Create(ctx context.Context, thing *models.Thing) error {
+    return r.db.WithContext(ctx).Create(thing).Error
+}
+
+func (r *thingRepo) FindByID(ctx context.Context, id uint) (*models.Thing, error) {
+    var thing models.Thing
+    if err := r.db.WithContext(ctx).First(&thing, id).Error; err != nil {
+        return nil, err
+    }
+    return &thing, nil
+}
+
+func (r *thingRepo) Update(ctx context.Context, thing *models.Thing) error {
+    return r.db.WithContext(ctx).Save(thing).Error
+}
+
+func (r *thingRepo) Delete(ctx context.Context, id uint) error {
+    return r.db.WithContext(ctx).Model(&models.Thing{}).Where("id = ?", id).Update("workflow_state", "deleted").Error
+}
+
+func (r *thingRepo) ListByCourseID(ctx context.Context, courseID uint, params repository.PaginationParams) (*repository.PaginatedResult[models.Thing], error) {
+    var items []models.Thing
+    var totalCount int64
+    query := r.db.WithContext(ctx).Model(&models.Thing{}).Where("course_id = ? AND workflow_state != 'deleted'", courseID)
+    query.Count(&totalCount)
+    offset := (params.Page - 1) * params.PerPage
+    if err := query.Order("created_at DESC").Offset(offset).Limit(params.PerPage).Find(&items).Error; err != nil {
+        return nil, err
+    }
+    return &repository.PaginatedResult[models.Thing]{Items: items, TotalCount: totalCount, Page: params.Page, PerPage: params.PerPage}, nil
+}
+```
+
+**Step 4: Service** (if business logic needed) — `internal/service/thing_service.go`
+```go
+package service
+
+import (
+    "context"
+    "errors"
+    "github.com/kocherm/paper-lms/internal/domain/models"
+    "github.com/kocherm/paper-lms/internal/repository"
+)
+
+type ThingService struct {
+    thingRepo repository.ThingRepository
+}
+
+func NewThingService(thingRepo repository.ThingRepository) *ThingService {
+    return &ThingService{thingRepo: thingRepo}
+}
+
+func (s *ThingService) Create(ctx context.Context, thing *models.Thing) error {
+    if thing.Title == "" {
+        return errors.New("title is required")
+    }
+    return s.thingRepo.Create(ctx, thing)
+}
+```
+
+**Step 5: Handler** — `internal/api/v1/handlers/things.go`
+```go
+package handlers
+
+import (
+    "github.com/gofiber/fiber/v2"
+    "github.com/kocherm/paper-lms/internal/api/v1/middleware"
+    "github.com/kocherm/paper-lms/internal/api/v1/responses"
+    "github.com/kocherm/paper-lms/internal/domain/models"
+    "github.com/kocherm/paper-lms/internal/repository"
+)
+
+type ThingHandler struct {
+    thingRepo repository.ThingRepository
+}
+
+func NewThingHandler(thingRepo repository.ThingRepository) *ThingHandler {
+    return &ThingHandler{thingRepo: thingRepo}
+}
+
+func thingToJSON(t *models.Thing) fiber.Map {
+    return fiber.Map{
+        "id": t.ID, "course_id": t.CourseID, "title": t.Title,
+        "description": t.Description, "workflow_state": t.WorkflowState,
+        "created_at": t.CreatedAt, "updated_at": t.UpdatedAt,
+    }
+}
+
+func (h *ThingHandler) List(c *fiber.Ctx) error {
+    courseID, err := c.ParamsInt("course_id")
+    if err != nil { return responses.BadRequest(c, "Invalid course ID") }
+    params := middleware.GetPagination(c)
+    result, err := h.thingRepo.ListByCourseID(c.Context(), uint(courseID), params)
+    if err != nil { return responses.InternalError(c, "Could not fetch things") }
+    responses.SetPaginationHeaders(c, result.TotalCount, result.Page, result.PerPage)
+    items := make([]fiber.Map, len(result.Items))
+    for i, t := range result.Items { items[i] = thingToJSON(&t) }
+    return c.JSON(items)
+}
+```
+
+**Step 6: Wire it up** — Modify these shared files (main thread only, never in parallel agents):
+1. `internal/db/postgres.go` — Add `&models.Thing{}` to AutoMigrate list
+2. `internal/api/v1/router.go` — Add handler field, constructor param, route registration
+3. `cmd/server/main.go` — Initialize repo, service, handler; pass to router
+4. `internal/db/migrations/` — Add SQL migration for production
+
+**Step 7: Frontend API method** — Add to `web/src/services/api.js`
+```js
+getThings: (courseId, page = 1, perPage = 10) =>
+    request(`/courses/${courseId}/things?page=${page}&per_page=${perPage}`),
+createThing: (courseId, data) =>
+    request(`/courses/${courseId}/things`, { method: 'POST', body: JSON.stringify(data) }),
+```
+
+**Step 8: Frontend page** — `web/src/pages/ThingsPage.jsx`
+```jsx
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { api } from '../services/api';
+import useIsTeacher from '../hooks/useIsTeacher';
+import Layout from '../components/Layout';
+import CourseNav from '../components/CourseNav';
+
+const ThingsPage = () => {
+  const { courseId } = useParams();
+  const isTeacher = useIsTeacher(courseId);
+  const [things, setThings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        const result = await api.getThings(courseId);
+        setThings(result.data || []);
+      } catch (err) { setError(err.message); }
+      finally { setLoading(false); }
+    };
+    fetch();
+  }, [courseId]);
+
+  return (
+    <Layout>
+      <CourseNav courseId={courseId} />
+      <div className="p-6">
+        {/* loading spinner, error with retry, content */}
+      </div>
+    </Layout>
+  );
+};
+export default ThingsPage;
+```
+
+**Step 9: Route** — Add to `web/src/App.jsx`
+```jsx
+const ThingsPage = React.lazy(() => import('./pages/ThingsPage'));
+// In routes:
+<Route path="/courses/:courseId/things" element={<Suspense><ThingsPage /></Suspense>} />
+```
+
+### Recipe: Adding a Field to an Existing Model
+1. Add field to model struct in `internal/domain/models/xxx.go`
+2. Add field to `xxxToJSON()` in the handler
+3. Add field to create/update input struct in the handler
+4. Add field to frontend API calls and page state
+5. If `AUTO_MIGRATE=true`, GORM handles the column automatically
+6. For production: add SQL migration in `internal/db/migrations/`
+
+### Recipe: Adding a New React Page (no backend changes)
+1. Create `web/src/pages/XxxPage.jsx` following the page pattern above
+2. Add lazy import + route in `web/src/App.jsx`
+3. Add to CourseNav tabs if course-scoped (in `web/src/components/CourseNav.jsx`)
+4. Add nav link in `web/src/components/Layout.jsx` if app-level
+
+## Shared Files (modify only from main thread)
+When using parallel agents, these files must only be edited by the main thread to avoid conflicts:
 - `internal/repository/interfaces.go`
-- `internal/db/postgres.go` (AutoMigrate)
-- `internal/api/v1/router.go` (routes)
-- `cmd/server/main.go` (wiring)
+- `internal/db/postgres.go` (AutoMigrate list)
+- `internal/api/v1/router.go` (route registration)
+- `cmd/server/main.go` (dependency wiring)
 - `web/src/services/api.js` (API methods)
 - `web/src/App.jsx` (React routes)
 - `web/src/components/Layout.jsx` (nav links)
 
-Agents should ONLY create new files. All shared file edits happen in the main thread to avoid conflicts.
+Agents should ONLY create new files. All shared file edits happen in the main thread.
+
+## Current State
+- **84 models**, **81 repos**, **52 services**, **60 handlers**, **360 API routes**
+- **67 frontend pages**, **27 shared components**, **3 hooks**, **2 contexts**
+- **40 lazy-loaded chunks** — main bundle 267KB / 56KB gzipped
+- Auth: JWT + OAuth2 + PAT + SAML/LDAP/CAS SSO
+- Storage: pluggable local disk / S3
+- CI/CD: GitHub Actions, Docker, health probes
+- PWA with service worker + offline support
+- WCAG 2.1 AA accessibility
+
+## Known Issues / Technical Debt
+- Frontend test coverage is minimal (5 test files)
+- No drag-and-drop reorder for modules/module items
+- FERPA cascade delete not implemented
+- Email: no dead letter queue, bounce handling, or delivery confirmation
+- Single-tenant architecture (no multi-tenancy)
+- Backend requires restart for Go changes (Vite HMR works for frontend)
+
+## Implementation History
+See [CHANGELOG.md](./CHANGELOG.md) for the full 30-phase development history.

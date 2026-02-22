@@ -1,21 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Mail, CheckCircle, Clock, AlertTriangle, XCircle, RefreshCw, Plus, Trash2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import Layout from '../components/Layout';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
-
-const getHeaders = () => {
-  const token = localStorage.getItem('token');
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-};
+const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
 async function apiFetch(path, options = {}) {
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
-    headers: { ...getHeaders(), ...options.headers },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...options.headers },
   });
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
@@ -168,14 +162,18 @@ const NotificationDeliveryPage = () => {
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="text-center py-12 text-gray-500">Loading notification deliveries...</div>
-      </div>
+      <Layout>
+        <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+  Loading notification deliveries...
+</div>
+      </Layout>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <Layout>
+    <div className="max-w-6xl mx-auto">
       {/* Page Header */}
       <div className="flex items-center gap-3 mb-6">
         <div className="bg-blue-100 p-2 rounded-lg">
@@ -435,6 +433,7 @@ const NotificationDeliveryPage = () => {
         )}
       </div>
     </div>
+    </Layout>
   );
 };
 

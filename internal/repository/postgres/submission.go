@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"time"
 
 	"github.com/kocherm/paper-lms/internal/domain/models"
 	"github.com/kocherm/paper-lms/internal/repository"
@@ -91,4 +92,11 @@ func (r *submissionRepo) BulkListByCourse(ctx context.Context, courseID uint, pa
 		Page:       params.Page,
 		PerPage:    params.PerPage,
 	}, nil
+}
+
+func (r *submissionRepo) PostGradesByAssignment(ctx context.Context, assignmentID uint, postedAt *time.Time) error {
+	return r.db.WithContext(ctx).
+		Model(&models.Submission{}).
+		Where("assignment_id = ? AND score IS NOT NULL", assignmentID).
+		Update("posted_at", postedAt).Error
 }

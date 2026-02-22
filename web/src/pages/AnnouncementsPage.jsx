@@ -3,7 +3,11 @@ import { useParams, Link } from 'react-router-dom';
 import { Megaphone, AlertTriangle, Clock, CheckCircle, Eye, Users, Plus, Edit2, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { api } from '../services/api';
 import Layout from '../components/Layout';
+import CourseNav from '../components/CourseNav';
 import { useAuth } from '../contexts/AuthContext';
+import RichContentEditor from '../components/RichContentEditor';
+import useCrossCourseCheck from '../hooks/useCrossCourseCheck';
+import CrossCourseWarningDialog from '../components/CrossCourseWarningDialog';
 
 const AnnouncementsPage = () => {
   const { courseId } = useParams();
@@ -29,12 +33,14 @@ const AnnouncementsPage = () => {
     schedule: false,
   });
 
-  const isInstructor = user?.role === 'admin' || user?.role === 'teacher';
+  const [userNames, setUserNames] = useState({});
+  const [isInstructor, setIsInstructor] = useState(false);
+  const { issues: crossCourseIssues, checkAndSave, dismiss: dismissCrossCourse, confirm: confirmCrossCourse } = useCrossCourseCheck(courseId);
 
   const fetchAnnouncements = async () => {
     try {
       const result = await api.request(`/courses/${courseId}/announcements`);
-      setAnnouncements(result.data);
+      setAnnouncements(result.data || []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -44,6 +50,35 @@ const AnnouncementsPage = () => {
 
   useEffect(() => {
     fetchAnnouncements();
+    // Detect teacher role via enrollment (not user.role which is global)
+    if (courseId && user) {
+      api.getEnrollments(courseId, 1, 200)
+        .then((result) => {
+          const enrollments = result.data || [];
+          const myEnrollment = enrollments.find(e =>
+            e.user_id === user.id || e.user?.id === user.id
+          );
+          const teacherRole =
+            user.role === 'admin' ||
+            myEnrollment?.type === 'TeacherEnrollment' ||
+            myEnrollment?.type === 'TaEnrollment' ||
+            myEnrollment?.role === 'TeacherEnrollment' ||
+            myEnrollment?.role === 'TaEnrollment';
+          setIsInstructor(teacherRole);
+          // Build user name map for read receipts
+          if (teacherRole) {
+            const names = {};
+            for (const e of (result.data || [])) {
+              const uid = e.user_id || e.user?.id;
+              if (uid) {
+                names[uid] = e.user?.name || e.user?.display_name || `User #${uid}`;
+              }
+            }
+            setUserNames(names);
+          }
+        })
+        .catch(() => {});
+    }
   }, [courseId]);
 
   const resetForm = () => {
@@ -61,8 +96,7 @@ const AnnouncementsPage = () => {
     setEditingId(null);
   };
 
-  const handleCreate = async (e) => {
-    e.preventDefault();
+  const doCreate = async () => {
     setCreating(true);
     try {
       const payload = {
@@ -100,6 +134,11 @@ const AnnouncementsPage = () => {
     } finally {
       setCreating(false);
     }
+  };
+
+  const handleCreate = (e) => {
+    e.preventDefault();
+    checkAndSave(formData.message, doCreate);
   };
 
   const handleDelete = async (id) => {
@@ -197,13 +236,17 @@ const AnnouncementsPage = () => {
   if (error) {
     return (
       <Layout>
-        <div className="text-red-600 text-center py-12" role="alert">{error}</div>
+        <div className="text-center py-12" role="alert">
+          <p className="text-red-600 mb-3">{error}</p>
+          <button onClick={() => window.location.reload()} className="text-blue-600 hover:text-blue-800 text-sm font-medium">Try Again</button>
+        </div>
       </Layout>
     );
   }
 
   return (
     <Layout>
+      <CourseNav />
       <div className="mb-6">
         <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm">
           &larr; Back to Course
@@ -249,15 +292,14 @@ const AnnouncementsPage = () => {
               />
             </div>
             <div>
-              <label htmlFor="ann-message" className="block text-sm font-medium text-gray-700 mb-1">Message</label>
-              <textarea
-                id="ann-message"
+              <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+              <RichContentEditor
                 value={formData.message}
-                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                rows={5}
-                required
-                aria-required="true"
+                onChange={(html) => setFormData((prev) => ({ ...prev, message: html }))}
+                placeholder="Announcement message..."
+                minHeight="160px"
+                ariaLabel="Announcement message"
+                courseId={courseId}
               />
             </div>
 
@@ -531,7 +573,7 @@ const AnnouncementsPage = () => {
                         <table className="w-full text-sm" aria-label="Read receipt details">
                           <thead>
                             <tr className="border-b border-gray-200">
-                              <th className="text-left px-3 py-2 font-medium text-gray-600" scope="col">User ID</th>
+                              <th className="text-left px-3 py-2 font-medium text-gray-600" scope="col">Student</th>
                               <th className="text-left px-3 py-2 font-medium text-gray-600" scope="col">Read At</th>
                               {announcement.require_acknowledgement && (
                                 <th className="text-left px-3 py-2 font-medium text-gray-600" scope="col">Acknowledged</th>
@@ -541,7 +583,7 @@ const AnnouncementsPage = () => {
                           <tbody className="divide-y divide-gray-200">
                             {receiptData[announcement.id].receipts.map((receipt) => (
                               <tr key={receipt.id}>
-                                <td className="px-3 py-2 text-gray-900">User #{receipt.user_id}</td>
+                                <td className="px-3 py-2 text-gray-900">{userNames[receipt.user_id] || `User #${receipt.user_id}`}</td>
                                 <td className="px-3 py-2 text-gray-500">{formatDate(receipt.read_at)}</td>
                                 {announcement.require_acknowledgement && (
                                   <td className="px-3 py-2">
@@ -570,6 +612,7 @@ const AnnouncementsPage = () => {
           ))
         )}
       </div>
+      <CrossCourseWarningDialog issues={crossCourseIssues} onGoBack={dismissCrossCourse} onSaveAnyway={confirmCrossCourse} />
     </Layout>
   );
 };

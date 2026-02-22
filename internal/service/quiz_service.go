@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"math"
+	mathrand "math/rand"
 	"strings"
 	"time"
 
@@ -23,20 +24,49 @@ type answerOption struct {
 }
 
 type QuizService struct {
-	questionRepo   repository.QuizQuestionRepository
-	submissionRepo repository.QuizSubmissionRepository
-	answerRepo     repository.QuizSubmissionAnswerRepository
+	quizRepo             repository.QuizRepository
+	questionRepo         repository.QuizQuestionRepository
+	submissionRepo       repository.QuizSubmissionRepository
+	answerRepo           repository.QuizSubmissionAnswerRepository
+	groupRepo            repository.QuizQuestionGroupRepository
+	bankEntryRepo        repository.QuestionBankEntryRepository
+	accommodationService *AccommodationService
 }
 
 func NewQuizService(
+	quizRepo repository.QuizRepository,
 	questionRepo repository.QuizQuestionRepository,
 	submissionRepo repository.QuizSubmissionRepository,
 	answerRepo repository.QuizSubmissionAnswerRepository,
+	opts ...func(*QuizService),
 ) *QuizService {
-	return &QuizService{
+	s := &QuizService{
+		quizRepo:       quizRepo,
 		questionRepo:   questionRepo,
 		submissionRepo: submissionRepo,
 		answerRepo:     answerRepo,
+	}
+	for _, opt := range opts {
+		opt(s)
+	}
+	return s
+}
+
+func WithQuestionGroupRepo(repo repository.QuizQuestionGroupRepository) func(*QuizService) {
+	return func(s *QuizService) {
+		s.groupRepo = repo
+	}
+}
+
+func WithBankEntryRepo(repo repository.QuestionBankEntryRepository) func(*QuizService) {
+	return func(s *QuizService) {
+		s.bankEntryRepo = repo
+	}
+}
+
+func WithAccommodationService(svc *AccommodationService) func(*QuizService) {
+	return func(s *QuizService) {
+		s.accommodationService = svc
 	}
 }
 
@@ -91,6 +121,169 @@ func (s *QuizService) ListQuestions(ctx context.Context, quizID uint, params rep
 	return s.questionRepo.ListByQuizID(ctx, quizID, params)
 }
 
+// ---------- Quiz Question Group Methods ----------
+
+func (s *QuizService) CreateQuestionGroup(ctx context.Context, group *models.QuizQuestionGroup) error {
+	if s.groupRepo == nil {
+		return errors.New("question group repository not configured")
+	}
+	if group.PickCount < 1 {
+		group.PickCount = 1
+	}
+	return s.groupRepo.Create(ctx, group)
+}
+
+func (s *QuizService) GetQuestionGroup(ctx context.Context, id uint) (*models.QuizQuestionGroup, error) {
+	if s.groupRepo == nil {
+		return nil, errors.New("question group repository not configured")
+	}
+	return s.groupRepo.FindByID(ctx, id)
+}
+
+func (s *QuizService) UpdateQuestionGroup(ctx context.Context, group *models.QuizQuestionGroup) error {
+	if s.groupRepo == nil {
+		return errors.New("question group repository not configured")
+	}
+	return s.groupRepo.Update(ctx, group)
+}
+
+func (s *QuizService) DeleteQuestionGroup(ctx context.Context, id uint) error {
+	if s.groupRepo == nil {
+		return errors.New("question group repository not configured")
+	}
+	return s.groupRepo.Delete(ctx, id)
+}
+
+func (s *QuizService) ListQuestionGroups(ctx context.Context, quizID uint) ([]models.QuizQuestionGroup, error) {
+	if s.groupRepo == nil {
+		return nil, errors.New("question group repository not configured")
+	}
+	return s.groupRepo.ListByQuizID(ctx, quizID)
+}
+
+// generateSelectedQuestions builds the personalized question ID list for a quiz submission.
+// For questions not in any group, all are included.
+// For each QuizQuestionGroup, PickCount questions are randomly selected from the pool.
+func (s *QuizService) generateSelectedQuestions(ctx context.Context, quizID uint) ([]uint, error) {
+	// Get all questions for this quiz
+	allQuestions, err := s.questionRepo.ListByQuizID(ctx, quizID, repository.PaginationParams{Page: 1, PerPage: 10000})
+	if err != nil {
+		return nil, err
+	}
+
+	// If no group repo is configured, return all question IDs
+	if s.groupRepo == nil {
+		ids := make([]uint, len(allQuestions.Items))
+		for i, q := range allQuestions.Items {
+			ids[i] = q.ID
+		}
+		return ids, nil
+	}
+
+	// Get all question groups for this quiz
+	groups, err := s.groupRepo.ListByQuizID(ctx, quizID)
+	if err != nil {
+		return nil, err
+	}
+
+	// If no groups exist, return all question IDs (no randomization needed)
+	if len(groups) == 0 {
+		ids := make([]uint, len(allQuestions.Items))
+		for i, q := range allQuestions.Items {
+			ids[i] = q.ID
+		}
+		return ids, nil
+	}
+
+	var selectedIDs []uint
+
+	// Track which questions belong to a group so we can add ungrouped ones
+	groupedQuestionIDs := make(map[uint]bool)
+
+	rng := mathrand.New(mathrand.NewSource(time.Now().UnixNano()))
+
+	for _, group := range groups {
+		var pool []uint
+
+		// Option 1: Group pulls from a linked QuestionBank
+		if group.QuestionBankID != nil && s.bankEntryRepo != nil {
+			entries, err := s.bankEntryRepo.ListByBankID(ctx, *group.QuestionBankID)
+			if err == nil {
+				for _, entry := range entries {
+					pool = append(pool, entry.ID)
+				}
+			}
+		}
+
+		// Option 2: Group uses questions directly assigned to it via QuizQuestionGroupID
+		groupQuestions, err := s.questionRepo.ListByGroupID(ctx, group.ID)
+		if err == nil {
+			for _, q := range groupQuestions {
+				pool = append(pool, q.ID)
+				groupedQuestionIDs[q.ID] = true
+			}
+		}
+
+		// Randomly pick PickCount questions from the pool
+		if len(pool) > 0 {
+			// Shuffle the pool
+			rng.Shuffle(len(pool), func(i, j int) {
+				pool[i], pool[j] = pool[j], pool[i]
+			})
+
+			pickCount := group.PickCount
+			if pickCount > len(pool) {
+				pickCount = len(pool)
+			}
+			selectedIDs = append(selectedIDs, pool[:pickCount]...)
+		}
+	}
+
+	// Add all ungrouped questions (questions not assigned to any group)
+	for _, q := range allQuestions.Items {
+		if !groupedQuestionIDs[q.ID] && (q.QuizQuestionGroupID == nil || *q.QuizQuestionGroupID == 0) {
+			selectedIDs = append(selectedIDs, q.ID)
+		}
+	}
+
+	return selectedIDs, nil
+}
+
+// GetSubmissionQuestions returns the personalized list of questions for a specific submission.
+// If the submission has a SelectedQuestions field, only those questions are returned.
+// Otherwise, all quiz questions are returned.
+func (s *QuizService) GetSubmissionQuestions(ctx context.Context, submissionID uint) ([]models.QuizQuestion, error) {
+	submission, err := s.submissionRepo.FindByID(ctx, submissionID)
+	if err != nil {
+		return nil, errors.New("quiz submission not found")
+	}
+
+	// If there are selected questions, parse and return only those
+	if submission.SelectedQuestions != "" {
+		var questionIDs []uint
+		if err := json.Unmarshal([]byte(submission.SelectedQuestions), &questionIDs); err != nil {
+			return nil, errors.New("could not parse selected questions")
+		}
+
+		questions := make([]models.QuizQuestion, 0, len(questionIDs))
+		for _, qID := range questionIDs {
+			q, err := s.questionRepo.FindByID(ctx, qID)
+			if err != nil {
+				continue // skip questions that no longer exist
+			}
+			questions = append(questions, *q)
+		}
+		return questions, nil
+	}
+
+	// No selected questions stored - return all quiz questions
+	result, err := s.questionRepo.ListByQuizID(ctx, submission.QuizID, repository.PaginationParams{Page: 1, PerPage: 10000})
+	if err != nil {
+		return nil, err
+	}
+	return result.Items, nil
+}
+
 // ---------- Quiz Submission Methods ----------
 
 // generateValidationToken creates a cryptographically random hex token.
@@ -112,16 +305,27 @@ func (s *QuizService) StartSubmission(ctx context.Context, quizID, userID uint, 
 		return existing, nil
 	}
 
+	// Calculate attempt number
+	attempt := 1
+	if existing != nil {
+		attempt = existing.Attempt + 1
+	}
+
+	// Enforce attempt limits
+	quiz, err := s.quizRepo.FindByID(ctx, quizID)
+	if err != nil {
+		return nil, errors.New("quiz not found")
+	}
+	if quiz.AllowedAttempts > 0 && attempt > quiz.AllowedAttempts {
+		return nil, errors.New("maximum number of attempts reached")
+	}
+
 	token, err := generateValidationToken()
 	if err != nil {
 		return nil, errors.New("could not generate validation token")
 	}
 
 	now := time.Now()
-	attempt := 1
-	if existing != nil {
-		attempt = existing.Attempt + 1
-	}
 
 	submission := &models.QuizSubmission{
 		QuizID:          quizID,
@@ -132,9 +336,34 @@ func (s *QuizService) StartSubmission(ctx context.Context, quizID, userID uint, 
 		WorkflowState:   "untaken",
 	}
 
-	if timeLimit != nil && *timeLimit > 0 {
-		endAt := now.Add(time.Duration(*timeLimit) * time.Minute)
+	// Use quiz time limit if no override provided
+	effectiveTimeLimit := timeLimit
+	if effectiveTimeLimit == nil && quiz.TimeLimit != nil && *quiz.TimeLimit > 0 {
+		effectiveTimeLimit = quiz.TimeLimit
+	}
+
+	// Apply student accommodations (IEP/504 time extensions)
+	if s.accommodationService != nil && effectiveTimeLimit != nil && *effectiveTimeLimit > 0 {
+		courseID := quiz.CourseID
+		adjustment, err := s.accommodationService.ApplyAccommodationsToQuiz(ctx, userID, &courseID, effectiveTimeLimit)
+		if err == nil && adjustment != nil {
+			adjusted := adjustment.AdjustedTimeLimit
+			effectiveTimeLimit = &adjusted
+		}
+	}
+
+	if effectiveTimeLimit != nil && *effectiveTimeLimit > 0 {
+		endAt := now.Add(time.Duration(*effectiveTimeLimit) * time.Minute)
 		submission.EndAt = &endAt
+	}
+
+	// Generate personalized question set if question groups exist
+	selectedIDs, err := s.generateSelectedQuestions(ctx, quizID)
+	if err == nil && len(selectedIDs) > 0 {
+		selectedJSON, err := json.Marshal(selectedIDs)
+		if err == nil {
+			submission.SelectedQuestions = string(selectedJSON)
+		}
 	}
 
 	if err := s.submissionRepo.Create(ctx, submission); err != nil {
@@ -263,6 +492,48 @@ func (s *QuizService) CompleteSubmission(ctx context.Context, submissionID, user
 
 func (s *QuizService) ListSubmissions(ctx context.Context, quizID uint, params repository.PaginationParams) (*repository.PaginatedResult[models.QuizSubmission], error) {
 	return s.submissionRepo.ListByQuizID(ctx, quizID, params)
+}
+
+// ListSubmissionAnswers returns all answers for a completed quiz submission.
+func (s *QuizService) ListSubmissionAnswers(ctx context.Context, submissionID, userID uint) ([]models.QuizSubmissionAnswer, error) {
+	submission, err := s.submissionRepo.FindByID(ctx, submissionID)
+	if err != nil {
+		return nil, errors.New("quiz submission not found")
+	}
+	// Only the submitting user (or via instructor route) can view answers
+	if submission.UserID != userID {
+		return nil, errors.New("unauthorized: submission does not belong to this user")
+	}
+	if submission.WorkflowState == "untaken" {
+		return nil, errors.New("quiz submission is still in progress")
+	}
+	return s.answerRepo.ListBySubmissionID(ctx, submissionID)
+}
+
+// ---------- Statistics Methods ----------
+
+// GetQuiz returns a quiz by ID.
+func (s *QuizService) GetQuiz(ctx context.Context, quizID uint) (*models.Quiz, error) {
+	return s.quizRepo.FindByID(ctx, quizID)
+}
+
+// ListAllQuestions returns all active questions for a quiz (no pagination).
+func (s *QuizService) ListAllQuestions(ctx context.Context, quizID uint) ([]models.QuizQuestion, error) {
+	result, err := s.questionRepo.ListByQuizID(ctx, quizID, repository.PaginationParams{Page: 1, PerPage: 10000})
+	if err != nil {
+		return nil, err
+	}
+	return result.Items, nil
+}
+
+// ListAllCompletedSubmissions returns all completed/pending_review submissions for a quiz.
+func (s *QuizService) ListAllCompletedSubmissions(ctx context.Context, quizID uint) ([]models.QuizSubmission, error) {
+	return s.submissionRepo.ListCompletedByQuizID(ctx, quizID)
+}
+
+// ListAnswersBySubmissionIDs returns all answers for the given submission IDs.
+func (s *QuizService) ListAnswersBySubmissionIDs(ctx context.Context, submissionIDs []uint) ([]models.QuizSubmissionAnswer, error) {
+	return s.answerRepo.ListBySubmissionIDs(ctx, submissionIDs)
 }
 
 // ---------- Auto-Grading Logic ----------

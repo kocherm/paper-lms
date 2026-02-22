@@ -23,8 +23,8 @@ func Connect(databaseURL string) (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to get database instance: %w", err)
 	}
 
-	sqlDB.SetMaxOpenConns(25)
-	sqlDB.SetMaxIdleConns(5)
+	sqlDB.SetMaxOpenConns(100)
+	sqlDB.SetMaxIdleConns(25)
 
 	log.Println("Connected to PostgreSQL database")
 	return db, nil
@@ -87,6 +87,7 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.LearningOutcomeGroup{},
 		&models.LearningOutcome{},
 		&models.LearningOutcomeResult{},
+		&models.OutcomeAlignment{},
 		// Phase 8: Groups, Blueprint Courses, Course Pacing
 		&models.GroupCategory{},
 		&models.Group{},
@@ -143,6 +144,13 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.CourseHomeButton{},
 		&models.TodaysLessonOverride{},
 		&models.CourseVisit{},
+		// Peer Reviews, Question Banks, Module Prerequisites
+		&models.PeerReview{},
+		&models.QuestionBank{},
+		&models.QuestionBankEntry{},
+		&models.ModulePrerequisite{},
+		// Quiz Question Groups (random selection anti-cheating)
+		&models.QuizQuestionGroup{},
 	)
 }
 

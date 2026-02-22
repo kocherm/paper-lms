@@ -10,10 +10,11 @@ import (
 
 type ConversationHandler struct {
 	conversationService *service.ConversationService
+	userService         *service.UserService
 }
 
-func NewConversationHandler(conversationService *service.ConversationService) *ConversationHandler {
-	return &ConversationHandler{conversationService: conversationService}
+func NewConversationHandler(conversationService *service.ConversationService, userService *service.UserService) *ConversationHandler {
+	return &ConversationHandler{conversationService: conversationService, userService: userService}
 }
 
 func conversationToJSON(c *models.Conversation) fiber.Map {
@@ -40,6 +41,40 @@ func conversationMessageToJSON(m *models.ConversationMessage) fiber.Map {
 	}
 }
 
+// requireParticipant checks the authenticated user is a participant of the conversation.
+func (h *ConversationHandler) requireParticipant(c *fiber.Ctx, conversationID uint) error {
+	userID, _ := c.Locals("user_id").(uint)
+	participants, err := h.conversationService.GetParticipants(c.Context(), conversationID)
+	if err != nil {
+		return responses.Error(c, fiber.StatusForbidden, "Could not verify conversation access")
+	}
+	for _, p := range participants {
+		if p.UserID == userID {
+			return nil
+		}
+	}
+	return responses.Error(c, fiber.StatusForbidden, "You are not a participant in this conversation")
+}
+
+func (h *ConversationHandler) resolveParticipants(c *fiber.Ctx, conversationID uint) []fiber.Map {
+	participants, err := h.conversationService.GetParticipants(c.Context(), conversationID)
+	if err != nil {
+		return nil
+	}
+	result := make([]fiber.Map, 0, len(participants))
+	for _, p := range participants {
+		name := ""
+		if user, err := h.userService.GetByID(c.Context(), p.UserID); err == nil {
+			name = user.Name
+		}
+		result = append(result, fiber.Map{
+			"id":   p.UserID,
+			"name": name,
+		})
+	}
+	return result
+}
+
 func (h *ConversationHandler) ListConversations(c *fiber.Ctx) error {
 	userID, _ := c.Locals("user_id").(uint)
 
@@ -54,7 +89,9 @@ func (h *ConversationHandler) ListConversations(c *fiber.Ctx) error {
 
 	conversations := make([]fiber.Map, len(result.Items))
 	for i, conv := range result.Items {
-		conversations[i] = conversationToJSON(&conv)
+		j := conversationToJSON(&conv)
+		j["participants"] = h.resolveParticipants(c, conv.ID)
+		conversations[i] = j
 	}
 
 	return c.JSON(conversations)
@@ -66,12 +103,18 @@ func (h *ConversationHandler) GetConversation(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid conversation ID")
 	}
 
+	if err := h.requireParticipant(c, uint(id)); err != nil {
+		return err
+	}
+
 	conv, err := h.conversationService.GetConversation(c.Context(), uint(id))
 	if err != nil {
 		return responses.NotFound(c, "conversation")
 	}
 
-	return c.JSON(conversationToJSON(conv))
+	j := conversationToJSON(conv)
+	j["participants"] = h.resolveParticipants(c, conv.ID)
+	return c.JSON(j)
 }
 
 func (h *ConversationHandler) CreateConversation(c *fiber.Ctx) error {
@@ -104,6 +147,10 @@ func (h *ConversationHandler) UpdateConversation(c *fiber.Ctx) error {
 	id, err := c.ParamsInt("id")
 	if err != nil {
 		return responses.BadRequest(c, "Invalid conversation ID")
+	}
+
+	if err := h.requireParticipant(c, uint(id)); err != nil {
+		return err
 	}
 
 	conv, err := h.conversationService.GetConversation(c.Context(), uint(id))
@@ -142,6 +189,10 @@ func (h *ConversationHandler) ListMessages(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid conversation ID")
 	}
 
+	if err := h.requireParticipant(c, uint(id)); err != nil {
+		return err
+	}
+
 	params := middleware.GetPagination(c)
 
 	result, err := h.conversationService.ListMessages(c.Context(), uint(id), params)
@@ -153,7 +204,11 @@ func (h *ConversationHandler) ListMessages(c *fiber.Ctx) error {
 
 	messages := make([]fiber.Map, len(result.Items))
 	for i, m := range result.Items {
-		messages[i] = conversationMessageToJSON(&m)
+		j := conversationMessageToJSON(&m)
+		if user, err := h.userService.GetByID(c.Context(), m.UserID); err == nil {
+			j["user_name"] = user.Name
+		}
+		messages[i] = j
 	}
 
 	return c.JSON(messages)
@@ -163,6 +218,10 @@ func (h *ConversationHandler) CreateMessage(c *fiber.Ctx) error {
 	id, err := c.ParamsInt("id")
 	if err != nil {
 		return responses.BadRequest(c, "Invalid conversation ID")
+	}
+
+	if err := h.requireParticipant(c, uint(id)); err != nil {
+		return err
 	}
 
 	var input struct {
@@ -185,7 +244,11 @@ func (h *ConversationHandler) CreateMessage(c *fiber.Ctx) error {
 		return responses.BadRequest(c, err.Error())
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(conversationMessageToJSON(msg))
+	j := conversationMessageToJSON(msg)
+	if user, err := h.userService.GetByID(c.Context(), userID); err == nil {
+		j["user_name"] = user.Name
+	}
+	return c.Status(fiber.StatusCreated).JSON(j)
 }
 
 func (h *ConversationHandler) MarkAsRead(c *fiber.Ctx) error {

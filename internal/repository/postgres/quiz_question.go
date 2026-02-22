@@ -55,3 +55,11 @@ func (r *quizQuestionRepo) ListByQuizID(ctx context.Context, quizID uint, params
 		PerPage:    params.PerPage,
 	}, nil
 }
+
+func (r *quizQuestionRepo) ListByGroupID(ctx context.Context, groupID uint) ([]models.QuizQuestion, error) {
+	var questions []models.QuizQuestion
+	if err := r.db.WithContext(ctx).Where("quiz_question_group_id = ? AND workflow_state != ?", groupID, "deleted").Order("position ASC, id ASC").Find(&questions).Error; err != nil {
+		return nil, err
+	}
+	return questions, nil
+}

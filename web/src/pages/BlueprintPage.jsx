@@ -1,20 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Navigate } from 'react-router-dom';
 import { Settings, Link2, RefreshCw, Clock, CheckCircle, AlertCircle, Plus, Trash2, X, Loader2 } from 'lucide-react';
+import { api } from '../services/api';
+import useIsTeacher from '../hooks/useIsTeacher';
 import Layout from '../components/Layout';
+import CourseNav from '../components/CourseNav';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
-const getHeaders = () => {
-  const token = localStorage.getItem('token');
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-};
+const getHeaders = () => ({
+  'Content-Type': 'application/json',
+});
 
 const BlueprintPage = () => {
   const { courseId } = useParams();
+  const isTeacher = useIsTeacher(courseId);
 
   // Template state
   const [template, setTemplate] = useState(null);
@@ -41,7 +41,7 @@ const BlueprintPage = () => {
   const fetchTemplate = useCallback(async () => {
     try {
       const response = await fetch(`${API_URL}/courses/${courseId}/blueprint_templates/default`, {
-        headers: getHeaders(),
+        credentials: 'include', headers: getHeaders(),
       });
       if (!response.ok) throw new Error('Failed to fetch blueprint template');
       const data = await response.json();
@@ -57,7 +57,7 @@ const BlueprintPage = () => {
     try {
       const response = await fetch(
         `${API_URL}/courses/${courseId}/blueprint_templates/default/associated_courses?per_page=100`,
-        { headers: getHeaders() }
+        { credentials: 'include', headers: getHeaders() }
       );
       if (!response.ok) throw new Error('Failed to fetch associated courses');
       const data = await response.json();
@@ -71,7 +71,7 @@ const BlueprintPage = () => {
     try {
       const response = await fetch(
         `${API_URL}/courses/${courseId}/blueprint_templates/default/migrations?per_page=50`,
-        { headers: getHeaders() }
+        { credentials: 'include', headers: getHeaders() }
       );
       if (!response.ok) throw new Error('Failed to fetch sync history');
       const data = await response.json();
@@ -99,7 +99,7 @@ const BlueprintPage = () => {
     try {
       const response = await fetch(`${API_URL}/courses/${courseId}/blueprint_templates/default`, {
         method: 'PUT',
-        headers: getHeaders(),
+        credentials: 'include', headers: getHeaders(),
         body: JSON.stringify({
           blueprint_template: {
             default_restrictions: restrictions,
@@ -136,7 +136,7 @@ const BlueprintPage = () => {
         `${API_URL}/courses/${courseId}/blueprint_templates/default/associated_courses`,
         {
           method: 'PUT',
-          headers: getHeaders(),
+          credentials: 'include', headers: getHeaders(),
           body: JSON.stringify({
             course_ids_to_add: [parseInt(newCourseId, 10)],
             course_ids_to_remove: [],
@@ -168,7 +168,7 @@ const BlueprintPage = () => {
         `${API_URL}/courses/${courseId}/blueprint_templates/default/associated_courses`,
         {
           method: 'PUT',
-          headers: getHeaders(),
+          credentials: 'include', headers: getHeaders(),
           body: JSON.stringify({
             course_ids_to_add: [],
             course_ids_to_remove: [childCourseId],
@@ -199,7 +199,7 @@ const BlueprintPage = () => {
         `${API_URL}/courses/${courseId}/blueprint_templates/default/migrations`,
         {
           method: 'POST',
-          headers: getHeaders(),
+          credentials: 'include', headers: getHeaders(),
           body: JSON.stringify({
             comment: syncComment,
             send_notification: false,
@@ -272,6 +272,12 @@ const BlueprintPage = () => {
     }
   };
 
+  if (isTeacher === false) return <Navigate to={`/courses/${courseId}`} replace />;
+  if (isTeacher === null) return <Layout><div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+  Loading...
+</div></Layout>;
+
   if (loading) {
     return (
       <Layout>
@@ -285,6 +291,7 @@ const BlueprintPage = () => {
 
   return (
     <Layout>
+      <CourseNav />
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Blueprint Course</h2>
         <p className="text-gray-600 mt-1">

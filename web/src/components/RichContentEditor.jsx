@@ -2,8 +2,11 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   Bold, Italic, Underline, Strikethrough, Heading2, Heading3,
   List, ListOrdered, Quote, Minus, Link, Image, Table, Calculator,
-  Play, Shield, Code, Type, RemoveFormatting, X, Check, ChevronDown
+  Play, Shield, Code, Type, RemoveFormatting, X, Check, ChevronDown,
+  Upload, AlertTriangle
 } from 'lucide-react';
+import katex from 'katex';
+import { api } from '../services/api';
 
 /* --- Helpers ------------------------------------------------------------ */
 
@@ -54,11 +57,22 @@ function Popover({ open, onClose, children, className }) {
 
   useEffect(() => {
     if (!open) return;
-    function handleClick(e) {
-      if (ref.current && !ref.current.contains(e.target)) onClose();
-    }
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+    // Defer registration so the opening mousedown doesn't immediately close the popover
+    const timer = setTimeout(() => {
+      function handleClick(e) {
+        if (ref.current && !ref.current.contains(e.target)) onClose();
+      }
+      document.addEventListener('mousedown', handleClick);
+      // Store cleanup reference
+      ref.current?.__cleanup?.();
+      if (ref.current) {
+        ref.current.__cleanup = () => document.removeEventListener('mousedown', handleClick);
+      }
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+      ref.current?.__cleanup?.();
+    };
   }, [open, onClose]);
 
   if (!open) return null;
@@ -126,50 +140,175 @@ function LinkPopover({ open, onClose, onInsert }) {
   );
 }
 
-/* --- Image Popover ------------------------------------------------------ */
+/* --- Image Popover (URL + Upload tabs) ---------------------------------- */
 
-function ImagePopover({ open, onClose, onInsert }) {
+function ImagePopover({ open, onClose, onInsert, courseId }) {
+  const [tab, setTab] = useState(courseId ? 'upload' : 'url');
   const [url, setUrl] = useState('');
   const [alt, setAlt] = useState('');
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState('');
   const urlRef = useRef(null);
+  const fileRef = useRef(null);
 
   useEffect(() => {
-    if (open && urlRef.current) urlRef.current.focus();
-  }, [open]);
+    if (open && tab === 'url' && urlRef.current) urlRef.current.focus();
+  }, [open, tab]);
 
-  const handleInsert = () => {
+  useEffect(() => {
+    if (!open) {
+      setUrl('');
+      setAlt('');
+      setSelectedFile(null);
+      setPreview(null);
+      setUploading(false);
+      setUploadProgress(0);
+      setUploadError('');
+      setTab(courseId ? 'upload' : 'url');
+    }
+  }, [open, courseId]);
+
+  useEffect(() => {
+    if (!selectedFile) { setPreview(null); return; }
+    const objectUrl = URL.createObjectURL(selectedFile);
+    setPreview(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [selectedFile]);
+
+  const handleInsertUrl = () => {
     if (!url) return;
     onInsert(url, alt);
-    setUrl('');
-    setAlt('');
     onClose();
   };
 
+  const handleUpload = async () => {
+    if (!selectedFile || !courseId) return;
+    setUploading(true);
+    setUploadError('');
+    try {
+      const attachment = await api.uploadCourseFileWithProgress(courseId, selectedFile, setUploadProgress);
+      const imgUrl = `/api/v1/files/${attachment.id}/download`;
+      onInsert(imgUrl, alt);
+      onClose();
+    } catch (err) {
+      setUploadError(err.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setUploadError('');
+      if (!alt) setAlt(file.name.replace(/\.[^.]+$/, ''));
+    }
+  };
+
   return (
-    <Popover open={open} onClose={onClose} className="w-72">
-      <label className="block text-xs font-medium text-gray-700 mb-1">Image URL</label>
-      <input
-        ref={urlRef}
-        type="url"
-        className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none mb-2"
-        value={url}
-        onChange={(e) => setUrl(e.target.value)}
-        onKeyDown={(e) => { if (e.key === 'Enter') handleInsert(); }}
-        placeholder="https://example.com/image.png"
-      />
-      <label className="block text-xs font-medium text-gray-700 mb-1">Alt text (for accessibility)</label>
-      <input
-        type="text"
-        className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none mb-3"
-        value={alt}
-        onChange={(e) => setAlt(e.target.value)}
-        onKeyDown={(e) => { if (e.key === 'Enter') handleInsert(); }}
-        placeholder="Describe the image"
-      />
-      <div className="flex justify-end gap-2">
-        <button type="button" onClick={onClose} className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
-        <button type="button" onClick={handleInsert} className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Insert Image</button>
-      </div>
+    <Popover open={open} onClose={onClose} className="w-80">
+      {courseId && (
+        <div className="flex gap-1 mb-3 border-b border-gray-200">
+          <button
+            type="button"
+            className={cx('px-3 py-1.5 text-xs font-medium border-b-2 -mb-px transition-colors', tab === 'upload' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700')}
+            onClick={() => setTab('upload')}
+          >
+            <Upload size={12} className="inline mr-1 -mt-0.5" />Upload
+          </button>
+          <button
+            type="button"
+            className={cx('px-3 py-1.5 text-xs font-medium border-b-2 -mb-px transition-colors', tab === 'url' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700')}
+            onClick={() => setTab('url')}
+          >
+            URL
+          </button>
+        </div>
+      )}
+
+      {tab === 'url' ? (
+        <>
+          <label className="block text-xs font-medium text-gray-700 mb-1">Image URL</label>
+          <input
+            ref={urlRef}
+            type="url"
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none mb-2"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleInsertUrl(); }}
+            placeholder="https://example.com/image.png"
+          />
+          <label className="block text-xs font-medium text-gray-700 mb-1">Alt text (for accessibility)</label>
+          <input
+            type="text"
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none mb-3"
+            value={alt}
+            onChange={(e) => setAlt(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleInsertUrl(); }}
+            placeholder="Describe the image"
+          />
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={onClose} className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
+            <button type="button" onClick={handleInsertUrl} className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Insert Image</button>
+          </div>
+        </>
+      ) : (
+        <>
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+          {!selectedFile ? (
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 hover:bg-blue-50 transition-colors"
+            >
+              <Upload size={24} className="mx-auto mb-2 text-gray-400" />
+              <span className="text-sm text-gray-600">Click to choose an image</span>
+              <span className="block text-xs text-gray-400 mt-1">or drag & drop onto the editor</span>
+            </button>
+          ) : (
+            <div className="space-y-2">
+              {preview && (
+                <div className="flex justify-center p-2 bg-gray-50 rounded border border-gray-200">
+                  <img src={preview} alt="Preview" className="max-h-32 max-w-full rounded" />
+                </div>
+              )}
+              <div className="flex items-center justify-between text-xs text-gray-500">
+                <span className="truncate max-w-[180px]">{selectedFile.name}</span>
+                <button type="button" onClick={() => { setSelectedFile(null); setPreview(null); }} className="text-gray-400 hover:text-gray-600 ml-2"><X size={14} /></button>
+              </div>
+            </div>
+          )}
+          <label className="block text-xs font-medium text-gray-700 mb-1 mt-2">Alt text (for accessibility)</label>
+          <input
+            type="text"
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none mb-2"
+            value={alt}
+            onChange={(e) => setAlt(e.target.value)}
+            placeholder="Describe the image"
+          />
+          {uploading && (
+            <div className="w-full bg-gray-200 rounded-full h-1.5 mb-2">
+              <div className="bg-blue-600 h-1.5 rounded-full transition-all duration-200" style={{ width: `${Math.round(uploadProgress * 100)}%` }} />
+            </div>
+          )}
+          {uploadError && <p className="text-xs text-red-600 mb-2">{uploadError}</p>}
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={onClose} className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
+            <button
+              type="button"
+              onClick={handleUpload}
+              disabled={!selectedFile || uploading}
+              className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {uploading ? 'Uploading...' : 'Upload & Insert'}
+            </button>
+          </div>
+        </>
+      )}
     </Popover>
   );
 }
@@ -272,7 +411,17 @@ function EquationPopover({ open, onClose, onInsert }) {
       </div>
       {latex.trim() && (
         <div className="mb-3 p-2 bg-gray-50 rounded border border-gray-200 text-center">
-          <span className="math-tex text-sm italic text-gray-800">{latex}</span>
+          <span
+            dangerouslySetInnerHTML={{
+              __html: (() => {
+                try {
+                  return katex.renderToString(latex, { throwOnError: false, displayMode: false });
+                } catch {
+                  return `<span class="text-sm italic text-gray-800">${latex.replace(/</g, '&lt;')}</span>`;
+                }
+              })()
+            }}
+          />
         </div>
       )}
       <div className="flex justify-end gap-2">
@@ -429,6 +578,7 @@ export default function RichContentEditor({
   disabled = false,
   id,
   ariaLabel = 'Rich content editor',
+  courseId,
 }) {
   const editorRef = useRef(null);
   const [sourceView, setSourceView] = useState(false);
@@ -443,6 +593,10 @@ export default function RichContentEditor({
   const [mediaOpen, setMediaOpen] = useState(false);
   const [a11yOpen, setA11yOpen] = useState(false);
   const [a11yIssues, setA11yIssues] = useState([]);
+
+  const [dragOver, setDragOver] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(null);
+  const [uploadError, setUploadError] = useState(null);
 
   const savedSelectionRef = useRef(null);
 
@@ -514,7 +668,19 @@ export default function RichContentEditor({
   }, [handleSelectionChange]);
 
   const exec = useCallback((command, val) => {
-    editorRef.current?.focus();
+    const el = editorRef.current;
+    if (!el) return;
+    el.focus();
+    // Ensure editor has at least one block element for formatting commands to work
+    if (!el.innerHTML || el.innerHTML === '<br>' || el.innerHTML.trim() === '') {
+      el.innerHTML = '<p><br></p>';
+      const range = document.createRange();
+      range.selectNodeContents(el.querySelector('p'));
+      range.collapse(true);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
     document.execCommand(command, false, val === undefined ? null : val);
     handleInput();
   }, [handleInput]);
@@ -525,29 +691,40 @@ export default function RichContentEditor({
   const toggleStrikethrough = useCallback(() => exec('strikeThrough'), [exec]);
 
   const toggleH2 = useCallback(() => {
-    const current = document.queryCommandValue('formatBlock');
-    exec('formatBlock', current === 'h2' ? 'p' : 'h2');
+    const current = document.queryCommandValue('formatBlock')?.toLowerCase();
+    exec('formatBlock', current === 'h2' ? '<p>' : '<h2>');
   }, [exec]);
 
   const toggleH3 = useCallback(() => {
-    const current = document.queryCommandValue('formatBlock');
-    exec('formatBlock', current === 'h3' ? 'p' : 'h3');
+    const current = document.queryCommandValue('formatBlock')?.toLowerCase();
+    exec('formatBlock', current === 'h3' ? '<p>' : '<h3>');
   }, [exec]);
 
   const toggleBulletList = useCallback(() => exec('insertUnorderedList'), [exec]);
   const toggleNumberedList = useCallback(() => exec('insertOrderedList'), [exec]);
 
   const toggleBlockquote = useCallback(() => {
-    const current = document.queryCommandValue('formatBlock');
-    exec('formatBlock', current === 'blockquote' ? 'p' : 'blockquote');
+    const current = document.queryCommandValue('formatBlock')?.toLowerCase();
+    exec('formatBlock', current === 'blockquote' ? '<p>' : '<blockquote>');
   }, [exec]);
 
   const insertHR = useCallback(() => exec('insertHorizontalRule'), [exec]);
   const clearFormatting = useCallback(() => exec('removeFormat'), [exec]);
 
   const handleInsertLink = useCallback((url, text) => {
+    const el = editorRef.current;
+    if (!el) return;
     restoreSelection();
-    editorRef.current?.focus();
+    el.focus();
+    // If editor is empty, add a paragraph first
+    if (!el.innerHTML || el.innerHTML === '<br>' || el.innerHTML.trim() === '') {
+      el.innerHTML = '<p><br></p>';
+      const range = document.createRange();
+      range.selectNodeContents(el.querySelector('p'));
+      range.collapse(true);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+    }
     const sel = window.getSelection();
     if (sel && sel.rangeCount > 0) {
       const range = sel.getRangeAt(0);
@@ -565,8 +742,19 @@ export default function RichContentEditor({
   }, [restoreSelection, handleInput]);
 
   const handleInsertImage = useCallback((url, alt) => {
+    const el = editorRef.current;
+    if (!el) return;
     restoreSelection();
-    editorRef.current?.focus();
+    el.focus();
+    // If editor is empty, add a paragraph first
+    if (!el.innerHTML || el.innerHTML === '<br>' || el.innerHTML.trim() === '') {
+      el.innerHTML = '<p><br></p>';
+      const range = document.createRange();
+      range.selectNodeContents(el.querySelector('p'));
+      range.collapse(true);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+    }
     const safeUrl = url.replace(/"/g, '&quot;');
     const safeAlt = (alt || '').replace(/"/g, '&quot;');
     const imgHtml = '<img src="' + safeUrl + '" alt="' + safeAlt + '" style="max-width:100%;height:auto;" />';
@@ -599,7 +787,13 @@ export default function RichContentEditor({
     restoreSelection();
     editorRef.current?.focus();
     const safeTex = latex.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const eqHtml = '<span class="math-tex" contenteditable="false" style="display:inline-block;padding:2px 6px;background:#f8f9fa;border:1px solid #e5e7eb;border-radius:4px;font-family:serif;font-style:italic;color:#1f2937;">' + safeTex + '</span>&nbsp;';
+    let renderedHtml;
+    try {
+      renderedHtml = katex.renderToString(latex, { throwOnError: false, displayMode: false });
+    } catch {
+      renderedHtml = safeTex;
+    }
+    const eqHtml = '<span class="math-tex" contenteditable="false" data-latex="' + safeTex + '" style="display:inline-block;padding:2px 4px;">' + renderedHtml + '</span>&nbsp;';
     document.execCommand('insertHTML', false, eqHtml);
     handleInput();
   }, [restoreSelection, handleInput]);
@@ -631,6 +825,85 @@ export default function RichContentEditor({
     setA11yIssues(issues);
     setA11yOpen(true);
   }, []);
+
+  const insertUploadedImage = useCallback((downloadUrl, altText) => {
+    const el = editorRef.current;
+    if (!el) return;
+    el.focus();
+    if (!el.innerHTML || el.innerHTML === '<br>' || el.innerHTML.trim() === '') {
+      el.innerHTML = '<p><br></p>';
+      const range = document.createRange();
+      range.selectNodeContents(el.querySelector('p'));
+      range.collapse(true);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+    }
+    const safeUrl = downloadUrl.replace(/"/g, '&quot;');
+    const safeAlt = (altText || '').replace(/"/g, '&quot;');
+    document.execCommand('insertHTML', false, '<img src="' + safeUrl + '" alt="' + safeAlt + '" style="max-width:100%;height:auto;" />');
+    handleInput();
+  }, [handleInput]);
+
+  const uploadAndInsertImage = useCallback(async (file) => {
+    if (!courseId) return;
+    setUploadProgress(0);
+    setUploadError(null);
+    try {
+      const attachment = await api.uploadCourseFileWithProgress(courseId, file, (p) => setUploadProgress(p));
+      insertUploadedImage(`/api/v1/files/${attachment.id}/download`, file.name.replace(/\.[^.]+$/, ''));
+    } catch (err) {
+      setUploadError(err.message || 'Upload failed');
+    } finally {
+      setUploadProgress(null);
+    }
+  }, [courseId, insertUploadedImage]);
+
+  const handleDragOver = useCallback((e) => {
+    if (!courseId) return;
+    const hasImages = Array.from(e.dataTransfer?.types || []).includes('Files');
+    if (hasImages) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      setDragOver(true);
+    }
+  }, [courseId]);
+
+  const handleDragLeave = useCallback((e) => {
+    if (e.currentTarget.contains(e.relatedTarget)) return;
+    setDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e) => {
+    setDragOver(false);
+    if (!courseId) return;
+    const files = Array.from(e.dataTransfer?.files || []).filter(f => f.type.startsWith('image/'));
+    if (files.length === 0) return;
+    e.preventDefault();
+    // Place cursor at drop point
+    const el = editorRef.current;
+    if (el) {
+      const caretRange = document.caretRangeFromPoint?.(e.clientX, e.clientY);
+      if (caretRange) {
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(caretRange);
+      }
+    }
+    files.forEach(file => uploadAndInsertImage(file));
+  }, [courseId, uploadAndInsertImage]);
+
+  const handlePaste = useCallback((e) => {
+    if (!courseId) return;
+    const items = Array.from(e.clipboardData?.items || []);
+    const imageItem = items.find(item => item.type.startsWith('image/'));
+    if (!imageItem) return;
+    e.preventDefault();
+    const file = imageItem.getAsFile();
+    if (!file) return;
+    const ext = file.type.split('/')[1] || 'png';
+    const namedFile = new File([file], `pasted-image-${Date.now()}.${ext}`, { type: file.type });
+    uploadAndInsertImage(namedFile);
+  }, [courseId, uploadAndInsertImage]);
 
   const handleToggleSource = useCallback(() => {
     if (sourceView) {
@@ -740,7 +1013,7 @@ export default function RichContentEditor({
         </div>
         <div className="relative">
           <ToolbarButton icon={Image} label="Insert image" onClick={() => openPopover(setImageOpen)} disabled={disabled} />
-          <ImagePopover open={imageOpen} onClose={() => setImageOpen(false)} onInsert={handleInsertImage} />
+          <ImagePopover open={imageOpen} onClose={() => setImageOpen(false)} onInsert={handleInsertImage} courseId={courseId} />
         </div>
         <div className="relative">
           <ToolbarButton icon={Table} label="Insert table" onClick={() => openPopover(setTableOpen)} disabled={disabled} />
@@ -770,6 +1043,28 @@ export default function RichContentEditor({
         />
       </div>
 
+      {/* Upload progress bar */}
+      {uploadProgress !== null && (
+        <div className="px-3 py-1.5 bg-blue-50 border-b border-blue-200">
+          <div className="flex items-center gap-2">
+            <Upload size={14} className="text-blue-600 shrink-0" />
+            <div className="flex-1 bg-blue-200 rounded-full h-1.5">
+              <div className="bg-blue-600 h-1.5 rounded-full transition-all duration-200" style={{ width: `${Math.round(uploadProgress * 100)}%` }} />
+            </div>
+            <span className="text-xs text-blue-700">{Math.round(uploadProgress * 100)}%</span>
+          </div>
+        </div>
+      )}
+
+      {/* Upload error banner */}
+      {uploadError && (
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 border-b border-red-200 text-xs text-red-700">
+          <AlertTriangle size={14} className="shrink-0" />
+          <span className="flex-1">{uploadError}</span>
+          <button type="button" onClick={() => setUploadError(null)} className="text-red-400 hover:text-red-600"><X size={14} /></button>
+        </div>
+      )}
+
       {/* Editor Surface */}
       {sourceView ? (
         <textarea
@@ -782,25 +1077,41 @@ export default function RichContentEditor({
         />
       ) : (
         <div
-          ref={editorRef}
-          id={id}
-          contentEditable={!disabled}
-          suppressContentEditableWarning
-          role="textbox"
-          aria-multiline="true"
-          aria-label={ariaLabel}
-          className={cx(
-            'w-full p-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-400',
-            'prose prose-sm max-w-none',
-            'empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:pointer-events-none',
+          className="relative"
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          <div
+            ref={editorRef}
+            id={id}
+            contentEditable={!disabled}
+            suppressContentEditableWarning
+            role="textbox"
+            aria-multiline="true"
+            aria-label={ariaLabel}
+            className={cx(
+              'w-full p-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-400',
+              'prose prose-sm max-w-none',
+              'empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:pointer-events-none',
+            )}
+            style={{ minHeight }}
+            data-placeholder={placeholder}
+            onInput={handleInput}
+            onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
+            onFocus={updateActiveFormats}
+            onMouseUp={updateActiveFormats}
+          />
+          {dragOver && (
+            <div className="absolute inset-0 bg-blue-50/70 border-2 border-dashed border-blue-400 rounded flex items-center justify-center pointer-events-none z-10">
+              <div className="flex items-center gap-2 text-blue-700 font-medium text-sm">
+                <Image size={20} />
+                Drop image here to upload
+              </div>
+            </div>
           )}
-          style={{ minHeight }}
-          data-placeholder={placeholder}
-          onInput={handleInput}
-          onKeyDown={handleKeyDown}
-          onFocus={updateActiveFormats}
-          onMouseUp={updateActiveFormats}
-        />
+        </div>
       )}
 
       {/* Bottom Bar */}

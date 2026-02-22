@@ -10,10 +10,11 @@ import (
 
 type BatchHandler struct {
 	batchService *service.BatchService
+	authz        *ResourceAuthorizer
 }
 
-func NewBatchHandler(batchService *service.BatchService) *BatchHandler {
-	return &BatchHandler{batchService: batchService}
+func NewBatchHandler(batchService *service.BatchService, authz *ResourceAuthorizer) *BatchHandler {
+	return &BatchHandler{batchService: batchService, authz: authz}
 }
 
 // CloneCourse handles POST /api/v1/courses/clone
@@ -153,6 +154,11 @@ func (h *BatchHandler) BulkSendMessage(c *fiber.Ctx) error {
 	}
 	if len(input.EnrollmentTypes) == 0 {
 		return responses.BadRequest(c, "enrollment_types is required")
+	}
+
+	// Authorization: only instructors in the target course can bulk-send messages
+	if err := h.authz.RequireCourseInstructor(c, input.CourseID); err != nil {
+		return err
 	}
 
 	result, err := h.batchService.BulkSendMessage(

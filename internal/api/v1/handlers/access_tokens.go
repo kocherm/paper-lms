@@ -42,7 +42,10 @@ func (h *AccessTokenHandler) ListAccessTokens(c *fiber.Ctx) error {
 	}
 
 	// Verify the requesting user matches the target user
-	currentUserID := c.Locals("user_id").(uint)
+	currentUserID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 	if currentUserID != uint(userID) {
 		return responses.Error(c, fiber.StatusForbidden, "You can only view your own tokens")
 	}
@@ -81,7 +84,10 @@ func (h *AccessTokenHandler) CreateAccessToken(c *fiber.Ctx) error {
 	}
 
 	// Verify the requesting user matches the target user
-	currentUserID := c.Locals("user_id").(uint)
+	currentUserID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 	if currentUserID != uint(userID) {
 		return responses.Error(c, fiber.StatusForbidden, "You can only create tokens for yourself")
 	}
@@ -122,7 +128,10 @@ func (h *AccessTokenHandler) DeleteAccessToken(c *fiber.Ctx) error {
 	}
 
 	// Verify the requesting user matches the target user
-	currentUserID := c.Locals("user_id").(uint)
+	currentUserID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 	if currentUserID != uint(userID) {
 		return responses.Error(c, fiber.StatusForbidden, "You can only delete your own tokens")
 	}

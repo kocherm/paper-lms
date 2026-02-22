@@ -53,6 +53,7 @@ type BatchService struct {
 	moduleItemRepo      repository.ModuleItemRepository
 	assignmentRepo      repository.AssignmentRepository
 	quizRepo            repository.QuizRepository
+	quizQuestionRepo    repository.QuizQuestionRepository
 	pageRepo            repository.PageRepository
 	discussionTopicRepo repository.DiscussionTopicRepository
 	calendarEventRepo   repository.CalendarEventRepository
@@ -70,6 +71,7 @@ func NewBatchService(
 	moduleItemRepo repository.ModuleItemRepository,
 	assignmentRepo repository.AssignmentRepository,
 	quizRepo repository.QuizRepository,
+	quizQuestionRepo repository.QuizQuestionRepository,
 	pageRepo repository.PageRepository,
 	discussionTopicRepo repository.DiscussionTopicRepository,
 	calendarEventRepo repository.CalendarEventRepository,
@@ -86,6 +88,7 @@ func NewBatchService(
 		moduleItemRepo:      moduleItemRepo,
 		assignmentRepo:      assignmentRepo,
 		quizRepo:            quizRepo,
+		quizQuestionRepo:    quizQuestionRepo,
 		pageRepo:            pageRepo,
 		discussionTopicRepo: discussionTopicRepo,
 		calendarEventRepo:   calendarEventRepo,
@@ -271,6 +274,28 @@ func (s *BatchService) cloneQuizzes(ctx context.Context, sourceCourseID, destCou
 			return fmt.Errorf("failed to clone quiz %d: %w", oldID, err)
 		}
 		idMap[oldID] = newQuiz.ID
+
+		// Clone quiz questions
+		qParams := repository.PaginationParams{Page: 1, PerPage: 1000}
+		questions, err := s.quizQuestionRepo.ListByQuizID(ctx, oldID, qParams)
+		if err != nil {
+			continue // skip question cloning if fetch fails
+		}
+		for _, question := range questions.Items {
+			newQuestion := &models.QuizQuestion{
+				QuizID:            newQuiz.ID,
+				Position:          question.Position,
+				QuestionType:      question.QuestionType,
+				QuestionText:      question.QuestionText,
+				PointsPossible:    question.PointsPossible,
+				Answers:           question.Answers,
+				CorrectComments:   question.CorrectComments,
+				IncorrectComments: question.IncorrectComments,
+				NeutralComments:   question.NeutralComments,
+				WorkflowState:     question.WorkflowState,
+			}
+			_ = s.quizQuestionRepo.Create(ctx, newQuestion)
+		}
 	}
 	return nil
 }

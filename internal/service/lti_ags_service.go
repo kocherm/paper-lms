@@ -17,6 +17,7 @@ type LTIAGSService struct {
 	lineItemRepo   repository.LTILineItemRepository
 	resultRepo     repository.LTIResultRepository
 	submissionRepo repository.SubmissionRepository
+	assignmentRepo repository.AssignmentRepository
 }
 
 // NewLTIAGSService creates a new LTIAGSService.
@@ -24,11 +25,13 @@ func NewLTIAGSService(
 	lineItemRepo repository.LTILineItemRepository,
 	resultRepo repository.LTIResultRepository,
 	submissionRepo repository.SubmissionRepository,
+	assignmentRepo repository.AssignmentRepository,
 ) *LTIAGSService {
 	return &LTIAGSService{
 		lineItemRepo:   lineItemRepo,
 		resultRepo:     resultRepo,
 		submissionRepo: submissionRepo,
+		assignmentRepo: assignmentRepo,
 	}
 }
 
@@ -149,9 +152,8 @@ func (s *LTIAGSService) PostScore(ctx context.Context, lineItemID uint, result *
 }
 
 // syncSubmissionScore updates the Canvas submission for an assignment with the
-// score computed from the LTI result. The score is scaled to the line item's
-// score maximum: score = (resultScore / resultMaximum) * assignmentPointsPossible.
-// Since we don't have the assignment points here, we pass the raw score through.
+// score computed from the LTI result. The score is scaled to the assignment's
+// points_possible: score = (resultScore / resultMaximum) * pointsPossible.
 func (s *LTIAGSService) syncSubmissionScore(ctx context.Context, assignmentID uint, result *models.LTIResult) error {
 	submission, err := s.submissionRepo.FindByAssignmentAndUser(ctx, assignmentID, result.UserID)
 	if err != nil {
@@ -161,7 +163,12 @@ func (s *LTIAGSService) syncSubmissionScore(ctx context.Context, assignmentID ui
 
 	// Compute the scaled score
 	if result.ResultScore != nil && result.ResultMaximum != nil && *result.ResultMaximum > 0 {
-		score := *result.ResultScore / *result.ResultMaximum * 100
+		// Scale to assignment's actual points_possible (default 100 if not set)
+		pointsPossible := 100.0
+		if assignment, aErr := s.assignmentRepo.FindByID(ctx, assignmentID); aErr == nil && assignment.PointsPossible != nil && *assignment.PointsPossible > 0 {
+			pointsPossible = *assignment.PointsPossible
+		}
+		score := *result.ResultScore / *result.ResultMaximum * pointsPossible
 		submission.Score = &score
 
 		gradeStr := fmt.Sprintf("%.2f", score)

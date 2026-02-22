@@ -10,10 +10,11 @@ import (
 
 type FolderHandler struct {
 	fileService *service.FileService
+	authz       *ResourceAuthorizer
 }
 
-func NewFolderHandler(fileService *service.FileService) *FolderHandler {
-	return &FolderHandler{fileService: fileService}
+func NewFolderHandler(fileService *service.FileService, authz *ResourceAuthorizer) *FolderHandler {
+	return &FolderHandler{fileService: fileService, authz: authz}
 }
 
 func folderToJSON(f *models.Folder) fiber.Map {
@@ -112,6 +113,12 @@ func (h *FolderHandler) GetFolder(c *fiber.Ctx) error {
 		return responses.NotFound(c, "folder")
 	}
 
+	if folder.ContextType == "Course" {
+		if err := h.authz.RequireCourseEnrolled(c, folder.ContextID); err != nil {
+			return err
+		}
+	}
+
 	return c.JSON(folderToJSON(folder))
 }
 
@@ -124,6 +131,12 @@ func (h *FolderHandler) UpdateFolder(c *fiber.Ctx) error {
 	folder, err := h.fileService.GetFolder(c.Context(), uint(id))
 	if err != nil {
 		return responses.NotFound(c, "folder")
+	}
+
+	if folder.ContextType == "Course" {
+		if err := h.authz.RequireCourseInstructor(c, folder.ContextID); err != nil {
+			return err
+		}
 	}
 
 	var input struct {
@@ -155,6 +168,17 @@ func (h *FolderHandler) DeleteFolder(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid folder ID")
 	}
 
+	folder, err := h.fileService.GetFolder(c.Context(), uint(id))
+	if err != nil {
+		return responses.NotFound(c, "folder")
+	}
+
+	if folder.ContextType == "Course" {
+		if err := h.authz.RequireCourseInstructor(c, folder.ContextID); err != nil {
+			return err
+		}
+	}
+
 	if err := h.fileService.DeleteFolder(c.Context(), uint(id)); err != nil {
 		return responses.InternalError(c, "Could not delete folder")
 	}
@@ -166,6 +190,17 @@ func (h *FolderHandler) ListSubfolders(c *fiber.Ctx) error {
 	folderID, err := c.ParamsInt("folder_id")
 	if err != nil {
 		return responses.BadRequest(c, "Invalid folder ID")
+	}
+
+	parentFolder, err := h.fileService.GetFolder(c.Context(), uint(folderID))
+	if err != nil {
+		return responses.NotFound(c, "folder")
+	}
+
+	if parentFolder.ContextType == "Course" {
+		if err := h.authz.RequireCourseEnrolled(c, parentFolder.ContextID); err != nil {
+			return err
+		}
 	}
 
 	params := middleware.GetPagination(c)

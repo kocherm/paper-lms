@@ -92,7 +92,6 @@ func (h *ObserverHandler) ListObservees(c *fiber.Ctx) error {
 }
 
 // GetObserveeCourses handles GET /users/:user_id/observees/:observee_id/courses
-// Placeholder implementation that returns an empty list.
 func (h *ObserverHandler) GetObserveeCourses(c *fiber.Ctx) error {
 	userID, err := c.ParamsInt("user_id")
 	if err != nil || userID <= 0 {
@@ -104,10 +103,20 @@ func (h *ObserverHandler) GetObserveeCourses(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid observee ID")
 	}
 
-	// Placeholder: return empty list. Full implementation would filter
-	// observer enrollments for this specific observee and return the
-	// associated courses.
-	_ = observeeID
+	courses, err := h.observerService.GetObserveeCourses(c.Context(), uint(userID), uint(observeeID))
+	if err != nil {
+		return responses.BadRequest(c, err.Error())
+	}
 
-	return c.JSON([]fiber.Map{})
+	result := make([]fiber.Map, len(courses))
+	for i, course := range courses {
+		result[i] = fiber.Map{
+			"id":             course.ID,
+			"name":           course.Name,
+			"course_code":    course.CourseCode,
+			"workflow_state": course.WorkflowState,
+		}
+	}
+
+	return c.JSON(result)
 }

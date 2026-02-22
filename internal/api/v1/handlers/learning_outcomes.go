@@ -11,10 +11,11 @@ import (
 
 type LearningOutcomeHandler struct {
 	outcomeService *service.LearningOutcomeService
+	alignmentRepo  repository.OutcomeAlignmentRepository
 }
 
-func NewLearningOutcomeHandler(outcomeService *service.LearningOutcomeService) *LearningOutcomeHandler {
-	return &LearningOutcomeHandler{outcomeService: outcomeService}
+func NewLearningOutcomeHandler(outcomeService *service.LearningOutcomeService, alignmentRepo repository.OutcomeAlignmentRepository) *LearningOutcomeHandler {
+	return &LearningOutcomeHandler{outcomeService: outcomeService, alignmentRepo: alignmentRepo}
 }
 
 func outcomeGroupToJSON(g *models.LearningOutcomeGroup) fiber.Map {
@@ -490,4 +491,87 @@ func (h *LearningOutcomeHandler) GetMasteryGradebook(c *fiber.Ctx) error {
 			"outcomes": outcomeList,
 		},
 	})
+}
+
+// Alignment endpoints
+
+func (h *LearningOutcomeHandler) CreateAlignment(c *fiber.Ctx) error {
+	courseID, err := c.ParamsInt("course_id")
+	if err != nil {
+		return responses.BadRequest(c, "Invalid course ID")
+	}
+
+	var input struct {
+		LearningOutcomeID uint `json:"learning_outcome_id"`
+		AssignmentID      uint `json:"assignment_id"`
+	}
+
+	if err := c.BodyParser(&input); err != nil {
+		return responses.BadRequest(c, "Invalid input")
+	}
+
+	if input.LearningOutcomeID == 0 || input.AssignmentID == 0 {
+		return responses.BadRequest(c, "learning_outcome_id and assignment_id are required")
+	}
+
+	alignment := &models.OutcomeAlignment{
+		LearningOutcomeID: input.LearningOutcomeID,
+		AssignmentID:      input.AssignmentID,
+		CourseID:          uint(courseID),
+	}
+
+	if err := h.alignmentRepo.Create(c.Context(), alignment); err != nil {
+		return responses.InternalError(c, "Could not create alignment")
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"id":                  alignment.ID,
+		"learning_outcome_id": alignment.LearningOutcomeID,
+		"assignment_id":       alignment.AssignmentID,
+		"course_id":           alignment.CourseID,
+	})
+}
+
+func (h *LearningOutcomeHandler) DeleteAlignment(c *fiber.Ctx) error {
+	alignmentID, err := c.ParamsInt("alignment_id")
+	if err != nil {
+		return responses.BadRequest(c, "Invalid alignment ID")
+	}
+
+	if err := h.alignmentRepo.Delete(c.Context(), uint(alignmentID)); err != nil {
+		return responses.InternalError(c, "Could not delete alignment")
+	}
+
+	return c.JSON(fiber.Map{"delete": true})
+}
+
+func (h *LearningOutcomeHandler) ListAlignments(c *fiber.Ctx) error {
+	courseID, err := c.ParamsInt("course_id")
+	if err != nil {
+		return responses.BadRequest(c, "Invalid course ID")
+	}
+
+	assignmentID := c.QueryInt("assignment_id", 0)
+	var alignments []models.OutcomeAlignment
+
+	if assignmentID > 0 {
+		alignments, err = h.alignmentRepo.ListByAssignmentID(c.Context(), uint(assignmentID))
+	} else {
+		alignments, err = h.alignmentRepo.ListByCourseID(c.Context(), uint(courseID))
+	}
+	if err != nil {
+		return responses.InternalError(c, "Could not fetch alignments")
+	}
+
+	result := make([]fiber.Map, len(alignments))
+	for i, a := range alignments {
+		result[i] = fiber.Map{
+			"id":                  a.ID,
+			"learning_outcome_id": a.LearningOutcomeID,
+			"assignment_id":       a.AssignmentID,
+			"course_id":           a.CourseID,
+		}
+	}
+
+	return c.JSON(result)
 }

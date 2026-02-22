@@ -238,6 +238,33 @@ func (s *AnnouncementService) GetAnnouncementStats(ctx context.Context, announce
 	}, nil
 }
 
+// ReadAckStatus holds the read/acknowledged status for a single announcement.
+type ReadAckStatus struct {
+	IsRead         bool
+	IsAcknowledged bool
+}
+
+// GetBulkReadStatus returns read/acknowledged status for multiple announcements in a single query.
+func (s *AnnouncementService) GetBulkReadStatus(ctx context.Context, announcementIDs []uint, userID uint) map[uint]ReadAckStatus {
+	result := make(map[uint]ReadAckStatus, len(announcementIDs))
+	if len(announcementIDs) == 0 || userID == 0 {
+		return result
+	}
+
+	receipts, err := s.receiptRepo.FindByAnnouncementIDsAndUser(ctx, announcementIDs, userID)
+	if err != nil {
+		return result
+	}
+
+	for _, r := range receipts {
+		result[r.AnnouncementID] = ReadAckStatus{
+			IsRead:         true,
+			IsAcknowledged: r.Acknowledged,
+		}
+	}
+	return result
+}
+
 // IsRead checks if a user has read a specific announcement.
 func (s *AnnouncementService) IsRead(ctx context.Context, announcementID, userID uint) bool {
 	receipt, err := s.receiptRepo.FindByAnnouncementAndUser(ctx, announcementID, userID)

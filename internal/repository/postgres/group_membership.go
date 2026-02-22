@@ -63,3 +63,15 @@ func (r *groupMembershipRepo) FindByGroupAndUser(ctx context.Context, groupID, u
 	}
 	return &membership, nil
 }
+
+func (r *groupMembershipRepo) FindUserGroupInCategory(ctx context.Context, userID, groupCategoryID uint) (*models.Group, error) {
+	var group models.Group
+	if err := r.db.WithContext(ctx).
+		Joins("INNER JOIN group_memberships ON group_memberships.group_id = groups.id").
+		Where("group_memberships.user_id = ? AND groups.group_category_id = ? AND group_memberships.workflow_state = ? AND groups.workflow_state != ?",
+			userID, groupCategoryID, "accepted", "deleted").
+		First(&group).Error; err != nil {
+		return nil, err
+	}
+	return &group, nil
+}

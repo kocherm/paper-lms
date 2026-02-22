@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/kocherm/paper-lms/internal/api/v1/middleware"
@@ -27,6 +28,8 @@ func pageToJSON(p *models.WikiPage) fiber.Map {
 		"workflow_state": p.WorkflowState,
 		"editing_roles":  p.EditingRoles,
 		"front_page":     p.FrontPage,
+		"public":         p.Public,
+		"website_mode":   p.WebsiteMode,
 		"published":      p.WorkflowState == "active",
 		"created_at":     p.CreatedAt,
 		"updated_at":     p.UpdatedAt,
@@ -95,11 +98,17 @@ func (h *PageHandler) CreatePage(c *fiber.Ctx) error {
 			EditingRoles string `json:"editing_roles"`
 			Published    bool   `json:"published"`
 			FrontPage    bool   `json:"front_page"`
+			Public       bool   `json:"public"`
+			WebsiteMode  bool   `json:"website_mode"`
 		} `json:"wiki_page"`
 	}
 
 	if err := c.BodyParser(&input); err != nil {
 		return responses.BadRequest(c, "Invalid input")
+	}
+
+	if strings.TrimSpace(input.WikiPage.Title) == "" {
+		return responses.BadRequest(c, "Page title is required")
 	}
 
 	state := "unpublished"
@@ -113,6 +122,8 @@ func (h *PageHandler) CreatePage(c *fiber.Ctx) error {
 		Body:          input.WikiPage.Body,
 		EditingRoles:  input.WikiPage.EditingRoles,
 		FrontPage:     input.WikiPage.FrontPage,
+		Public:        input.WikiPage.Public,
+		WebsiteMode:   input.WikiPage.WebsiteMode,
 		WorkflowState: state,
 	}
 
@@ -155,6 +166,8 @@ func (h *PageHandler) UpdatePage(c *fiber.Ctx) error {
 			EditingRoles *string `json:"editing_roles"`
 			Published    *bool   `json:"published"`
 			FrontPage    *bool   `json:"front_page"`
+			Public       *bool   `json:"public"`
+			WebsiteMode  *bool   `json:"website_mode"`
 		} `json:"wiki_page"`
 	}
 
@@ -180,6 +193,12 @@ func (h *PageHandler) UpdatePage(c *fiber.Ctx) error {
 	}
 	if input.WikiPage.FrontPage != nil {
 		page.FrontPage = *input.WikiPage.FrontPage
+	}
+	if input.WikiPage.Public != nil {
+		page.Public = *input.WikiPage.Public
+	}
+	if input.WikiPage.WebsiteMode != nil {
+		page.WebsiteMode = *input.WikiPage.WebsiteMode
 	}
 
 	if err := h.pageService.Update(c.Context(), page); err != nil {
@@ -215,4 +234,23 @@ func (h *PageHandler) DeletePage(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{"delete": true})
+}
+
+func (h *PageHandler) GetPublicPage(c *fiber.Ctx) error {
+	courseID, err := c.ParamsInt("course_id")
+	if err != nil {
+		return responses.BadRequest(c, "Invalid course ID")
+	}
+
+	slug := c.Params("slug")
+	if slug == "" {
+		return responses.BadRequest(c, "Page slug is required")
+	}
+
+	page, err := h.pageService.GetPublicPage(c.Context(), uint(courseID), slug)
+	if err != nil {
+		return responses.NotFound(c, "page")
+	}
+
+	return c.JSON(pageToJSON(page))
 }

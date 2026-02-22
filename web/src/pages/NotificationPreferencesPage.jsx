@@ -44,8 +44,8 @@ const NotificationPreferencesPage = () => {
 
   const fetchPreferences = useCallback(async () => {
     try {
-      const { data } = await api.getNotificationPreferences();
-      setPreferences(data.notification_preferences);
+      const result = await api.getNotificationPreferences();
+      setPreferences(result.notification_preferences);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -72,14 +72,14 @@ const NotificationPreferencesPage = () => {
     setError(null);
     setSuccess(false);
     try {
-      const { data } = await api.updateNotificationPreferences({
+      const result = await api.updateNotificationPreferences({
         policy: preferences.policy,
         notify_new_message: preferences.notify_new_message,
         notify_event_start: preferences.notify_event_start,
         notify_submission_grade: preferences.notify_submission_grade,
         notify_new_announcement: preferences.notify_new_announcement,
       });
-      setPreferences(data.notification_preferences);
+      setPreferences(result.notification_preferences);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
@@ -92,7 +92,10 @@ const NotificationPreferencesPage = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="text-center py-12 text-gray-500">Loading notification preferences...</div>
+        <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+  Loading notification preferences...
+</div>
       </Layout>
     );
   }

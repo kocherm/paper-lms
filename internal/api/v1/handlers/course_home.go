@@ -25,7 +25,10 @@ func (h *CourseHomeHandler) GetHomeData(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid course ID")
 	}
 
-	userID := c.Locals("user_id").(uint)
+	userID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 
 	data, err := h.courseHomeService.GetHomeData(c.Context(), uint(courseID), userID)
 	if err != nil {
@@ -41,7 +44,10 @@ func (h *CourseHomeHandler) RecordVisit(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid course ID")
 	}
 
-	userID := c.Locals("user_id").(uint)
+	userID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 
 	var input struct {
 		URL   string `json:"url"`

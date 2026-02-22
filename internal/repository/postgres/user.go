@@ -56,6 +56,14 @@ func (r *userRepo) Update(ctx context.Context, user *models.User) error {
 	return r.db.WithContext(ctx).Save(user).Error
 }
 
+func (r *userRepo) FindByResetToken(ctx context.Context, token string) (*models.User, error) {
+	var user models.User
+	if err := r.db.WithContext(ctx).Where("reset_token = ? AND reset_token != ''", token).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (r *userRepo) List(ctx context.Context, params repository.PaginationParams) (*repository.PaginatedResult[models.User], error) {
 	var users []models.User
 	var count int64
@@ -64,6 +72,27 @@ func (r *userRepo) List(ctx context.Context, params repository.PaginationParams)
 
 	offset := (params.Page - 1) * params.PerPage
 	if err := r.db.WithContext(ctx).Offset(offset).Limit(params.PerPage).Order("id ASC").Find(&users).Error; err != nil {
+		return nil, err
+	}
+
+	return &repository.PaginatedResult[models.User]{
+		Items:      users,
+		TotalCount: count,
+		Page:       params.Page,
+		PerPage:    params.PerPage,
+	}, nil
+}
+
+func (r *userRepo) Search(ctx context.Context, searchTerm string, params repository.PaginationParams) (*repository.PaginatedResult[models.User], error) {
+	var users []models.User
+	var count int64
+
+	like := "%" + searchTerm + "%"
+	query := r.db.WithContext(ctx).Model(&models.User{}).Where("name ILIKE ? OR email ILIKE ?", like, like)
+	query.Count(&count)
+
+	offset := (params.Page - 1) * params.PerPage
+	if err := query.Offset(offset).Limit(params.PerPage).Order("name ASC").Find(&users).Error; err != nil {
 		return nil, err
 	}
 

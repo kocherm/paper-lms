@@ -57,3 +57,7 @@ func (s *EnrollmentService) GetUserRole(ctx context.Context, userID, courseID ui
 	}
 	return enrollment.Type, nil
 }
+
+func (s *EnrollmentService) CountStudentsByCourseIDs(ctx context.Context, courseIDs []uint) (map[uint]int64, error) {
+	return s.enrollmentRepo.CountByCourseIDs(ctx, courseIDs)
+}

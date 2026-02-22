@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -20,21 +21,28 @@ func NewAssignmentHandler(assignmentService *service.AssignmentService) *Assignm
 
 func assignmentToJSON(a *models.Assignment) fiber.Map {
 	return fiber.Map{
-		"id":               a.ID,
-		"course_id":        a.CourseID,
-		"name":             a.Name,
-		"description":      a.Description,
-		"due_at":           a.DueAt,
-		"unlock_at":        a.UnlockAt,
-		"lock_at":          a.LockAt,
-		"points_possible":  a.PointsPossible,
-		"grading_type":     a.GradingType,
-		"submission_types": []string{a.SubmissionTypes},
-		"position":         a.Position,
-		"workflow_state":   a.WorkflowState,
-		"published":        a.Published,
-		"created_at":       a.CreatedAt,
-		"updated_at":       a.UpdatedAt,
+		"id":                   a.ID,
+		"course_id":            a.CourseID,
+		"assignment_group_id":  a.AssignmentGroupID,
+		"name":                 a.Name,
+		"description":          a.Description,
+		"due_at":               a.DueAt,
+		"unlock_at":            a.UnlockAt,
+		"lock_at":              a.LockAt,
+		"points_possible":      a.PointsPossible,
+		"grading_type":         a.GradingType,
+		"submission_types":     strings.Split(a.SubmissionTypes, ","),
+		"position":             a.Position,
+		"workflow_state":       a.WorkflowState,
+		"published":            a.Published,
+		"anonymous_grading":    a.AnonymousGrading,
+		"post_policy":          a.PostPolicy,
+		"peer_reviews_enabled": a.PeerReviewsEnabled,
+		"peer_review_count":    a.PeerReviewCount,
+		"group_category_id":    a.GroupCategoryID,
+		"is_group_assignment":  a.GroupCategoryID != nil && *a.GroupCategoryID > 0,
+		"created_at":           a.CreatedAt,
+		"updated_at":           a.UpdatedAt,
 	}
 }
 
@@ -83,16 +91,22 @@ func (h *AssignmentHandler) CreateAssignment(c *fiber.Ctx) error {
 
 	var input struct {
 		Assignment struct {
-			Name            string     `json:"name"`
-			Description     string     `json:"description"`
-			DueAt           *time.Time `json:"due_at"`
-			UnlockAt        *time.Time `json:"unlock_at"`
-			LockAt          *time.Time `json:"lock_at"`
-			PointsPossible  *float64   `json:"points_possible"`
-			GradingType     string     `json:"grading_type"`
-			SubmissionTypes string     `json:"submission_types"`
-			Position        int        `json:"position"`
-			Published       bool       `json:"published"`
+			Name               string     `json:"name"`
+			Description        string     `json:"description"`
+			DueAt              *time.Time `json:"due_at"`
+			UnlockAt           *time.Time `json:"unlock_at"`
+			LockAt             *time.Time `json:"lock_at"`
+			PointsPossible     *float64   `json:"points_possible"`
+			GradingType        string     `json:"grading_type"`
+			SubmissionTypes    []string   `json:"submission_types"`
+			Position           int        `json:"position"`
+			Published          bool       `json:"published"`
+			AssignmentGroupID  *uint      `json:"assignment_group_id"`
+			AnonymousGrading   bool       `json:"anonymous_grading"`
+			PostPolicy         string     `json:"post_policy"`
+			PeerReviewsEnabled bool       `json:"peer_reviews_enabled"`
+			PeerReviewCount    int        `json:"peer_review_count"`
+			GroupCategoryID    *uint      `json:"group_category_id"`
 		} `json:"assignment"`
 	}
 
@@ -100,24 +114,41 @@ func (h *AssignmentHandler) CreateAssignment(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid input")
 	}
 
+	if strings.TrimSpace(input.Assignment.Name) == "" {
+		return responses.BadRequest(c, "Assignment name is required")
+	}
+
 	state := "unpublished"
 	if input.Assignment.Published {
 		state = "published"
 	}
 
+	submissionTypes := strings.Join(input.Assignment.SubmissionTypes, ",")
+
+	postPolicy := input.Assignment.PostPolicy
+	if postPolicy == "" {
+		postPolicy = "automatic"
+	}
+
 	assignment := &models.Assignment{
-		CourseID:        uint(courseID),
-		Name:            input.Assignment.Name,
-		Description:     input.Assignment.Description,
-		DueAt:           input.Assignment.DueAt,
-		UnlockAt:        input.Assignment.UnlockAt,
-		LockAt:          input.Assignment.LockAt,
-		PointsPossible:  input.Assignment.PointsPossible,
-		GradingType:     input.Assignment.GradingType,
-		SubmissionTypes: input.Assignment.SubmissionTypes,
-		Position:        input.Assignment.Position,
-		Published:       input.Assignment.Published,
-		WorkflowState:   state,
+		CourseID:           uint(courseID),
+		AssignmentGroupID:  input.Assignment.AssignmentGroupID,
+		Name:               input.Assignment.Name,
+		Description:        input.Assignment.Description,
+		DueAt:              input.Assignment.DueAt,
+		UnlockAt:           input.Assignment.UnlockAt,
+		LockAt:             input.Assignment.LockAt,
+		PointsPossible:     input.Assignment.PointsPossible,
+		GradingType:        input.Assignment.GradingType,
+		SubmissionTypes:    submissionTypes,
+		Position:           input.Assignment.Position,
+		Published:          input.Assignment.Published,
+		WorkflowState:      state,
+		AnonymousGrading:   input.Assignment.AnonymousGrading,
+		PostPolicy:         postPolicy,
+		PeerReviewsEnabled: input.Assignment.PeerReviewsEnabled,
+		PeerReviewCount:    input.Assignment.PeerReviewCount,
+		GroupCategoryID:    input.Assignment.GroupCategoryID,
 	}
 
 	if assignment.GradingType == "" {
@@ -147,16 +178,22 @@ func (h *AssignmentHandler) UpdateAssignment(c *fiber.Ctx) error {
 
 	var input struct {
 		Assignment struct {
-			Name            *string    `json:"name"`
-			Description     *string    `json:"description"`
-			DueAt           *time.Time `json:"due_at"`
-			UnlockAt        *time.Time `json:"unlock_at"`
-			LockAt          *time.Time `json:"lock_at"`
-			PointsPossible  *float64   `json:"points_possible"`
-			GradingType     *string    `json:"grading_type"`
-			SubmissionTypes *string    `json:"submission_types"`
-			Position        *int       `json:"position"`
-			Published       *bool      `json:"published"`
+			Name               *string    `json:"name"`
+			Description        *string    `json:"description"`
+			DueAt              *time.Time `json:"due_at"`
+			UnlockAt           *time.Time `json:"unlock_at"`
+			LockAt             *time.Time `json:"lock_at"`
+			PointsPossible     *float64   `json:"points_possible"`
+			GradingType        *string    `json:"grading_type"`
+			SubmissionTypes    []string   `json:"submission_types"`
+			Position           *int       `json:"position"`
+			Published          *bool      `json:"published"`
+			AssignmentGroupID  *uint      `json:"assignment_group_id"`
+			AnonymousGrading   *bool      `json:"anonymous_grading"`
+			PostPolicy         *string    `json:"post_policy"`
+			PeerReviewsEnabled *bool      `json:"peer_reviews_enabled"`
+			PeerReviewCount    *int       `json:"peer_review_count"`
+			GroupCategoryID    *uint      `json:"group_category_id"`
 		} `json:"assignment"`
 	}
 
@@ -185,8 +222,8 @@ func (h *AssignmentHandler) UpdateAssignment(c *fiber.Ctx) error {
 	if input.Assignment.GradingType != nil {
 		assignment.GradingType = *input.Assignment.GradingType
 	}
-	if input.Assignment.SubmissionTypes != nil {
-		assignment.SubmissionTypes = *input.Assignment.SubmissionTypes
+	if len(input.Assignment.SubmissionTypes) > 0 {
+		assignment.SubmissionTypes = strings.Join(input.Assignment.SubmissionTypes, ",")
 	}
 	if input.Assignment.Position != nil {
 		assignment.Position = *input.Assignment.Position
@@ -198,6 +235,24 @@ func (h *AssignmentHandler) UpdateAssignment(c *fiber.Ctx) error {
 		} else {
 			assignment.WorkflowState = "unpublished"
 		}
+	}
+	if input.Assignment.AssignmentGroupID != nil {
+		assignment.AssignmentGroupID = input.Assignment.AssignmentGroupID
+	}
+	if input.Assignment.AnonymousGrading != nil {
+		assignment.AnonymousGrading = *input.Assignment.AnonymousGrading
+	}
+	if input.Assignment.PostPolicy != nil {
+		assignment.PostPolicy = *input.Assignment.PostPolicy
+	}
+	if input.Assignment.PeerReviewsEnabled != nil {
+		assignment.PeerReviewsEnabled = *input.Assignment.PeerReviewsEnabled
+	}
+	if input.Assignment.PeerReviewCount != nil {
+		assignment.PeerReviewCount = *input.Assignment.PeerReviewCount
+	}
+	if input.Assignment.GroupCategoryID != nil {
+		assignment.GroupCategoryID = input.Assignment.GroupCategoryID
 	}
 
 	if err := h.assignmentService.Update(c.Context(), assignment); err != nil {

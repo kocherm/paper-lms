@@ -3,23 +3,37 @@ import { useParams, Link } from 'react-router-dom';
 import { FileText, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { api } from '../services/api';
 import Layout from '../components/Layout';
+import CourseNav from '../components/CourseNav';
 
 const QuizSubmissionsPage = () => {
   const { courseId, quizId } = useParams();
   const [quiz, setQuiz] = useState(null);
   const [submissions, setSubmissions] = useState([]);
+  const [userNames, setUserNames] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [quizData, subsResult] = await Promise.all([
+        const [quizResult, subsResult, enrollResult] = await Promise.allSettled([
           api.getQuiz(courseId, quizId),
           api.getQuizSubmissions(courseId, quizId, 1, 100),
+          api.getEnrollments(courseId, 1, 200),
         ]);
-        setQuiz(quizData);
-        setSubmissions(subsResult.data);
+        if (quizResult.status === 'rejected') throw new Error(quizResult.reason?.message || 'Failed to load quiz');
+        setQuiz(quizResult.value);
+        setSubmissions(subsResult.status === 'fulfilled' ? (subsResult.value.data || []) : []);
+        // Build user name lookup from enrollments
+        const names = {};
+        if (enrollResult.status === 'fulfilled') {
+          for (const e of (enrollResult.value.data || [])) {
+            const uid = e.user_id || e.user?.id;
+            const name = e.user?.name || e.user?.email;
+            if (uid && name) names[uid] = name;
+          }
+        }
+        setUserNames(names);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -50,14 +64,21 @@ const QuizSubmissionsPage = () => {
   };
 
   if (loading) {
-    return <Layout><div className="text-center py-12 text-gray-500">Loading submissions...</div></Layout>;
+    return <Layout><div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+  Loading submissions...
+</div></Layout>;
   }
   if (error) {
-    return <Layout><div className="text-red-600 text-center py-12">{error}</div></Layout>;
+    return <Layout><div className="text-center py-12">
+  <p className="text-red-600 mb-3">{error}</p>
+  <button onClick={() => window.location.reload()} className="text-blue-600 hover:text-blue-800 text-sm font-medium">Try Again</button>
+</div></Layout>;
   }
 
   return (
     <Layout>
+      <CourseNav />
       <div className="mb-6">
         <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm">← Back to Course</Link>
         <h2 className="text-2xl font-bold mt-2">{quiz?.title} - Submissions</h2>
@@ -88,7 +109,7 @@ const QuizSubmissionsPage = () => {
             ) : (
               submissions.map(sub => (
                 <tr key={sub.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm">User #{sub.user_id}</td>
+                  <td className="px-4 py-3 text-sm">{userNames[sub.user_id] || `User #${sub.user_id}`}</td>
                   <td className="px-4 py-3 text-sm">{sub.attempt}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center space-x-2">

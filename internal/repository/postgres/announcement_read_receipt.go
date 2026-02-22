@@ -13,6 +13,7 @@ import (
 type AnnouncementReadReceiptRepository interface {
 	Create(ctx context.Context, receipt *models.AnnouncementReadReceipt) error
 	FindByAnnouncementAndUser(ctx context.Context, announcementID, userID uint) (*models.AnnouncementReadReceipt, error)
+	FindByAnnouncementIDsAndUser(ctx context.Context, announcementIDs []uint, userID uint) ([]models.AnnouncementReadReceipt, error)
 	ListByAnnouncementID(ctx context.Context, announcementID uint, params repository.PaginationParams) (*repository.PaginatedResult[models.AnnouncementReadReceipt], error)
 	CountReadByAnnouncementID(ctx context.Context, announcementID uint) (int64, error)
 	CountAcknowledgedByAnnouncementID(ctx context.Context, announcementID uint) (int64, error)
@@ -42,6 +43,19 @@ func (r *announcementReadReceiptRepo) FindByAnnouncementAndUser(ctx context.Cont
 		return nil, err
 	}
 	return &receipt, nil
+}
+
+func (r *announcementReadReceiptRepo) FindByAnnouncementIDsAndUser(ctx context.Context, announcementIDs []uint, userID uint) ([]models.AnnouncementReadReceipt, error) {
+	if len(announcementIDs) == 0 {
+		return nil, nil
+	}
+	var receipts []models.AnnouncementReadReceipt
+	if err := r.db.WithContext(ctx).
+		Where("announcement_id IN ? AND user_id = ?", announcementIDs, userID).
+		Find(&receipts).Error; err != nil {
+		return nil, err
+	}
+	return receipts, nil
 }
 
 func (r *announcementReadReceiptRepo) ListByAnnouncementID(ctx context.Context, announcementID uint, params repository.PaginationParams) (*repository.PaginatedResult[models.AnnouncementReadReceipt], error) {

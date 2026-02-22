@@ -113,6 +113,11 @@ func (h *AssignmentOverrideHandler) CreateOverride(c *fiber.Ctx) error {
 }
 
 func (h *AssignmentOverrideHandler) GetOverride(c *fiber.Ctx) error {
+	assignmentID, err := c.ParamsInt("assignment_id")
+	if err != nil {
+		return responses.BadRequest(c, "Invalid assignment ID")
+	}
+
 	overrideID, err := c.ParamsInt("override_id")
 	if err != nil {
 		return responses.BadRequest(c, "Invalid override ID")
@@ -120,6 +125,11 @@ func (h *AssignmentOverrideHandler) GetOverride(c *fiber.Ctx) error {
 
 	override, err := h.overrideService.GetOverride(c.Context(), uint(overrideID))
 	if err != nil {
+		return responses.NotFound(c, "assignment override")
+	}
+
+	// Verify the override belongs to the URL's assignment (prevents cross-course IDOR)
+	if override.AssignmentID != uint(assignmentID) {
 		return responses.NotFound(c, "assignment override")
 	}
 
@@ -137,6 +147,11 @@ func (h *AssignmentOverrideHandler) GetOverride(c *fiber.Ctx) error {
 }
 
 func (h *AssignmentOverrideHandler) UpdateOverride(c *fiber.Ctx) error {
+	assignmentID, err := c.ParamsInt("assignment_id")
+	if err != nil {
+		return responses.BadRequest(c, "Invalid assignment ID")
+	}
+
 	overrideID, err := c.ParamsInt("override_id")
 	if err != nil {
 		return responses.BadRequest(c, "Invalid override ID")
@@ -144,6 +159,11 @@ func (h *AssignmentOverrideHandler) UpdateOverride(c *fiber.Ctx) error {
 
 	override, err := h.overrideService.GetOverride(c.Context(), uint(overrideID))
 	if err != nil {
+		return responses.NotFound(c, "assignment override")
+	}
+
+	// Verify the override belongs to the URL's assignment (prevents cross-course IDOR)
+	if override.AssignmentID != uint(assignmentID) {
 		return responses.NotFound(c, "assignment override")
 	}
 
@@ -203,9 +223,23 @@ func (h *AssignmentOverrideHandler) UpdateOverride(c *fiber.Ctx) error {
 }
 
 func (h *AssignmentOverrideHandler) DeleteOverride(c *fiber.Ctx) error {
+	assignmentID, err := c.ParamsInt("assignment_id")
+	if err != nil {
+		return responses.BadRequest(c, "Invalid assignment ID")
+	}
+
 	overrideID, err := c.ParamsInt("override_id")
 	if err != nil {
 		return responses.BadRequest(c, "Invalid override ID")
+	}
+
+	// Verify the override belongs to the URL's assignment before deleting
+	override, err := h.overrideService.GetOverride(c.Context(), uint(overrideID))
+	if err != nil {
+		return responses.NotFound(c, "assignment override")
+	}
+	if override.AssignmentID != uint(assignmentID) {
+		return responses.NotFound(c, "assignment override")
 	}
 
 	if err := h.overrideService.DeleteOverride(c.Context(), uint(overrideID)); err != nil {

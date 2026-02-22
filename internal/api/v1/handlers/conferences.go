@@ -12,10 +12,11 @@ import (
 
 type ConferenceHandler struct {
 	conferenceService *service.ConferenceService
+	authz             *ResourceAuthorizer
 }
 
-func NewConferenceHandler(conferenceService *service.ConferenceService) *ConferenceHandler {
-	return &ConferenceHandler{conferenceService: conferenceService}
+func NewConferenceHandler(conferenceService *service.ConferenceService, authz *ResourceAuthorizer) *ConferenceHandler {
+	return &ConferenceHandler{conferenceService: conferenceService, authz: authz}
 }
 
 func conferenceToJSON(conf *models.Conference) fiber.Map {
@@ -140,6 +141,13 @@ func (h *ConferenceHandler) GetConference(c *fiber.Ctx) error {
 		return responses.NotFound(c, "conference")
 	}
 
+	// Authorization: require enrollment for course-scoped conferences
+	if conference.ContextType == "Course" {
+		if err := h.authz.RequireCourseEnrolled(c, conference.ContextID); err != nil {
+			return err
+		}
+	}
+
 	return c.JSON(conferenceToJSON(conference))
 }
 
@@ -154,6 +162,13 @@ func (h *ConferenceHandler) UpdateConference(c *fiber.Ctx) error {
 	conference, err := h.conferenceService.GetByID(c.Context(), uint(id))
 	if err != nil {
 		return responses.NotFound(c, "conference")
+	}
+
+	// Authorization: require instructor for course-scoped conferences
+	if conference.ContextType == "Course" {
+		if err := h.authz.RequireCourseInstructor(c, conference.ContextID); err != nil {
+			return err
+		}
 	}
 
 	var input struct {
@@ -205,7 +220,20 @@ func (h *ConferenceHandler) DeleteConference(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid conference ID")
 	}
 
-	if err := h.conferenceService.Delete(c.Context(), uint(id)); err != nil {
+	// Fetch first to check authorization
+	conference, err := h.conferenceService.GetByID(c.Context(), uint(id))
+	if err != nil {
+		return responses.NotFound(c, "conference")
+	}
+
+	// Authorization: require instructor for course-scoped conferences
+	if conference.ContextType == "Course" {
+		if err := h.authz.RequireCourseInstructor(c, conference.ContextID); err != nil {
+			return err
+		}
+	}
+
+	if err := h.conferenceService.Delete(c.Context(), conference.ID); err != nil {
 		return responses.NotFound(c, "conference")
 	}
 
@@ -220,9 +248,22 @@ func (h *ConferenceHandler) JoinConference(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid conference ID")
 	}
 
+	// Fetch to check authorization
+	conference, err := h.conferenceService.GetByID(c.Context(), uint(id))
+	if err != nil {
+		return responses.NotFound(c, "conference")
+	}
+
+	// Authorization: require enrollment for course-scoped conferences
+	if conference.ContextType == "Course" {
+		if err := h.authz.RequireCourseEnrolled(c, conference.ContextID); err != nil {
+			return err
+		}
+	}
+
 	userID, _ := c.Locals("user_id").(uint)
 
-	joinURL, err := h.conferenceService.JoinConference(c.Context(), uint(id), userID)
+	joinURL, err := h.conferenceService.JoinConference(c.Context(), conference.ID, userID)
 	if err != nil {
 		return responses.BadRequest(c, err.Error())
 	}
@@ -241,7 +282,20 @@ func (h *ConferenceHandler) EndConference(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid conference ID")
 	}
 
-	conference, err := h.conferenceService.EndConference(c.Context(), uint(id))
+	// Fetch first to check authorization
+	conf, err := h.conferenceService.GetByID(c.Context(), uint(id))
+	if err != nil {
+		return responses.NotFound(c, "conference")
+	}
+
+	// Authorization: require instructor for course-scoped conferences
+	if conf.ContextType == "Course" {
+		if err := h.authz.RequireCourseInstructor(c, conf.ContextID); err != nil {
+			return err
+		}
+	}
+
+	conference, err := h.conferenceService.EndConference(c.Context(), conf.ID)
 	if err != nil {
 		return responses.BadRequest(c, err.Error())
 	}
@@ -257,7 +311,20 @@ func (h *ConferenceHandler) GetRecordings(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid conference ID")
 	}
 
-	recordings, err := h.conferenceService.GetRecordings(c.Context(), uint(id))
+	// Fetch to check authorization
+	conference, err := h.conferenceService.GetByID(c.Context(), uint(id))
+	if err != nil {
+		return responses.NotFound(c, "conference")
+	}
+
+	// Authorization: require enrollment for course-scoped conferences
+	if conference.ContextType == "Course" {
+		if err := h.authz.RequireCourseEnrolled(c, conference.ContextID); err != nil {
+			return err
+		}
+	}
+
+	recordings, err := h.conferenceService.GetRecordings(c.Context(), conference.ID)
 	if err != nil {
 		return responses.NotFound(c, "conference")
 	}
@@ -276,7 +343,20 @@ func (h *ConferenceHandler) GetParticipants(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid conference ID")
 	}
 
-	participants, err := h.conferenceService.ListParticipants(c.Context(), uint(id))
+	// Fetch to check authorization
+	conference, err := h.conferenceService.GetByID(c.Context(), uint(id))
+	if err != nil {
+		return responses.NotFound(c, "conference")
+	}
+
+	// Authorization: require enrollment for course-scoped conferences
+	if conference.ContextType == "Course" {
+		if err := h.authz.RequireCourseEnrolled(c, conference.ContextID); err != nil {
+			return err
+		}
+	}
+
+	participants, err := h.conferenceService.ListParticipants(c.Context(), conference.ID)
 	if err != nil {
 		return responses.InternalError(c, "Could not fetch participants")
 	}

@@ -186,6 +186,46 @@ func (s *ObserverService) IsObserverOf(ctx context.Context, observerUserID, stud
 	return false, nil
 }
 
+// GetObserveeCourses returns the courses a specific observed student is enrolled
+// in where the observer also has an active ObserverEnrollment linked to that student.
+func (s *ObserverService) GetObserveeCourses(ctx context.Context, observerUserID, studentUserID uint) ([]models.Course, error) {
+	// Verify observer is actually linked to this student
+	linked, err := s.IsObserverOf(ctx, observerUserID, studentUserID)
+	if err != nil {
+		return nil, err
+	}
+	if !linked {
+		return nil, errors.New("observer is not linked to this student")
+	}
+
+	// Get the student's active enrollments to find their courses
+	studentEnrollments, err := s.enrollmentRepo.ListByUserID(ctx, studentUserID)
+	if err != nil {
+		return nil, errors.New("could not fetch student enrollments")
+	}
+
+	seen := make(map[uint]bool)
+	var courses []models.Course
+
+	for _, e := range studentEnrollments {
+		if e.WorkflowState != "active" {
+			continue
+		}
+		if seen[e.CourseID] {
+			continue
+		}
+		seen[e.CourseID] = true
+
+		course, err := s.courseRepo.FindByID(ctx, e.CourseID)
+		if err != nil {
+			continue
+		}
+		courses = append(courses, *course)
+	}
+
+	return courses, nil
+}
+
 // GetObserverDashboard returns the courses where the observer has an active
 // ObserverEnrollment.
 func (s *ObserverService) GetObserverDashboard(ctx context.Context, observerUserID uint) ([]models.Course, error) {

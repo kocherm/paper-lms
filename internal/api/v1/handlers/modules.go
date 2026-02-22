@@ -44,7 +44,7 @@ func moduleToJSON(m *models.ContextModule) fiber.Map {
 }
 
 func moduleItemToJSON(item *models.ContentTag) fiber.Map {
-	return fiber.Map{
+	result := fiber.Map{
 		"id":                item.ID,
 		"module_id":         item.ContextModuleID,
 		"title":             item.Title,
@@ -57,6 +57,10 @@ func moduleItemToJSON(item *models.ContentTag) fiber.Map {
 		"workflow_state":    item.WorkflowState,
 		"published":         item.WorkflowState == "active",
 	}
+	if item.ContentType == "WikiPage" && item.URL != "" {
+		result["page_url"] = item.URL
+	}
+	return result
 }
 
 func contentTypeToItemType(ct string) string {
@@ -214,6 +218,31 @@ func (h *ModuleHandler) UpdateModule(c *fiber.Ctx) error {
 	return c.JSON(moduleToJSON(module))
 }
 
+func (h *ModuleHandler) ReorderModules(c *fiber.Ctx) error {
+	courseID, err := c.ParamsInt("course_id")
+	if err != nil {
+		return responses.BadRequest(c, "Invalid course ID")
+	}
+
+	var input struct {
+		Order []uint `json:"order"`
+	}
+
+	if err := c.BodyParser(&input); err != nil {
+		return responses.BadRequest(c, "Invalid input")
+	}
+
+	if len(input.Order) == 0 {
+		return responses.BadRequest(c, "Order array is required")
+	}
+
+	if err := h.moduleService.ReorderModules(c.Context(), uint(courseID), input.Order); err != nil {
+		return responses.InternalError(c, "Could not reorder modules")
+	}
+
+	return c.JSON(fiber.Map{"reorder": true})
+}
+
 func (h *ModuleHandler) DeleteModule(c *fiber.Ctx) error {
 	id, err := c.ParamsInt("id")
 	if err != nil {
@@ -225,4 +254,38 @@ func (h *ModuleHandler) DeleteModule(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{"delete": true})
+}
+
+func (h *ModuleHandler) GetPrerequisites(c *fiber.Ctx) error {
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return responses.BadRequest(c, "Invalid module ID")
+	}
+
+	prereqs, err := h.moduleService.GetPrerequisites(c.Context(), uint(id))
+	if err != nil {
+		return responses.InternalError(c, "Could not get prerequisites")
+	}
+
+	return c.JSON(fiber.Map{"module_id": id, "prerequisite_module_ids": prereqs})
+}
+
+func (h *ModuleHandler) SetPrerequisites(c *fiber.Ctx) error {
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return responses.BadRequest(c, "Invalid module ID")
+	}
+
+	var input struct {
+		PrerequisiteModuleIDs []uint `json:"prerequisite_module_ids"`
+	}
+	if err := c.BodyParser(&input); err != nil {
+		return responses.BadRequest(c, "Invalid input")
+	}
+
+	if err := h.moduleService.SetPrerequisites(c.Context(), uint(id), input.PrerequisiteModuleIDs); err != nil {
+		return responses.BadRequest(c, err.Error())
+	}
+
+	return c.JSON(fiber.Map{"module_id": id, "prerequisite_module_ids": input.PrerequisiteModuleIDs})
 }

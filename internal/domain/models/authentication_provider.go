@@ -13,6 +13,7 @@ type AuthenticationProvider struct {
 	LogInURL               string `json:"log_in_url,omitempty"`
 	LogOutURL              string `json:"log_out_url,omitempty"`
 	CertificateFingerprint string `json:"certificate_fingerprint,omitempty"`
+	IDPCertificate         string `json:"idp_certificate,omitempty" gorm:"type:text"` // PEM or base64-encoded X.509 cert for signature verification
 
 	// LDAP settings
 	LDAPHost           string `json:"ldap_host,omitempty"`

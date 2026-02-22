@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Plus, Trash2, Users, Calendar } from 'lucide-react';
 import { api } from '../services/api';
 import Layout from '../components/Layout';
+import CourseNav from '../components/CourseNav';
 
 const AssignmentOverridesPage = () => {
   const { courseId, assignmentId } = useParams();
@@ -30,7 +31,7 @@ const AssignmentOverridesPage = () => {
       ]);
       setAssignment(assignmentData);
       setOverrides(overridesData);
-      setSections(sectionsResult.data);
+      setSections(sectionsResult.data || []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -76,11 +77,15 @@ const AssignmentOverridesPage = () => {
   };
 
   if (loading) {
-    return <Layout><div className="text-center py-12 text-gray-500">Loading overrides...</div></Layout>;
+    return <Layout><div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+  Loading overrides...
+</div></Layout>;
   }
 
   return (
     <Layout>
+      <CourseNav />
       <div className="mb-6">
         <Link to={`/courses/${courseId}/assignments/${assignmentId}`} className="text-blue-600 hover:underline text-sm">← Back to Assignment</Link>
         <div className="flex items-center justify-between mt-2">

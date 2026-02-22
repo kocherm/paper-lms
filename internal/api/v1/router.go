@@ -84,6 +84,15 @@ type Router struct {
 	portfolioHandler      *handlers.PortfolioHandler
 	// Course Home Engine
 	courseHomeHandler     *handlers.CourseHomeHandler
+	// Peer Reviews, Question Banks
+	peerReviewHandler          *handlers.PeerReviewHandler
+	questionBankHandler        *handlers.QuestionBankHandler
+	// Quiz Question Groups
+	quizQuestionGroupHandler   *handlers.QuizQuestionGroupHandler
+	// Quiz Statistics
+	quizStatisticsHandler      *handlers.QuizStatisticsHandler
+	// Setup
+	setupHandler               *handlers.SetupHandler
 	authMiddleware             *middleware.AuthMiddleware
 	permMiddleware             *middleware.PermissionMiddleware
 }
@@ -165,6 +174,15 @@ func NewRouter(
 	portfolioHandler *handlers.PortfolioHandler,
 	// Course Home Engine
 	courseHomeHandler *handlers.CourseHomeHandler,
+	// Peer Reviews, Question Banks
+	peerReviewHandler *handlers.PeerReviewHandler,
+	questionBankHandler *handlers.QuestionBankHandler,
+	// Quiz Question Groups
+	quizQuestionGroupHandler *handlers.QuizQuestionGroupHandler,
+	// Quiz Statistics
+	quizStatisticsHandler *handlers.QuizStatisticsHandler,
+	// Setup
+	setupHandler *handlers.SetupHandler,
 	authMiddleware *middleware.AuthMiddleware,
 	permMiddleware *middleware.PermissionMiddleware,
 ) *Router {
@@ -233,6 +251,11 @@ func NewRouter(
 		attendanceHandler:           attendanceHandler,
 		portfolioHandler:            portfolioHandler,
 		courseHomeHandler:           courseHomeHandler,
+		peerReviewHandler:          peerReviewHandler,
+		questionBankHandler:        questionBankHandler,
+		quizQuestionGroupHandler:   quizQuestionGroupHandler,
+		quizStatisticsHandler:      quizStatisticsHandler,
+		setupHandler:               setupHandler,
 		authMiddleware:              authMiddleware,
 		permMiddleware:              permMiddleware,
 	}
@@ -247,11 +270,17 @@ func (r *Router) Register(app *fiber.App) {
 	instructor := r.permMiddleware.RequireInstructor()
 	selfOrAdmin := r.permMiddleware.RequireSelfOrAdmin()
 
+	// Setup wizard (public, no auth required)
+	api.Get("/setup/status", r.setupHandler.GetStatus)
+	api.Post("/setup/complete", middleware.AuthRateLimit(), r.setupHandler.CompleteSetup)
+
 	// Public auth routes (rate-limited to prevent brute-force)
 	authLimit := middleware.AuthRateLimit()
 	api.Post("/login", authLimit, r.userHandler.Login)
 	api.Post("/register", authLimit, r.userHandler.Register)
 	api.Post("/logout", r.userHandler.Logout)
+	api.Post("/password/reset", authLimit, r.userHandler.RequestPasswordReset)
+	api.Post("/password/reset/confirm", authLimit, r.userHandler.ResetPassword)
 
 	// Public OAuth2 token endpoint (no auth required)
 	api.Post("/login/oauth2/token", r.oauth2Handler.Token)
@@ -273,7 +302,7 @@ func (r *Router) Register(app *fiber.App) {
 	api.Get("/courses/:course_id/p/:slug", r.pageHandler.GetPublicPage)
 
 	// Protected routes (authentication required)
-	protected := api.Group("", r.authMiddleware.Protected())
+	protected := api.Group("", r.authMiddleware.Protected(), middleware.CSRFProtection())
 
 	// Users (self access or admin)
 	protected.Get("/users/self", r.userHandler.GetSelf)
@@ -281,6 +310,10 @@ func (r *Router) Register(app *fiber.App) {
 	protected.Get("/users/:id", selfOrAdmin, r.userHandler.GetUser)
 	protected.Get("/users/:id/profile", selfOrAdmin, r.userHandler.GetUserProfile)
 	protected.Put("/users/:id", selfOrAdmin, r.userHandler.UpdateUser)
+
+	// Masquerade (admin only)
+	protected.Post("/users/:id/masquerade", admin, r.userHandler.StartMasquerade)
+	protected.Delete("/masquerade", r.userHandler.EndMasquerade)
 
 	// Personal Access Tokens (self or admin)
 	protected.Get("/users/:user_id/tokens", selfOrAdmin, r.accessTokenHandler.ListAccessTokens)
@@ -331,6 +364,7 @@ func (r *Router) Register(app *fiber.App) {
 	protected.Get("/courses/:course_id/modules/:id", enrolled, r.moduleHandler.GetModule)
 	protected.Put("/courses/:course_id/modules/:id", instructor, r.moduleHandler.UpdateModule)
 	protected.Delete("/courses/:course_id/modules/:id", instructor, r.moduleHandler.DeleteModule)
+	protected.Post("/courses/:course_id/modules/reorder", instructor, r.moduleHandler.ReorderModules)
 
 	// Course Home Engine (view: enrolled; manage: instructor)
 	protected.Get("/courses/:course_id/home", enrolled, r.courseHomeHandler.GetHomeData)
@@ -349,6 +383,10 @@ func (r *Router) Register(app *fiber.App) {
 	protected.Get("/courses/:course_id/modules/:module_id/items", enrolled, r.moduleItemHandler.ListModuleItems)
 	protected.Post("/courses/:course_id/modules/:module_id/items", instructor, r.moduleItemHandler.CreateModuleItem)
 	protected.Get("/courses/:course_id/modules/:module_id/items/:item_id", enrolled, r.moduleItemHandler.GetModuleItem)
+	protected.Put("/courses/:course_id/modules/:module_id/items/:item_id", instructor, r.moduleItemHandler.UpdateModuleItem)
+	protected.Delete("/courses/:course_id/modules/:module_id/items/:item_id", instructor, r.moduleItemHandler.DeleteModuleItem)
+	protected.Post("/courses/:course_id/modules/:module_id/items/reorder", instructor, r.moduleItemHandler.ReorderItems)
+	protected.Post("/courses/:course_id/modules/:module_id/items/:item_id/move", instructor, r.moduleItemHandler.MoveItem)
 
 	// Pages (view: enrolled; manage: instructor)
 	protected.Get("/courses/:course_id/pages", enrolled, r.pageHandler.ListPages)
@@ -371,6 +409,10 @@ func (r *Router) Register(app *fiber.App) {
 	protected.Put("/courses/:course_id/assignment_groups/:id", instructor, r.assignmentGroupHandler.UpdateAssignmentGroup)
 	protected.Delete("/courses/:course_id/assignment_groups/:id", instructor, r.assignmentGroupHandler.DeleteAssignmentGroup)
 
+	// Course-wide submissions (enrolled users; students see only their own)
+	protected.Get("/courses/:course_id/submissions", enrolled, r.submissionHandler.ListCourseSubmissions)
+	protected.Post("/courses/:course_id/submissions/bulk_grade", instructor, r.submissionHandler.BulkGrade)
+
 	// Submissions (view: enrolled; create: enrolled; grade: instructor)
 	protected.Get("/courses/:course_id/assignments/:assignment_id/submissions", enrolled, r.submissionHandler.ListSubmissions)
 	protected.Post("/courses/:course_id/assignments/:assignment_id/submissions", enrolled, r.submissionHandler.CreateSubmission)
@@ -388,18 +430,20 @@ func (r *Router) Register(app *fiber.App) {
 	// Grading Standards (view: enrolled; manage: instructor)
 	protected.Get("/courses/:course_id/grading_standards", enrolled, r.gradingStandardHandler.ListGradingStandards)
 	protected.Post("/courses/:course_id/grading_standards", instructor, r.gradingStandardHandler.CreateGradingStandard)
+	protected.Put("/courses/:course_id/grading_standards/:id", instructor, r.gradingStandardHandler.UpdateGradingStandard)
+	protected.Delete("/courses/:course_id/grading_standards/:id", instructor, r.gradingStandardHandler.DeleteGradingStandard)
 
-	// LTI AGS (Assignment and Grade Services) - protected via OAuth2 token
-	protected.Get("/lti/courses/:course_id/line_items", r.ltiHandler.ListLineItems)
-	protected.Post("/lti/courses/:course_id/line_items", r.ltiHandler.CreateLineItem)
-	protected.Get("/lti/courses/:course_id/line_items/:id", r.ltiHandler.GetLineItem)
-	protected.Put("/lti/courses/:course_id/line_items/:id", r.ltiHandler.UpdateLineItem)
-	protected.Delete("/lti/courses/:course_id/line_items/:id", r.ltiHandler.DeleteLineItem)
-	protected.Post("/lti/courses/:course_id/line_items/:id/scores", r.ltiHandler.PostScore)
-	protected.Get("/lti/courses/:course_id/line_items/:id/results", r.ltiHandler.GetResults)
+	// LTI AGS (Assignment and Grade Services) - protected via OAuth2 token + enrollment
+	protected.Get("/lti/courses/:course_id/line_items", enrolled, r.ltiHandler.ListLineItems)
+	protected.Post("/lti/courses/:course_id/line_items", instructor, r.ltiHandler.CreateLineItem)
+	protected.Get("/lti/courses/:course_id/line_items/:id", enrolled, r.ltiHandler.GetLineItem)
+	protected.Put("/lti/courses/:course_id/line_items/:id", instructor, r.ltiHandler.UpdateLineItem)
+	protected.Delete("/lti/courses/:course_id/line_items/:id", instructor, r.ltiHandler.DeleteLineItem)
+	protected.Post("/lti/courses/:course_id/line_items/:id/scores", instructor, r.ltiHandler.PostScore)
+	protected.Get("/lti/courses/:course_id/line_items/:id/results", enrolled, r.ltiHandler.GetResults)
 
 	// LTI NRPS (Names and Role Provisioning Services)
-	protected.Get("/lti/courses/:course_id/memberships", r.ltiHandler.GetMemberships)
+	protected.Get("/lti/courses/:course_id/memberships", enrolled, r.ltiHandler.GetMemberships)
 
 	// Phase 4: Discussion Topics (view: enrolled; manage: instructor; post: enrolled)
 	protected.Get("/courses/:course_id/discussion_topics", enrolled, r.discussionHandler.ListTopics)
@@ -420,7 +464,7 @@ func (r *Router) Register(app *fiber.App) {
 
 	// Phase 4: Files (view: enrolled; upload/delete: instructor)
 	protected.Get("/courses/:course_id/files", enrolled, r.fileHandler.ListCourseFiles)
-	protected.Post("/courses/:course_id/files", instructor, r.fileHandler.UploadCourseFile)
+	protected.Post("/courses/:course_id/files", middleware.UploadRateLimit(), instructor, r.fileHandler.UploadCourseFile)
 	protected.Get("/courses/:course_id/files/:id", enrolled, r.fileHandler.GetFile)
 	protected.Delete("/courses/:course_id/files/:id", instructor, r.fileHandler.DeleteFile)
 	protected.Get("/files/:id/download", r.fileHandler.DownloadFile)
@@ -435,7 +479,7 @@ func (r *Router) Register(app *fiber.App) {
 	protected.Get("/folders/:folder_id/folders", r.folderHandler.ListSubfolders)
 
 	// Phase 4: SIS Import/Export (admin only)
-	protected.Post("/accounts/:account_id/sis_imports", admin, r.sisImportHandler.CreateSISImport)
+	protected.Post("/accounts/:account_id/sis_imports", middleware.UploadRateLimit(), admin, r.sisImportHandler.CreateSISImport)
 	protected.Get("/accounts/:account_id/sis_imports", admin, r.sisImportHandler.ListSISImports)
 	protected.Get("/accounts/:account_id/sis_imports/:id", admin, r.sisImportHandler.GetSISImport)
 	protected.Get("/accounts/:account_id/sis_imports/:id/errors", admin, r.sisImportHandler.GetSISImportErrors)
@@ -464,6 +508,18 @@ func (r *Router) Register(app *fiber.App) {
 	protected.Get("/courses/:course_id/quizzes/:quiz_id/submissions/:submission_id", enrolled, r.quizSubmissionHandler.GetSubmission)
 	protected.Put("/courses/:course_id/quizzes/:quiz_id/submissions/:submission_id/questions/:question_id", enrolled, r.quizSubmissionHandler.AnswerQuestion)
 	protected.Post("/courses/:course_id/quizzes/:quiz_id/submissions/:submission_id/complete", enrolled, r.quizSubmissionHandler.CompleteSubmission)
+	protected.Get("/courses/:course_id/quizzes/:quiz_id/submissions/:submission_id/answers", enrolled, r.quizSubmissionHandler.GetSubmissionAnswers)
+	protected.Get("/courses/:course_id/quizzes/:quiz_id/submissions/:submission_id/questions", enrolled, r.quizSubmissionHandler.GetSubmissionQuestions)
+
+	// Quiz Statistics (instructor only)
+	protected.Get("/courses/:course_id/quizzes/:quiz_id/statistics", instructor, r.quizStatisticsHandler.GetQuizStatistics)
+
+	// Quiz Question Groups (view: enrolled; manage: instructor)
+	protected.Get("/courses/:course_id/quizzes/:quiz_id/groups", enrolled, r.quizQuestionGroupHandler.ListGroups)
+	protected.Post("/courses/:course_id/quizzes/:quiz_id/groups", instructor, r.quizQuestionGroupHandler.CreateGroup)
+	protected.Get("/courses/:course_id/quizzes/:quiz_id/groups/:group_id", enrolled, r.quizQuestionGroupHandler.GetGroup)
+	protected.Put("/courses/:course_id/quizzes/:quiz_id/groups/:group_id", instructor, r.quizQuestionGroupHandler.UpdateGroup)
+	protected.Delete("/courses/:course_id/quizzes/:quiz_id/groups/:group_id", instructor, r.quizQuestionGroupHandler.DeleteGroup)
 
 	// Phase 5: Rubrics (view: enrolled; manage: instructor)
 	protected.Get("/courses/:course_id/rubrics", enrolled, r.rubricHandler.ListCourseRubrics)
@@ -490,6 +546,9 @@ func (r *Router) Register(app *fiber.App) {
 	protected.Get("/accounts/:account_id/grading_period_groups/:group_id/grading_periods/:period_id", admin, r.gradingPeriodHandler.GetPeriod)
 	protected.Put("/accounts/:account_id/grading_period_groups/:group_id/grading_periods/:period_id", admin, r.gradingPeriodHandler.UpdatePeriod)
 	protected.Delete("/accounts/:account_id/grading_period_groups/:group_id/grading_periods/:period_id", admin, r.gradingPeriodHandler.DeletePeriod)
+
+	// Assignment Rubric (view: enrolled)
+	protected.Get("/courses/:course_id/assignments/:assignment_id/rubric", enrolled, r.rubricHandler.GetAssignmentRubric)
 
 	// Phase 5: Assignment Overrides (instructor only)
 	protected.Get("/courses/:course_id/assignments/:assignment_id/overrides", instructor, r.assignmentOverrideHandler.ListOverrides)
@@ -531,7 +590,7 @@ func (r *Router) Register(app *fiber.App) {
 
 	// Phase 7: Content Migrations (instructor only)
 	protected.Get("/courses/:course_id/content_migrations", instructor, r.contentMigrationHandler.ListMigrations)
-	protected.Post("/courses/:course_id/content_migrations", instructor, r.contentMigrationHandler.CreateMigration)
+	protected.Post("/courses/:course_id/content_migrations", middleware.ExpensiveOpRateLimit(), instructor, r.contentMigrationHandler.CreateMigration)
 	protected.Get("/courses/:course_id/content_migrations/:id", instructor, r.contentMigrationHandler.GetMigration)
 	protected.Put("/courses/:course_id/content_migrations/:id", instructor, r.contentMigrationHandler.UpdateMigration)
 
@@ -549,10 +608,17 @@ func (r *Router) Register(app *fiber.App) {
 	protected.Get("/courses/:course_id/outcome_results", enrolled, r.learningOutcomeHandler.ListResults)
 	protected.Post("/courses/:course_id/outcome_results", instructor, r.learningOutcomeHandler.CreateResult)
 	protected.Get("/courses/:course_id/outcome_rollups", enrolled, r.learningOutcomeHandler.GetMasteryGradebook)
+	protected.Get("/courses/:course_id/outcome_alignments", enrolled, r.learningOutcomeHandler.ListAlignments)
+	protected.Post("/courses/:course_id/outcome_alignments", instructor, r.learningOutcomeHandler.CreateAlignment)
+	protected.Delete("/courses/:course_id/outcome_alignments/:alignment_id", instructor, r.learningOutcomeHandler.DeleteAlignment)
 
 	// Phase 7: SpeedGrader (instructor only)
 	protected.Get("/courses/:course_id/assignments/:assignment_id/speedgrader", instructor, r.speedGraderHandler.GetSpeedGraderData)
 	protected.Get("/courses/:course_id/assignments/:assignment_id/speedgrader/submissions/:user_id", instructor, r.speedGraderHandler.GetStudentSubmission)
+
+	// Grade posting (instructor only)
+	protected.Post("/courses/:course_id/assignments/:id/post_grades", instructor, r.submissionHandler.PostGrades)
+	protected.Post("/courses/:course_id/assignments/:id/hide_grades", instructor, r.submissionHandler.HideGrades)
 
 	// Phase 8: Groups (view: enrolled; manage categories: instructor; join: enrolled)
 	protected.Get("/courses/:course_id/group_categories", enrolled, r.groupHandler.ListGroupCategories)
@@ -653,13 +719,13 @@ func (r *Router) Register(app *fiber.App) {
 	protected.Put("/courses/:course_id/discussion_topics/:topic_id/entries/:entry_id/v2", enrolled, r.discussionV2Handler.UpdateEntryV2)
 
 	// Phase 9: Content Import (IMSCC/Common Cartridge)
-	protected.Post("/courses/:course_id/content_imports", instructor, r.contentImportHandler.ImportPackage)
+	protected.Post("/courses/:course_id/content_imports", middleware.ExpensiveOpRateLimit(), instructor, r.contentImportHandler.ImportPackage)
 
-	// Phase 9: Batch Operations (instructor/admin)
-	protected.Post("/courses/clone", admin, r.batchHandler.CloneCourse)
-	protected.Post("/courses/:course_id/date_shift", instructor, r.batchHandler.BulkDateShift)
-	protected.Post("/conversations/bulk", r.batchHandler.BulkSendMessage)
-	protected.Post("/courses/:course_id/enrollments/bulk", instructor, r.batchHandler.BulkEnrollUsers)
+	// Phase 9: Batch Operations (instructor/admin, rate-limited)
+	protected.Post("/courses/clone", middleware.ExpensiveOpRateLimit(), admin, r.batchHandler.CloneCourse)
+	protected.Post("/courses/:course_id/date_shift", middleware.ExpensiveOpRateLimit(), instructor, r.batchHandler.BulkDateShift)
+	protected.Post("/conversations/bulk", middleware.ExpensiveOpRateLimit(), r.batchHandler.BulkSendMessage)
+	protected.Post("/courses/:course_id/enrollments/bulk", middleware.ExpensiveOpRateLimit(), instructor, r.batchHandler.BulkEnrollUsers)
 	protected.Post("/courses/:course_id/assignments/bulk_update_dates", instructor, r.batchHandler.BulkUpdateAssignmentDates)
 
 	// Phase 10: Announcements (view: enrolled; manage: instructor; global: admin)
@@ -795,6 +861,28 @@ func (r *Router) Register(app *fiber.App) {
 	protected.Post("/portfolios/:id/comments", r.portfolioHandler.AddComment)
 	protected.Get("/portfolio_templates", r.portfolioHandler.ListTemplates)
 	protected.Post("/portfolio_templates/:template_id/create", r.portfolioHandler.CreateFromTemplate)
+
+	// Peer Reviews (assign/list: instructor; view own: enrolled; submit: enrolled)
+	protected.Post("/courses/:course_id/assignments/:id/peer_reviews", instructor, r.peerReviewHandler.AssignPeerReviews)
+	protected.Get("/courses/:course_id/assignments/:id/peer_reviews", instructor, r.peerReviewHandler.ListPeerReviews)
+	protected.Get("/courses/:course_id/assignments/:id/peer_reviews/mine", enrolled, r.peerReviewHandler.ListMyPeerReviews)
+	protected.Put("/peer_reviews/:review_id", r.peerReviewHandler.SubmitPeerReview)
+
+	// Question Banks (view: enrolled; manage: instructor)
+	protected.Get("/courses/:course_id/question_banks", enrolled, r.questionBankHandler.ListBanks)
+	protected.Post("/courses/:course_id/question_banks", instructor, r.questionBankHandler.CreateBank)
+	protected.Get("/courses/:course_id/question_banks/:bank_id", enrolled, r.questionBankHandler.GetBank)
+	protected.Put("/courses/:course_id/question_banks/:bank_id", instructor, r.questionBankHandler.UpdateBank)
+	protected.Delete("/courses/:course_id/question_banks/:bank_id", instructor, r.questionBankHandler.DeleteBank)
+	protected.Get("/courses/:course_id/question_banks/:bank_id/questions", enrolled, r.questionBankHandler.ListQuestions)
+	protected.Post("/courses/:course_id/question_banks/:bank_id/questions", instructor, r.questionBankHandler.AddQuestion)
+	protected.Put("/courses/:course_id/question_banks/:bank_id/questions/:question_id", instructor, r.questionBankHandler.UpdateQuestion)
+	protected.Delete("/courses/:course_id/question_banks/:bank_id/questions/:question_id", instructor, r.questionBankHandler.DeleteQuestion)
+	protected.Post("/courses/:course_id/question_banks/:bank_id/pull_to_quiz", instructor, r.questionBankHandler.PullToQuiz)
+
+	// Module Prerequisites (view: enrolled; manage: instructor)
+	protected.Get("/courses/:course_id/modules/:id/prerequisites", enrolled, r.moduleHandler.GetPrerequisites)
+	protected.Put("/courses/:course_id/modules/:id/prerequisites", instructor, r.moduleHandler.SetPrerequisites)
 
 	// Public portfolio view (no auth required)
 	api.Get("/portfolios/public/:slug", r.portfolioHandler.GetPublicPortfolio)

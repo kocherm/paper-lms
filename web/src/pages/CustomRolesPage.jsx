@@ -45,13 +45,12 @@ const CustomRolesPage = () => {
 
   const authHeaders = () => ({
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${localStorage.getItem('token')}`,
   });
 
   const fetchRoles = async () => {
     try {
       const response = await fetch(`/api/v1/accounts/${accountId}/roles?per_page=100`, {
-        headers: authHeaders(),
+        credentials: 'include', headers: authHeaders(),
       });
       if (!response.ok) throw new Error('Failed to fetch roles');
       const data = await response.json();
@@ -66,7 +65,7 @@ const CustomRolesPage = () => {
   const fetchPresets = async () => {
     try {
       const response = await fetch(`/api/v1/accounts/${accountId}/roles/presets`, {
-        headers: authHeaders(),
+        credentials: 'include', headers: authHeaders(),
       });
       if (response.ok) {
         const data = await response.json();
@@ -82,7 +81,7 @@ const CustomRolesPage = () => {
       // Get permission definitions from a role detail endpoint (any role ID or we parse from presets)
       // We'll use the AllPermissions data embedded in role detail responses
       const response = await fetch(`/api/v1/accounts/${accountId}/roles/presets`, {
-        headers: authHeaders(),
+        credentials: 'include', headers: authHeaders(),
       });
       if (response.ok) {
         // Permission definitions are also included in the presets endpoint
@@ -227,7 +226,7 @@ const CustomRolesPage = () => {
 
       const response = await fetch(url, {
         method,
-        headers: authHeaders(),
+        credentials: 'include', headers: authHeaders(),
         body: JSON.stringify(payload),
       });
 
@@ -265,7 +264,7 @@ const CustomRolesPage = () => {
     try {
       const response = await fetch(`/api/v1/accounts/${accountId}/roles/${roleId}`, {
         method: 'DELETE',
-        headers: authHeaders(),
+        credentials: 'include', headers: authHeaders(),
       });
       if (!response.ok) throw new Error('Failed to delete role');
       fetchRoles();
@@ -280,7 +279,7 @@ const CustomRolesPage = () => {
     try {
       const response = await fetch(`/api/v1/accounts/${accountId}/roles/${showCloneModal.id}/clone`, {
         method: 'POST',
-        headers: authHeaders(),
+        credentials: 'include', headers: authHeaders(),
         body: JSON.stringify({ name: cloneName }),
       });
       if (!response.ok) {

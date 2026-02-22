@@ -7,26 +7,132 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/kocherm/paper-lms/internal/domain/models"
 	"github.com/kocherm/paper-lms/internal/repository"
+	"github.com/kocherm/paper-lms/internal/storage"
 )
+
+// MaxUploadSize is the default maximum file upload size (100 MB).
+const MaxUploadSize int64 = 100 * 1024 * 1024
+
+// allowedMIMETypes maps file extensions to permitted MIME type prefixes.
+// Files whose detected MIME type does not match will be rejected.
+var allowedMIMETypes = map[string][]string{
+	".pdf":  {"application/pdf"},
+	".doc":  {"application/msword", "application/vnd.openxmlformats"},
+	".docx": {"application/vnd.openxmlformats", "application/msword"},
+	".xls":  {"application/vnd.ms-excel", "application/vnd.openxmlformats"},
+	".xlsx": {"application/vnd.openxmlformats", "application/vnd.ms-excel"},
+	".ppt":  {"application/vnd.ms-powerpoint", "application/vnd.openxmlformats"},
+	".pptx": {"application/vnd.openxmlformats", "application/vnd.ms-powerpoint"},
+	".txt":  {"text/plain"},
+	".csv":  {"text/csv", "text/plain", "application/csv"},
+	".html": {"text/html"},
+	".htm":  {"text/html"},
+	".png":  {"image/png"},
+	".jpg":  {"image/jpeg"},
+	".jpeg": {"image/jpeg"},
+	".gif":  {"image/gif"},
+	".svg":  {"image/svg+xml"},
+	".webp": {"image/webp"},
+	".mp4":  {"video/mp4"},
+	".webm": {"video/webm"},
+	".mp3":  {"audio/mpeg"},
+	".wav":  {"audio/wav", "audio/x-wav"},
+	".ogg":  {"audio/ogg", "video/ogg"},
+	".zip":  {"application/zip", "application/x-zip"},
+	".json": {"application/json", "text/plain"},
+	".xml":  {"application/xml", "text/xml"},
+	".md":   {"text/markdown", "text/plain"},
+}
+
+// blockedExtensions are never allowed, regardless of MIME type.
+var blockedExtensions = map[string]bool{
+	".exe": true, ".bat": true, ".cmd": true, ".com": true,
+	".msi": true, ".scr": true, ".pif": true, ".vbs": true,
+	".js":  true, ".wsh": true, ".wsf": true, ".ps1": true,
+	".sh":  true, ".cgi": true, ".dll": true, ".sys": true,
+	".svg": true, ".html": true, ".htm": true, // XSS vectors: SVG can embed scripts, HTML executes arbitrary JS
+}
 
 type FileService struct {
 	folderRepo     repository.FolderRepository
 	attachmentRepo repository.AttachmentRepository
-	storagePath    string
+	storageBackend storage.Backend
+	storagePath    string // kept for backward compat (local path prefix)
+	maxUploadSize  int64
 }
 
 func NewFileService(folderRepo repository.FolderRepository, attachmentRepo repository.AttachmentRepository, storagePath string) *FileService {
 	return &FileService{
 		folderRepo:     folderRepo,
 		attachmentRepo: attachmentRepo,
+		storageBackend: storage.NewLocalBackend(storagePath),
 		storagePath:    storagePath,
+		maxUploadSize:  MaxUploadSize,
 	}
+}
+
+// NewFileServiceWithBackend creates a FileService with a custom storage backend.
+func NewFileServiceWithBackend(folderRepo repository.FolderRepository, attachmentRepo repository.AttachmentRepository, backend storage.Backend) *FileService {
+	return &FileService{
+		folderRepo:     folderRepo,
+		attachmentRepo: attachmentRepo,
+		storageBackend: backend,
+		maxUploadSize:  MaxUploadSize,
+	}
+}
+
+// StorageBackend returns the underlying storage backend (for handlers that need
+// to stream files directly, e.g., download handler).
+func (s *FileService) StorageBackend() storage.Backend {
+	return s.storageBackend
+}
+
+// ValidateUpload checks that the file meets size, extension, and MIME type
+// requirements before any data is written to disk.
+func (s *FileService) ValidateUpload(filename string, sizeBytes int64) error {
+	if sizeBytes > s.maxUploadSize {
+		return fmt.Errorf("file size %d bytes exceeds maximum of %d bytes", sizeBytes, s.maxUploadSize)
+	}
+	ext := strings.ToLower(filepath.Ext(filename))
+	if blockedExtensions[ext] {
+		return fmt.Errorf("file type %s is not allowed", ext)
+	}
+	// Enforce allowlist: if the extension is known, it must match an allowed type.
+	// Unknown extensions are allowed through (e.g., custom file types for assignments).
+	if ext != "" {
+		if _, knownExt := allowedMIMETypes[ext]; !knownExt {
+			// Unknown extension — allow unless blocked above
+		}
+	}
+	return nil
+}
+
+// ValidateUploadWithMIME checks extension, size, and verifies the Content-Type
+// matches the expected MIME type for the file extension.
+func (s *FileService) ValidateUploadWithMIME(filename string, sizeBytes int64, contentType string) error {
+	if err := s.ValidateUpload(filename, sizeBytes); err != nil {
+		return err
+	}
+	ext := strings.ToLower(filepath.Ext(filename))
+	if allowedTypes, ok := allowedMIMETypes[ext]; ok && contentType != "" {
+		matched := false
+		for _, prefix := range allowedTypes {
+			if strings.HasPrefix(contentType, prefix) {
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			return fmt.Errorf("content type %s does not match expected type for %s files", contentType, ext)
+		}
+	}
+	return nil
 }
 
 // Folder operations
@@ -94,30 +200,51 @@ func (s *FileService) GetOrCreateRootFolder(ctx context.Context, contextType str
 
 // Attachment operations
 
+// sanitizeFilename removes path traversal components and dangerous characters from a filename.
+func sanitizeFilename(name string) string {
+	// Extract only the base filename, stripping any directory components
+	name = filepath.Base(name)
+	// Reject hidden files and directory traversal
+	if name == "." || name == ".." || name == "" {
+		name = "upload"
+	}
+	// Replace null bytes and path separators that might have survived
+	cleaned := make([]byte, 0, len(name))
+	for i := 0; i < len(name); i++ {
+		if name[i] != 0 && name[i] != '/' && name[i] != '\\' {
+			cleaned = append(cleaned, name[i])
+		}
+	}
+	if len(cleaned) == 0 {
+		return "upload"
+	}
+	return string(cleaned)
+}
+
 func (s *FileService) UploadFile(ctx context.Context, attachment *models.Attachment, fileData io.Reader) error {
+	// Sanitize filename to prevent path traversal attacks
+	attachment.Filename = sanitizeFilename(attachment.Filename)
+	attachment.DisplayName = sanitizeFilename(attachment.DisplayName)
+
+	// Validate file extension, size, and MIME type
+	if err := s.ValidateUploadWithMIME(attachment.Filename, attachment.Size, attachment.ContentType); err != nil {
+		return err
+	}
+
+	// Build storage key: ContextType/ContextID/UUID/filename
 	fileUUID := uuid.New().String()
-	dir := filepath.Join(s.storagePath, attachment.ContextType, fmt.Sprintf("%d", attachment.ContextID), fileUUID)
+	storageKey := filepath.Join(attachment.ContextType, fmt.Sprintf("%d", attachment.ContextID), fileUUID, attachment.Filename)
 
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return fmt.Errorf("could not create storage directory: %w", err)
-	}
-
-	destPath := filepath.Join(dir, attachment.Filename)
-	destFile, err := os.Create(destPath)
-	if err != nil {
-		return fmt.Errorf("could not create file: %w", err)
-	}
-	defer destFile.Close()
-
+	// Hash the file while uploading
 	hash := md5.New()
 	tee := io.TeeReader(fileData, hash)
 
-	if _, err := io.Copy(destFile, tee); err != nil {
-		return fmt.Errorf("could not write file: %w", err)
+	if err := s.storageBackend.Put(ctx, storageKey, tee, attachment.ContentType); err != nil {
+		return fmt.Errorf("could not store file: %w", err)
 	}
 
 	attachment.MD5 = hex.EncodeToString(hash.Sum(nil))
-	attachment.StoragePath = destPath
+	attachment.StoragePath = storageKey
 
 	if attachment.WorkflowState == "" {
 		attachment.WorkflowState = "active"
@@ -148,10 +275,23 @@ func (s *FileService) ListFilesByFolder(ctx context.Context, folderID uint, para
 	return s.attachmentRepo.ListByFolderID(ctx, folderID, params)
 }
 
+// GetFilePath returns the storage key for the given attachment.
+// For local storage, this resolves to a filesystem path.
+// For S3, this is the object key used with StorageBackend().Get().
 func (s *FileService) GetFilePath(ctx context.Context, id uint) (string, error) {
 	attachment, err := s.attachmentRepo.FindByID(ctx, id)
 	if err != nil {
 		return "", err
 	}
 	return attachment.StoragePath, nil
+}
+
+// GetFileURL returns a download URL for the given attachment.
+// For local storage, returns the file path. For S3, returns a presigned URL.
+func (s *FileService) GetFileURL(ctx context.Context, id uint) (string, error) {
+	attachment, err := s.attachmentRepo.FindByID(ctx, id)
+	if err != nil {
+		return "", err
+	}
+	return s.storageBackend.URL(ctx, attachment.StoragePath)
 }

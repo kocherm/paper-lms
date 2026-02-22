@@ -81,7 +81,10 @@ func (h *CustomRoleHandler) CreateRole(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid account ID")
 	}
 
-	userID := c.Locals("user_id").(uint)
+	userID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 
 	var input struct {
 		Role struct {
@@ -202,7 +205,10 @@ func (h *CustomRoleHandler) CloneRole(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid role ID")
 	}
 
-	userID := c.Locals("user_id").(uint)
+	userID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 
 	var input struct {
 		Name string `json:"name"`
@@ -310,7 +316,10 @@ func (h *CustomRoleHandler) GetCoursePermissions(c *fiber.Ctx) error {
 	}
 	courseID := uint(courseID64)
 
-	userID := c.Locals("user_id").(uint)
+	userID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 
 	perms, err := h.customRoleService.GetEffectivePermissions(c.Context(), userID, courseID)
 	if err != nil {

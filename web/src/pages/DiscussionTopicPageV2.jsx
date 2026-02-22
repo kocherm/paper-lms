@@ -29,6 +29,7 @@ import {
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
+import RichContentViewer, { sanitizeHTML } from '../components/RichContentViewer';
 
 // ---------------------------------------------------------------------------
 // Utilities
@@ -362,10 +363,7 @@ const VersionHistoryModal = ({ versions, onClose }) => {
                     {relativeTime(version.created_at)}
                   </span>
                 </div>
-                <div
-                  className="text-sm text-gray-800 prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: version.message }}
-                />
+                <RichContentViewer content={version.message} className="text-sm text-gray-800" />
               </div>
             ))
           )}
@@ -588,11 +586,7 @@ const EntryItem = ({
                 />
               </div>
             ) : (
-              <div
-                className="mt-1 text-sm text-gray-800 prose prose-sm max-w-none break-words
-                  [&_a]:text-blue-600 [&_a]:underline [&_img]:rounded-md [&_img]:max-w-full"
-                dangerouslySetInnerHTML={{ __html: highlightMentions(entry.message) }}
-              />
+              <RichContentViewer content={highlightMentions(entry.message)} className="mt-1 text-sm text-gray-800 break-words" />
             )}
 
             {/* Action bar */}
@@ -991,11 +985,7 @@ const DiscussionTopicPageV2 = () => {
 
             {/* Topic body */}
             {topic.message && (
-              <div
-                className="mt-4 text-sm text-gray-800 prose prose-sm max-w-none
-                  [&_a]:text-blue-600 [&_a]:underline [&_img]:rounded-md [&_img]:max-w-full"
-                dangerouslySetInnerHTML={{ __html: highlightMentions(topic.message) }}
-              />
+              <RichContentViewer content={highlightMentions(topic.message)} className="mt-4 text-sm text-gray-800" />
             )}
           </div>
 

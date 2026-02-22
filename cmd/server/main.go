@@ -1,7 +1,10 @@
 package main
 
 import (
+	"context"
 	"log"
+	"log/slog"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -17,7 +20,11 @@ import (
 	"github.com/kocherm/paper-lms/internal/graphql"
 	"github.com/kocherm/paper-lms/internal/repository/postgres"
 	"github.com/kocherm/paper-lms/internal/service"
+	storageLib "github.com/kocherm/paper-lms/internal/storage"
 )
+
+// Version is set at build time via -ldflags
+var Version = "dev"
 
 func main() {
 	_ = godotenv.Load()
@@ -25,15 +32,38 @@ func main() {
 	cfg := config.Load()
 	cfg.Validate()
 
+	// Configure structured logging
+	logLevel := slog.LevelInfo
+	if cfg.Environment == "development" {
+		logLevel = slog.LevelDebug
+	}
+	var logHandler slog.Handler
+	if cfg.Environment == "production" {
+		logHandler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: logLevel})
+	} else {
+		logHandler = slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: logLevel})
+	}
+	slog.SetDefault(slog.New(logHandler))
+
 	// Connect to PostgreSQL
 	database, err := db.Connect(cfg.DatabaseURL)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	// Auto-migrate schema
-	if err := db.AutoMigrate(database); err != nil {
-		log.Fatalf("Failed to migrate database: %v", err)
+	// Database schema management
+	if cfg.AutoMigrate {
+		// Development mode: use GORM AutoMigrate for fast iteration
+		log.Println("AUTO_MIGRATE=true: using GORM AutoMigrate (development mode)")
+		if err := db.AutoMigrate(database); err != nil {
+			log.Fatalf("Failed to auto-migrate database: %v", err)
+		}
+	} else {
+		// Production mode: use versioned SQL migrations
+		log.Println("AUTO_MIGRATE=false: using versioned SQL migrations")
+		if err := db.MigrateUp(database); err != nil {
+			log.Fatalf("Failed to run database migrations: %v", err)
+		}
 	}
 
 	// Seed default data
@@ -95,6 +125,7 @@ func main() {
 	outcomeGroupRepo := postgres.NewLearningOutcomeGroupRepository(database)
 	outcomeRepo := postgres.NewLearningOutcomeRepository(database)
 	outcomeResultRepo := postgres.NewLearningOutcomeResultRepository(database)
+	outcomeAlignmentRepo := postgres.NewOutcomeAlignmentRepository(database)
 	// Phase 8 repositories
 	groupCategoryRepo := postgres.NewGroupCategoryRepository(database)
 	groupRepo := postgres.NewGroupRepository(database)
@@ -151,17 +182,24 @@ func main() {
 	courseHomeButtonRepo := postgres.NewCourseHomeButtonRepository(database)
 	todaysLessonOverrideRepo := postgres.NewTodaysLessonOverrideRepository(database)
 	courseVisitRepo := postgres.NewCourseVisitRepository(database)
+	// Peer Review, Question Bank, Module Prerequisite repositories
+	peerReviewRepo := postgres.NewPeerReviewRepository(database)
+	questionBankRepo := postgres.NewQuestionBankRepository(database)
+	questionBankEntryRepo := postgres.NewQuestionBankEntryRepository(database)
+	modulePrerequisiteRepo := postgres.NewModulePrerequisiteRepository(database)
+	// Quiz Question Group repository
+	quizQuestionGroupRepo := postgres.NewQuizQuestionGroupRepository(database)
 
 	// Initialize services
 	userService := service.NewUserService(userRepo)
 	courseService := service.NewCourseService(courseRepo, enrollmentRepo, sectionRepo)
 	enrollmentService := service.NewEnrollmentService(enrollmentRepo)
-	moduleService := service.NewModuleService(moduleRepo, moduleItemRepo)
+	moduleService := service.NewModuleService(moduleRepo, moduleItemRepo, service.WithPrerequisiteRepo(modulePrerequisiteRepo))
 	pageService := service.NewPageService(pageRepo)
 	assignmentService := service.NewAssignmentService(assignmentRepo)
 	assignmentGroupService := service.NewAssignmentGroupService(assignmentGroupRepo, assignmentRepo)
-	submissionService := service.NewSubmissionService(submissionRepo, assignmentRepo, enrollmentRepo)
-	gradingService := service.NewGradingService(submissionRepo, assignmentRepo, assignmentGroupRepo, enrollmentRepo)
+	submissionService := service.NewSubmissionService(submissionRepo, assignmentRepo, enrollmentRepo, latePolicyRepo, courseRepo, gradingPeriodGroupRepo, gradingPeriodRepo, groupMembershipRepo)
+	gradingService := service.NewGradingService(submissionRepo, assignmentRepo, assignmentGroupRepo, enrollmentRepo, courseRepo, gradingStandardRepo)
 	devKeyService := service.NewDeveloperKeyService(devKeyRepo)
 	accessTokenService := service.NewAccessTokenService(accessTokenRepo)
 	oauth2Service := service.NewOAuth2Service(devKeyService, accessTokenService)
@@ -174,14 +212,38 @@ func main() {
 		log.Fatalf("Failed to initialize LTI service: %v", err)
 	}
 
-	agsService := service.NewLTIAGSService(lineItemRepo, resultRepo, submissionRepo)
+	agsService := service.NewLTIAGSService(lineItemRepo, resultRepo, submissionRepo, assignmentRepo)
 	nrpsService := service.NewLTINRPSService(enrollmentRepo, userRepo)
 	// Phase 4 services
 	discussionService := service.NewDiscussionService(discussionTopicRepo, discussionEntryRepo, discussionRatingRepo)
-	fileService := service.NewFileService(folderRepo, attachmentRepo, cfg.FileStoragePath)
+	// Initialize file storage backend
+	var storageBackend storageLib.Backend
+	switch cfg.StorageBackend {
+	case "s3":
+		s3Cfg := storageLib.S3Config{
+			Bucket:    cfg.S3Bucket,
+			Region:    cfg.S3Region,
+			Endpoint:  cfg.S3Endpoint,
+			AccessKey: cfg.S3AccessKey,
+			SecretKey: cfg.S3SecretKey,
+		}
+		s3Backend, err := storageLib.NewS3Backend(context.Background(), s3Cfg)
+		if err != nil {
+			log.Fatalf("Failed to initialize S3 storage: %v", err)
+		}
+		storageBackend = s3Backend
+		slog.Info("Using S3 storage backend", "bucket", cfg.S3Bucket, "region", cfg.S3Region)
+	default:
+		storageBackend = storageLib.NewLocalBackend(cfg.FileStoragePath)
+		slog.Info("Using local storage backend", "path", cfg.FileStoragePath)
+	}
+	fileService := service.NewFileServiceWithBackend(folderRepo, attachmentRepo, storageBackend)
 	sisImportService := service.NewSISImportService(sisBatchRepo, sisBatchErrorRepo, userRepo, courseRepo, sectionRepo, enrollmentRepo, database)
 	// Phase 5 services
-	quizService := service.NewQuizService(quizQuestionRepo, quizSubmissionRepo, quizSubmissionAnswerRepo)
+	quizService := service.NewQuizService(quizRepo, quizQuestionRepo, quizSubmissionRepo, quizSubmissionAnswerRepo,
+		service.WithQuestionGroupRepo(quizQuestionGroupRepo),
+		service.WithBankEntryRepo(questionBankEntryRepo),
+	)
 	rubricService := service.NewRubricService(rubricRepo, rubricAssocRepo, rubricAssessRepo)
 	gradingPeriodService := service.NewGradingPeriodService(gradingPeriodGroupRepo, gradingPeriodRepo)
 	overrideService := service.NewOverrideService(assignmentOverrideRepo, assignmentOverrideStudentRepo, enrollmentRepo, sectionRepo)
@@ -196,8 +258,12 @@ func main() {
 	speedGraderService := service.NewSpeedGraderService(submissionRepo, submissionCommentRepo, assignmentRepo, enrollmentRepo, rubricAssessRepo)
 	// Phase 8 services
 	groupService := service.NewGroupService(groupCategoryRepo, groupRepo, groupMembershipRepo, enrollmentRepo)
-	blueprintService := service.NewBlueprintService(blueprintTemplateRepo, blueprintSubscriptionRepo, blueprintMigrationRepo)
-	coursePaceService := service.NewCoursePaceService(coursePaceRepo, coursePaceModuleItemRepo)
+	blueprintService := service.NewBlueprintService(
+		blueprintTemplateRepo, blueprintSubscriptionRepo, blueprintMigrationRepo,
+		moduleRepo, moduleItemRepo, assignmentRepo, pageRepo,
+		quizRepo, quizQuestionRepo, discussionTopicRepo,
+	)
+	coursePaceService := service.NewCoursePaceService(coursePaceRepo, coursePaceModuleItemRepo, moduleItemRepo, assignmentRepo)
 	// Phase 8B services
 	collaborationService := service.NewCollaborationService(collaborationRepo)
 	conferenceService := service.NewConferenceService(conferenceRepo, conferenceParticipantRepo)
@@ -240,12 +306,16 @@ func main() {
 	coppaService := service.NewCOPPAService(parentalConsentRepo, dpaRepo, ageVerificationRepo)
 	ferpaService := service.NewFERPAService(retentionPolicyRepo, deletionRequestRepo, exportRequestRepo, piiAccessLogRepo)
 	accommodationService := service.NewAccommodationService(studentAccommodationRepo, accommodationApplicationRepo)
+	// Wire accommodation service into quiz engine for IEP/504 time extensions
+	service.WithAccommodationService(accommodationService)(quizService)
 	attendanceService := service.NewAttendanceService(attendanceRepo)
 	portfolioService := service.NewPortfolioService(portfolioRepo, portfolioSectionRepo, portfolioArtifactRepo, portfolioReflectionRepo, portfolioTemplateRepo, portfolioCommentRepo, submissionRepo, assignmentRepo)
 	courseHomeService := service.NewCourseHomeService(courseRepo, courseHomeButtonRepo, todaysLessonOverrideRepo, courseVisitRepo, moduleRepo)
+	peerReviewService := service.NewPeerReviewService(peerReviewRepo, submissionRepo, enrollmentRepo)
+	questionBankService := service.NewQuestionBankService(questionBankRepo, questionBankEntryRepo, quizQuestionRepo)
 
 	batchService := service.NewBatchService(
-		courseRepo, moduleRepo, moduleItemRepo, assignmentRepo, quizRepo,
+		courseRepo, moduleRepo, moduleItemRepo, assignmentRepo, quizRepo, quizQuestionRepo,
 		pageRepo, discussionTopicRepo, calendarEventRepo, enrollmentRepo,
 		conversationRepo, conversationParticipantRepo, conversationMessageRepo,
 		userRepo, sectionRepo,
@@ -268,17 +338,17 @@ func main() {
 	tokenBlacklist := service.NewTokenBlacklist()
 
 	// Initialize handlers
-	userHandler := handlers.NewUserHandler(userService, cfg.JWTSecret, cfg.Environment, tokenBlacklist)
+	userHandler := handlers.NewUserHandler(userService, cfg.JWTSecret, cfg.Environment, tokenBlacklist, auditService)
 	accountHandler := handlers.NewAccountHandler(accountRepo)
 	courseHandler := handlers.NewCourseHandler(courseService, enrollmentService)
 	sectionHandler := handlers.NewSectionHandler(sectionRepo)
 	enrollmentHandler := handlers.NewEnrollmentHandler(enrollmentService)
 	moduleHandler := handlers.NewModuleHandler(moduleService)
-	moduleItemHandler := handlers.NewModuleItemHandler(moduleService)
+	moduleItemHandler := handlers.NewModuleItemHandler(moduleService, pageService)
 	pageHandler := handlers.NewPageHandler(pageService)
 	assignmentHandler := handlers.NewAssignmentHandler(assignmentService)
 	assignmentGroupHandler := handlers.NewAssignmentGroupHandler(assignmentGroupService)
-	submissionHandler := handlers.NewSubmissionHandler(submissionService, submissionCommentRepo)
+	submissionHandler := handlers.NewSubmissionHandler(submissionService, submissionCommentRepo, attachmentRepo, userRepo, assignmentRepo, notificationDeliveryService, observerService, outcomeAlignmentRepo, learningOutcomeService)
 	gradebookHandler := handlers.NewGradebookHandler(gradingService)
 	gradingStandardHandler := handlers.NewGradingStandardHandler(gradingStandardRepo)
 	developerKeyHandler := handlers.NewDeveloperKeyHandler(devKeyService)
@@ -289,33 +359,34 @@ func main() {
 	// Phase 4 handlers
 	discussionHandler := handlers.NewDiscussionHandler(discussionService)
 	discussionEntryHandler := handlers.NewDiscussionEntryHandler(discussionService)
-	fileHandler := handlers.NewFileHandler(fileService)
-	folderHandler := handlers.NewFolderHandler(fileService)
+	fileHandler := handlers.NewFileHandler(fileService, enrollmentRepo)
+	authz := handlers.NewResourceAuthorizer(enrollmentRepo, userRepo)
+	folderHandler := handlers.NewFolderHandler(fileService, authz)
 	sisImportHandler := handlers.NewSISImportHandler(sisImportService)
 	// Phase 5 handlers
 	quizHandler := handlers.NewQuizHandler(quizRepo)
 	quizQuestionHandler := handlers.NewQuizQuestionHandler(quizService)
-	quizSubmissionHandler := handlers.NewQuizSubmissionHandler(quizService)
+	quizSubmissionHandler := handlers.NewQuizSubmissionHandler(quizService, observerService)
 	rubricHandler := handlers.NewRubricHandler(rubricService)
 	rubricAssessmentHandler := handlers.NewRubricAssessmentHandler(rubricService)
 	gradingPeriodHandler := handlers.NewGradingPeriodHandler(gradingPeriodService)
 	assignmentOverrideHandler := handlers.NewAssignmentOverrideHandler(overrideService)
 	latePolicyHandler := handlers.NewLatePolicyHandler(latePolicyService)
 	// Phase 6 handlers
-	calendarEventHandler := handlers.NewCalendarEventHandler(calendarService)
-	conversationHandler := handlers.NewConversationHandler(conversationService)
+	calendarEventHandler := handlers.NewCalendarEventHandler(calendarService, authz)
+	conversationHandler := handlers.NewConversationHandler(conversationService, userService)
 	notificationHandler := handlers.NewNotificationHandler(notificationService)
 	// Phase 7 handlers
 	contentMigrationHandler := handlers.NewContentMigrationHandler(contentMigrationService)
-	learningOutcomeHandler := handlers.NewLearningOutcomeHandler(learningOutcomeService)
+	learningOutcomeHandler := handlers.NewLearningOutcomeHandler(learningOutcomeService, outcomeAlignmentRepo)
 	speedGraderHandler := handlers.NewSpeedGraderHandler(speedGraderService)
 	// Phase 8 handlers
-	groupHandler := handlers.NewGroupHandler(groupService)
+	groupHandler := handlers.NewGroupHandler(groupService, authz)
 	blueprintHandler := handlers.NewBlueprintHandler(blueprintService)
 	coursePaceHandler := handlers.NewCoursePaceHandler(coursePaceService)
 	// Phase 8B handlers
-	collaborationHandler := handlers.NewCollaborationHandler(collaborationService)
-	conferenceHandler := handlers.NewConferenceHandler(conferenceService)
+	collaborationHandler := handlers.NewCollaborationHandler(collaborationService, authz)
+	conferenceHandler := handlers.NewConferenceHandler(conferenceService, authz)
 	analyticsHandler := handlers.NewAnalyticsHandler(analyticsService)
 	observerHandler := handlers.NewObserverHandler(observerService)
 	// Phase 8C handlers
@@ -323,7 +394,7 @@ func main() {
 	graphqlHandler := handlers.NewGraphQLHandler(graphqlResolver)
 	authProviderHandler := handlers.NewAuthProviderHandler(authProviderService)
 	// Phase 10 handlers
-	announcementHandler := handlers.NewAnnouncementHandler(announcementService)
+	announcementHandler := handlers.NewAnnouncementHandler(announcementService, authz)
 	enrollmentTermHandler := handlers.NewEnrollmentTermHandler(enrollmentTermService)
 	syllabusHandler := handlers.NewSyllabusHandler(courseService, assignmentService, assignmentGroupService, calendarService, gradingService, enrollmentService, submissionService)
 	// Phase 10B handlers
@@ -332,18 +403,23 @@ func main() {
 	// Phase 10C handlers
 	customRoleHandler := handlers.NewCustomRoleHandler(customRoleService)
 	onerosterHandler := handlers.NewOneRosterHandler(onerosterService)
-	documentAnnotationHandler := handlers.NewDocumentAnnotationHandler(documentAnnotationService, submissionService)
+	documentAnnotationHandler := handlers.NewDocumentAnnotationHandler(documentAnnotationService, submissionService, assignmentRepo, submissionRepo, authz)
 	// Phase 9 handlers
 	discussionV2Handler := handlers.NewDiscussionV2Handler(discussionV2Service)
 	contentImportHandler := handlers.NewContentImportHandler(imsccParser, contentMigrationService, cfg.FileStoragePath)
-	batchHandler := handlers.NewBatchHandler(batchService)
+	batchHandler := handlers.NewBatchHandler(batchService, authz)
 	// Phase 12 handlers
 	coppaHandler := handlers.NewCOPPAHandler(coppaService)
 	ferpaHandler := handlers.NewFERPAHandler(ferpaService)
-	accommodationHandler := handlers.NewAccommodationHandler(accommodationService, assignmentService)
+	accommodationHandler := handlers.NewAccommodationHandler(accommodationService, assignmentService, authz)
 	attendanceHandler := handlers.NewAttendanceHandler(attendanceService)
-	portfolioHandler := handlers.NewPortfolioHandler(portfolioService)
+	portfolioHandler := handlers.NewPortfolioHandler(portfolioService, authz)
 	courseHomeHandler := handlers.NewCourseHomeHandler(courseHomeService)
+	peerReviewHandler := handlers.NewPeerReviewHandler(peerReviewService)
+	questionBankHandler := handlers.NewQuestionBankHandler(questionBankService)
+	quizQuestionGroupHandler := handlers.NewQuizQuestionGroupHandler(quizService)
+	quizStatisticsHandler := handlers.NewQuizStatisticsHandler(quizService)
+	setupHandler := handlers.NewSetupHandler(userService, accountRepo, userRepo, cfg.JWTSecret, cfg.Environment)
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret, accessTokenService, userRepo, tokenBlacklist)
 	permMiddleware := middleware.NewPermissionMiddleware(enrollmentRepo, userRepo)
 
@@ -425,6 +501,15 @@ func main() {
 		portfolioHandler,
 		// Course Home Engine
 		courseHomeHandler,
+		// Peer Reviews, Question Banks
+		peerReviewHandler,
+		questionBankHandler,
+		// Quiz Question Groups
+		quizQuestionGroupHandler,
+		// Quiz Statistics
+		quizStatisticsHandler,
+		// Setup
+		setupHandler,
 		authMiddleware,
 		permMiddleware,
 	)
@@ -443,15 +528,25 @@ func main() {
 		},
 	})
 
+	// Health check endpoints (no auth, no middleware)
+	healthHandler := handlers.NewHealthHandler(database, Version)
+	app.Get("/health", healthHandler.Health)
+	app.Get("/ready", healthHandler.Ready)
+
 	// Middleware
+	app.Use(middleware.RequestID())
 	app.Use(middleware.SecurityHeaders(middleware.SecurityConfig{Environment: cfg.Environment}))
 	app.Use(middleware.InputValidation())
-	app.Use(fiberlogger.New())
+	if cfg.Environment == "production" {
+		app.Use(middleware.StructuredLogger())
+	} else {
+		app.Use(fiberlogger.New())
+	}
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     cfg.FrontendURL,
-		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization, X-Request-ID, X-CSRF-Token",
 		AllowMethods:     "GET, POST, PUT, DELETE, OPTIONS",
-		ExposeHeaders:    "Link",
+		ExposeHeaders:    "Link, X-Request-ID",
 		AllowCredentials: true,
 	}))
 
@@ -459,6 +554,6 @@ func main() {
 	router.Register(app)
 
 	// Start server
-	log.Printf("Paper LMS starting on port %s", cfg.Port)
+	slog.Info("Paper LMS starting", "port", cfg.Port, "environment", cfg.Environment, "version", Version)
 	log.Fatal(app.Listen(":" + cfg.Port))
 }

@@ -2,51 +2,141 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import { ChevronDown, Home, CheckSquare, BarChart2 } from 'lucide-react';
 import { useCourseUI } from '../contexts/CourseUIContext';
+import { useAuth } from '../contexts/AuthContext';
+import { api } from '../services/api';
 
-const primaryTabs = [
-  { path: '', label: 'Home' },
-  { path: '/announcements', label: 'Announcements' },
-  { path: '/modules', label: 'Modules' },
-  { path: '/gradebook', label: 'Grades' },
+const isInstructorOrAdmin = (user, enrollments) => {
+  if (!user) return false;
+  if (user.role === 'admin') return true;
+  if (enrollments) {
+    // Only check the current user's enrollment, not all enrollments in the course
+    const myEnrollment = enrollments.find(e =>
+      e.user_id === user.id || e.user?.id === user.id
+    );
+    if (myEnrollment) {
+      return myEnrollment.type === 'TeacherEnrollment' || myEnrollment.type === 'TaEnrollment' ||
+        myEnrollment.role === 'TeacherEnrollment' || myEnrollment.role === 'TaEnrollment';
+    }
+  }
+  return false;
+};
+
+// Complete map of tab id -> path/label for all available tabs
+const TAB_REGISTRY = {
+  home:            { path: '', label: 'Home' },
+  announcements:   { path: '/announcements', label: 'Announcements' },
+  assignments:     { path: '/assignments', label: 'Assignments' },
+  modules:         { path: '/modules', label: 'Modules' },
+  grades:          { path: '/grades', label: 'Grades' },   // path overridden for teachers below
+  people:          { path: '/people', label: 'People' },
+  quizzes:         { path: '/quizzes', label: 'Quizzes' },
+  discussions:     { path: '/discussions', label: 'Discussions' },
+  files:           { path: '/files', label: 'Files' },
+  pages:           { path: '/pages', label: 'Pages' },
+  rubrics:         { path: '/rubrics', label: 'Rubrics' },
+  outcomes:        { path: '/outcomes', label: 'Outcomes' },
+  groups:          { path: '/groups', label: 'Groups' },
+  collaborations:  { path: '/collaborations', label: 'Collaborations' },
+  conferences:     { path: '/conferences', label: 'Conferences' },
+  syllabus:        { path: '/syllabus', label: 'Syllabus' },
+  attendance:      { path: '/attendance', label: 'Attendance' },
+  calendar:        { path: '/calendar', label: 'Calendar' },
+  question_banks:  { path: '/question_banks', label: 'Question Banks' },
+  accommodations:  { path: '/accommodations', label: 'Accommodations' },
+  blueprint:       { path: '/blueprint', label: 'Blueprint' },
+  pacing:          { path: '/pacing', label: 'Pacing' },
+  analytics:       { path: '/analytics', label: 'Analytics' },
+  audit_log:       { path: '/audit_log', label: 'Audit Log' },
+  content_import:  { path: '/content_import', label: 'Import Content' },
+  external_tools:  { path: '/external_tools', label: 'External Tools' },
+  settings:        { path: '/settings', label: 'Settings' },
+};
+
+// Teacher-only tab IDs (not shown to students)
+const TEACHER_ONLY_TAB_IDS = new Set([
+  'question_banks', 'accommodations', 'blueprint', 'pacing',
+  'analytics', 'audit_log', 'content_import', 'external_tools', 'settings',
+]);
+
+// Default tab order (used when no customization exists)
+const DEFAULT_PRIMARY_IDS = ['home', 'announcements', 'assignments', 'modules', 'grades', 'people'];
+const DEFAULT_MORE_IDS = [
+  'quizzes', 'discussions', 'files', 'pages', 'rubrics', 'outcomes',
+  'groups', 'collaborations', 'conferences', 'syllabus', 'attendance', 'calendar',
+  'question_banks', 'accommodations', 'blueprint', 'pacing',
+  'analytics', 'audit_log', 'content_import', 'external_tools', 'settings',
 ];
 
-const simplifiedTabs = [
+const PRIMARY_TAB_COUNT = 6;
+
+const getSimplifiedTabs = (gradesPath) => [
   { path: '', label: 'Home', icon: Home },
-  { path: '/gradebook', label: 'My Work', icon: CheckSquare },
-  { path: '/gradebook', label: 'Grades', icon: BarChart2 },
-];
-
-const moreTabs = [
-  { path: '/discussions', label: 'Discussions' },
-  { path: '/files', label: 'Files' },
-  { path: '/pages', label: 'Pages' },
-  { path: '/rubrics', label: 'Rubrics' },
-  { path: '/outcomes', label: 'Outcomes' },
-  { path: '/groups', label: 'Groups' },
-  { path: '/blueprint', label: 'Blueprint' },
-  { path: '/pacing', label: 'Pacing' },
-  { path: '/collaborations', label: 'Collaborations' },
-  { path: '/conferences', label: 'Conferences' },
-  { path: '/analytics', label: 'Analytics' },
-  { path: '/syllabus', label: 'Syllabus' },
-  { path: '/attendance', label: 'Attendance' },
-  { path: '/calendar', label: 'Calendar' },
-  { path: '/audit_log', label: 'Audit Log' },
-  { path: '/external_tools', label: 'External Tools' },
-  { path: '/settings', label: 'Settings' },
+  { path: gradesPath, label: 'My Work', icon: CheckSquare },
+  { path: gradesPath, label: 'Grades', icon: BarChart2 },
 ];
 
 const CourseNav = () => {
   const { courseId } = useParams();
   const location = useLocation();
   const [moreOpen, setMoreOpen] = useState(false);
+  const [enrollments, setEnrollments] = useState(null);
   const moreRef = useRef(null);
-  const { isK2, is35 } = useCourseUI();
+  const { course, isK2, is35 } = useCourseUI();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!courseId || !user) return;
+    // Fetch enrollments to determine role; cache in state
+    api.getEnrollments(courseId, 1, 10)
+      .then(result => setEnrollments(result.data || []))
+      .catch(() => setEnrollments([]));
+  }, [courseId, user]);
 
   if (!courseId) return null;
 
   // K-2 mode: no course navigation at all
   if (isK2) return null;
+
+  const isTeacher = isInstructorOrAdmin(user, enrollments);
+  const gradesPath = isTeacher ? '/gradebook' : '/grades';
+  const simplifiedTabs = getSimplifiedTabs(gradesPath);
+
+  // Build the effective tab list from course.navigation_tabs or defaults
+  const navConfig = course?.navigation_tabs;
+  let visibleTabs;
+
+  if (Array.isArray(navConfig) && navConfig.length > 0) {
+    // Use the saved custom order, filtering hidden tabs and teacher-only tabs for students
+    visibleTabs = navConfig
+      .sort((a, b) => a.position - b.position)
+      .filter(t => {
+        if (t.hidden) return false;
+        if (!isTeacher && TEACHER_ONLY_TAB_IDS.has(t.id)) return false;
+        return TAB_REGISTRY[t.id] != null;
+      })
+      .map(t => {
+        const reg = TAB_REGISTRY[t.id];
+        const path = t.id === 'grades' ? gradesPath : reg.path;
+        return { path, label: reg.label };
+      });
+  } else {
+    // Default: use the hardcoded primary + more order
+    const allDefaultIds = [...DEFAULT_PRIMARY_IDS, ...DEFAULT_MORE_IDS];
+    visibleTabs = allDefaultIds
+      .filter(id => {
+        if (!isTeacher && TEACHER_ONLY_TAB_IDS.has(id)) return false;
+        return TAB_REGISTRY[id] != null;
+      })
+      .map(id => {
+        const reg = TAB_REGISTRY[id];
+        const path = id === 'grades' ? gradesPath : reg.path;
+        return { path, label: reg.label };
+      });
+  }
+
+  // Split into primary tabs and "more" tabs
+  const primaryTabs = visibleTabs.slice(0, PRIMARY_TAB_COUNT);
+  const moreTabs = visibleTabs.slice(PRIMARY_TAB_COUNT);
 
   const basePath = `/courses/${courseId}`;
 
@@ -121,34 +211,36 @@ const CourseNav = () => {
           ))}
 
           {/* More dropdown */}
-          <div className="relative" ref={moreRef}>
-            <button
-              onClick={() => setMoreOpen(!moreOpen)}
-              className={`${tabClass(isMoreActive && !primaryTabs.some(t => isTabActive(t.path)))} inline-flex items-center gap-1`}
-            >
-              More
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${moreOpen ? 'rotate-180' : ''}`} />
-            </button>
+          {moreTabs.length > 0 && (
+            <div className="relative" ref={moreRef}>
+              <button
+                onClick={() => setMoreOpen(!moreOpen)}
+                className={`${tabClass(isMoreActive && !primaryTabs.some(t => isTabActive(t.path)))} inline-flex items-center gap-1`}
+              >
+                More
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${moreOpen ? 'rotate-180' : ''}`} />
+              </button>
 
-            {moreOpen && (
-              <div className="absolute left-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-40">
-                {moreTabs.map((tab) => (
-                  <Link
-                    key={tab.path}
-                    to={basePath + tab.path}
-                    onClick={() => setMoreOpen(false)}
-                    className={`block px-4 py-2 text-sm ${
-                      isTabActive(tab.path)
-                        ? 'bg-blue-50 text-blue-600 font-medium'
-                        : 'text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    {tab.label}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
+              {moreOpen && (
+                <div className="absolute left-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-40">
+                  {moreTabs.map((tab) => (
+                    <Link
+                      key={tab.path}
+                      to={basePath + tab.path}
+                      onClick={() => setMoreOpen(false)}
+                      className={`block px-4 py-2 text-sm ${
+                        isTabActive(tab.path)
+                          ? 'bg-blue-50 text-blue-600 font-medium'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      {tab.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </nav>
 
         {/* Right spacer for future gamification */}

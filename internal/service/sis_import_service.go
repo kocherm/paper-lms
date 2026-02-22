@@ -518,9 +518,23 @@ func (s *SISImportService) processEnrollmentsCSV(ctx context.Context, batchID ui
 			}
 		}
 
-		if err := s.enrollmentRepo.Create(ctx, enrollment); err != nil {
-			s.recordError(ctx, batchID, rowNum, fmt.Sprintf("failed to create enrollment: %v", err), "enrollments.csv")
-			continue
+		// Check for existing enrollment (deduplication on re-import)
+		existingEnrollment, _ := s.enrollmentRepo.FindByUserAndCourse(ctx, user.ID, course.ID)
+		if existingEnrollment != nil && existingEnrollment.Type == enrollmentType {
+			// Update existing enrollment instead of creating a duplicate
+			existingEnrollment.WorkflowState = workflowState
+			if enrollment.CourseSectionID != nil {
+				existingEnrollment.CourseSectionID = enrollment.CourseSectionID
+			}
+			if err := s.enrollmentRepo.Update(ctx, existingEnrollment); err != nil {
+				s.recordError(ctx, batchID, rowNum, fmt.Sprintf("failed to update enrollment: %v", err), "enrollments.csv")
+				continue
+			}
+		} else {
+			if err := s.enrollmentRepo.Create(ctx, enrollment); err != nil {
+				s.recordError(ctx, batchID, rowNum, fmt.Sprintf("failed to create enrollment: %v", err), "enrollments.csv")
+				continue
+			}
 		}
 
 		batch.ProcessedRows++

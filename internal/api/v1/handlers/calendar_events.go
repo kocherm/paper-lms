@@ -12,10 +12,11 @@ import (
 
 type CalendarEventHandler struct {
 	calendarService *service.CalendarService
+	authz           *ResourceAuthorizer
 }
 
-func NewCalendarEventHandler(calendarService *service.CalendarService) *CalendarEventHandler {
-	return &CalendarEventHandler{calendarService: calendarService}
+func NewCalendarEventHandler(calendarService *service.CalendarService, authz *ResourceAuthorizer) *CalendarEventHandler {
+	return &CalendarEventHandler{calendarService: calendarService, authz: authz}
 }
 
 func calendarEventToJSON(e *models.CalendarEvent) fiber.Map {
@@ -137,6 +138,11 @@ func (h *CalendarEventHandler) UpdateEvent(c *fiber.Ctx) error {
 		return responses.NotFound(c, "calendar event")
 	}
 
+	// Authorization: only the event creator or admin can update
+	if err := h.authz.RequireOwnerOrAdmin(c, event.CreatedByUserID); err != nil {
+		return err
+	}
+
 	var input struct {
 		CalendarEvent struct {
 			Title           *string    `json:"title"`
@@ -186,6 +192,15 @@ func (h *CalendarEventHandler) DeleteEvent(c *fiber.Ctx) error {
 	id, err := c.ParamsInt("id")
 	if err != nil {
 		return responses.BadRequest(c, "Invalid calendar event ID")
+	}
+
+	// Authorization: only the event creator or admin can delete
+	event, err := h.calendarService.GetByID(c.Context(), uint(id))
+	if err != nil {
+		return responses.NotFound(c, "calendar event")
+	}
+	if err := h.authz.RequireOwnerOrAdmin(c, event.CreatedByUserID); err != nil {
+		return err
 	}
 
 	if err := h.calendarService.Delete(c.Context(), uint(id)); err != nil {

@@ -18,19 +18,20 @@ func NewQuizQuestionHandler(quizService *service.QuizService) *QuizQuestionHandl
 
 func quizQuestionToJSON(q *models.QuizQuestion) fiber.Map {
 	return fiber.Map{
-		"id":                 q.ID,
-		"quiz_id":            q.QuizID,
-		"position":           q.Position,
-		"question_type":      q.QuestionType,
-		"question_text":      q.QuestionText,
-		"points_possible":    q.PointsPossible,
-		"answers":            q.Answers,
-		"correct_comments":   q.CorrectComments,
-		"incorrect_comments": q.IncorrectComments,
-		"neutral_comments":   q.NeutralComments,
-		"workflow_state":     q.WorkflowState,
-		"created_at":         q.CreatedAt,
-		"updated_at":         q.UpdatedAt,
+		"id":                      q.ID,
+		"quiz_id":                 q.QuizID,
+		"quiz_question_group_id":  q.QuizQuestionGroupID,
+		"position":                q.Position,
+		"question_type":           q.QuestionType,
+		"question_text":           q.QuestionText,
+		"points_possible":         q.PointsPossible,
+		"answers":                 q.Answers,
+		"correct_comments":        q.CorrectComments,
+		"incorrect_comments":      q.IncorrectComments,
+		"neutral_comments":        q.NeutralComments,
+		"workflow_state":          q.WorkflowState,
+		"created_at":              q.CreatedAt,
+		"updated_at":              q.UpdatedAt,
 	}
 }
 
@@ -79,14 +80,15 @@ func (h *QuizQuestionHandler) CreateQuestion(c *fiber.Ctx) error {
 
 	var input struct {
 		Question struct {
-			Position          int      `json:"position"`
-			QuestionType      string   `json:"question_type"`
-			QuestionText      string   `json:"question_text"`
-			PointsPossible    *float64 `json:"points_possible"`
-			Answers           string   `json:"answers"`
-			CorrectComments   string   `json:"correct_comments"`
-			IncorrectComments string   `json:"incorrect_comments"`
-			NeutralComments   string   `json:"neutral_comments"`
+			Position            int      `json:"position"`
+			QuestionType        string   `json:"question_type"`
+			QuestionText        string   `json:"question_text"`
+			PointsPossible      *float64 `json:"points_possible"`
+			Answers             string   `json:"answers"`
+			CorrectComments     string   `json:"correct_comments"`
+			IncorrectComments   string   `json:"incorrect_comments"`
+			NeutralComments     string   `json:"neutral_comments"`
+			QuizQuestionGroupID *uint    `json:"quiz_question_group_id"`
 		} `json:"question"`
 	}
 
@@ -95,15 +97,16 @@ func (h *QuizQuestionHandler) CreateQuestion(c *fiber.Ctx) error {
 	}
 
 	question := &models.QuizQuestion{
-		QuizID:            uint(quizID),
-		Position:          input.Question.Position,
-		QuestionType:      input.Question.QuestionType,
-		QuestionText:      input.Question.QuestionText,
-		PointsPossible:    input.Question.PointsPossible,
-		Answers:           input.Question.Answers,
-		CorrectComments:   input.Question.CorrectComments,
-		IncorrectComments: input.Question.IncorrectComments,
-		NeutralComments:   input.Question.NeutralComments,
+		QuizID:              uint(quizID),
+		QuizQuestionGroupID: input.Question.QuizQuestionGroupID,
+		Position:            input.Question.Position,
+		QuestionType:        input.Question.QuestionType,
+		QuestionText:        input.Question.QuestionText,
+		PointsPossible:      input.Question.PointsPossible,
+		Answers:             input.Question.Answers,
+		CorrectComments:     input.Question.CorrectComments,
+		IncorrectComments:   input.Question.IncorrectComments,
+		NeutralComments:     input.Question.NeutralComments,
 	}
 
 	if err := h.quizService.CreateQuestion(c.Context(), question); err != nil {
@@ -126,14 +129,15 @@ func (h *QuizQuestionHandler) UpdateQuestion(c *fiber.Ctx) error {
 
 	var input struct {
 		Question struct {
-			Position          *int     `json:"position"`
-			QuestionType      *string  `json:"question_type"`
-			QuestionText      *string  `json:"question_text"`
-			PointsPossible    *float64 `json:"points_possible"`
-			Answers           *string  `json:"answers"`
-			CorrectComments   *string  `json:"correct_comments"`
-			IncorrectComments *string  `json:"incorrect_comments"`
-			NeutralComments   *string  `json:"neutral_comments"`
+			Position            *int     `json:"position"`
+			QuestionType        *string  `json:"question_type"`
+			QuestionText        *string  `json:"question_text"`
+			PointsPossible      *float64 `json:"points_possible"`
+			Answers             *string  `json:"answers"`
+			CorrectComments     *string  `json:"correct_comments"`
+			IncorrectComments   *string  `json:"incorrect_comments"`
+			NeutralComments     *string  `json:"neutral_comments"`
+			QuizQuestionGroupID *uint    `json:"quiz_question_group_id"`
 		} `json:"question"`
 	}
 
@@ -164,6 +168,9 @@ func (h *QuizQuestionHandler) UpdateQuestion(c *fiber.Ctx) error {
 	}
 	if input.Question.NeutralComments != nil {
 		question.NeutralComments = *input.Question.NeutralComments
+	}
+	if input.Question.QuizQuestionGroupID != nil {
+		question.QuizQuestionGroupID = input.Question.QuizQuestionGroupID
 	}
 
 	if err := h.quizService.UpdateQuestion(c.Context(), question); err != nil {

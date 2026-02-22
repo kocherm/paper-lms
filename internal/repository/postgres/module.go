@@ -71,3 +71,16 @@ func (r *moduleRepo) FindActiveByDateRange(ctx context.Context, courseID uint, d
 	}
 	return &module, nil
 }
+
+func (r *moduleRepo) ReorderModules(ctx context.Context, courseID uint, moduleIDs []uint) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		for i, id := range moduleIDs {
+			if err := tx.Model(&models.ContextModule{}).
+				Where("id = ? AND course_id = ?", id, courseID).
+				Update("position", i+1).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}

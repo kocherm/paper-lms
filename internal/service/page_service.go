@@ -39,6 +39,10 @@ func (s *PageService) GetByURL(ctx context.Context, courseID uint, url string) (
 	return s.repo.FindByCourseAndURL(ctx, courseID, url)
 }
 
+func (s *PageService) GetPublicPage(ctx context.Context, courseID uint, slug string) (*models.WikiPage, error) {
+	return s.repo.FindPublicByCourseAndURL(ctx, courseID, slug)
+}
+
 func (s *PageService) Update(ctx context.Context, page *models.WikiPage) error {
 	return s.repo.Update(ctx, page)
 }

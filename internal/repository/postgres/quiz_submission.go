@@ -59,3 +59,14 @@ func (r *quizSubmissionRepo) ListByQuizID(ctx context.Context, quizID uint, para
 		PerPage:    params.PerPage,
 	}, nil
 }
+
+func (r *quizSubmissionRepo) ListCompletedByQuizID(ctx context.Context, quizID uint) ([]models.QuizSubmission, error) {
+	var submissions []models.QuizSubmission
+	if err := r.db.WithContext(ctx).
+		Where("quiz_id = ? AND workflow_state IN (?)", quizID, []string{"complete", "pending_review"}).
+		Order("id ASC").
+		Find(&submissions).Error; err != nil {
+		return nil, err
+	}
+	return submissions, nil
+}

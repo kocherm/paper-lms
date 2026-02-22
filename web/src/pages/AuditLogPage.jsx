@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, Navigate } from 'react-router-dom';
 import { FileText, Download, Filter, ChevronDown, ChevronUp, ArrowRight, ArrowLeft } from 'lucide-react';
 import { api } from '../services/api';
-import Layout from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
+import useIsTeacher from '../hooks/useIsTeacher';
+import Layout from '../components/Layout';
+import CourseNav from '../components/CourseNav';
 
 const TAB_ACTIVITY = 'activity';
 const TAB_GRADES = 'grades';
@@ -39,6 +41,7 @@ const GRADING_METHOD_LABELS = {
 const AuditLogPage = () => {
   const { courseId } = useParams();
   const { user } = useAuth();
+  const isTeacher = useIsTeacher(courseId);
   const [activeTab, setActiveTab] = useState(TAB_ACTIVITY);
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -153,20 +156,36 @@ const AuditLogPage = () => {
     setExpandedRows((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleExportAuditCSV = () => {
+  const handleExportAuditCSV = async () => {
     const filterParams = buildAuditFilterParams();
     const separator = filterParams ? '?' : '';
-    const token = localStorage.getItem('token');
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
-    window.open(`${API_URL}/courses/${courseId}/audit_log.csv${separator}${filterParams}${filterParams ? '&' : '?'}token=${token}`, '_blank');
+    try {
+      const res = await fetch(`/api/v1/courses/${courseId}/audit_log.csv${separator}${filterParams}`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Export failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `audit_log_${courseId}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch { /* ignore */ }
   };
 
-  const handleExportGradeCSV = () => {
+  const handleExportGradeCSV = async () => {
     const filterParams = buildGradeFilterParams();
     const separator = filterParams ? '?' : '';
-    const token = localStorage.getItem('token');
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
-    window.open(`${API_URL}/courses/${courseId}/grade_change_log.csv${separator}${filterParams}${filterParams ? '&' : '?'}token=${token}`, '_blank');
+    try {
+      const res = await fetch(`/api/v1/courses/${courseId}/grade_change_log.csv${separator}${filterParams}`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Export failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `grade_change_log_${courseId}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch { /* ignore */ }
   };
 
   const formatDate = (dateStr) => {
@@ -195,10 +214,19 @@ const AuditLogPage = () => {
     return EVENT_TYPE_COLORS[eventType] || 'bg-gray-100 text-gray-800';
   };
 
+  if (isTeacher === false) return <Navigate to={`/courses/${courseId}`} replace />;
+  if (isTeacher === null) return <Layout><div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+  Loading...
+</div></Layout>;
+
   if (loading) {
     return (
       <Layout>
-        <div className="text-center py-12 text-gray-500">Loading...</div>
+        <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+  Loading...
+</div>
       </Layout>
     );
   }
@@ -213,6 +241,7 @@ const AuditLogPage = () => {
 
   return (
     <Layout>
+      <CourseNav />
       {/* Header */}
       <div className="mb-6">
         <Link to={`/courses/${courseId}`} className="text-blue-600 hover:text-blue-800 text-sm flex items-center mb-2">
@@ -337,7 +366,10 @@ const AuditLogPage = () => {
 
           {/* Activity Table */}
           {auditLoading ? (
-            <div className="text-center py-12 text-gray-500">Loading audit log...</div>
+            <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+  Loading audit log...
+</div>
           ) : auditLogs.length === 0 ? (
             <div className="bg-white rounded-lg shadow p-8 text-center">
               <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -511,7 +543,10 @@ const AuditLogPage = () => {
 
           {/* Grade Changes Table */}
           {gradeLoading ? (
-            <div className="text-center py-12 text-gray-500">Loading grade changes...</div>
+            <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+  Loading grade changes...
+</div>
           ) : gradeChanges.length === 0 ? (
             <div className="bg-white rounded-lg shadow p-8 text-center">
               <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />

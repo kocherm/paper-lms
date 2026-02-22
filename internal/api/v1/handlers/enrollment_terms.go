@@ -61,7 +61,7 @@ func (h *EnrollmentTermHandler) CreateTerm(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid account ID")
 	}
 
-	_ = c.Locals("user_id").(uint)
+	// user_id verified by auth middleware
 
 	var input struct {
 		EnrollmentTerm struct {
@@ -137,7 +137,7 @@ func (h *EnrollmentTermHandler) UpdateTerm(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid term ID")
 	}
 
-	_ = c.Locals("user_id").(uint)
+	// user_id verified by auth middleware
 
 	term, err := h.termService.GetTerm(c.Context(), uint(termID))
 	if err != nil {
@@ -200,7 +200,7 @@ func (h *EnrollmentTermHandler) DeleteTerm(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid term ID")
 	}
 
-	_ = c.Locals("user_id").(uint)
+	// user_id verified by auth middleware
 
 	if err := h.termService.DeleteTerm(c.Context(), uint(termID)); err != nil {
 		return responses.InternalError(c, "Could not delete enrollment term")

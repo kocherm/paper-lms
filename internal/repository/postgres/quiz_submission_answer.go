@@ -53,3 +53,14 @@ func (r *quizSubmissionAnswerRepo) FindBySubmissionAndQuestion(ctx context.Conte
 	}
 	return &answer, nil
 }
+
+func (r *quizSubmissionAnswerRepo) ListBySubmissionIDs(ctx context.Context, submissionIDs []uint) ([]models.QuizSubmissionAnswer, error) {
+	if len(submissionIDs) == 0 {
+		return nil, nil
+	}
+	var answers []models.QuizSubmissionAnswer
+	if err := r.db.WithContext(ctx).Where("quiz_submission_id IN (?)", submissionIDs).Order("id ASC").Find(&answers).Error; err != nil {
+		return nil, err
+	}
+	return answers, nil
+}

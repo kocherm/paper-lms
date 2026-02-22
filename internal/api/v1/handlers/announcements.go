@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -13,11 +14,12 @@ import (
 // AnnouncementHandler handles HTTP requests for announcements.
 type AnnouncementHandler struct {
 	announcementService *service.AnnouncementService
+	authz               *ResourceAuthorizer
 }
 
 // NewAnnouncementHandler creates a new AnnouncementHandler.
-func NewAnnouncementHandler(announcementService *service.AnnouncementService) *AnnouncementHandler {
-	return &AnnouncementHandler{announcementService: announcementService}
+func NewAnnouncementHandler(announcementService *service.AnnouncementService, authz *ResourceAuthorizer) *AnnouncementHandler {
+	return &AnnouncementHandler{announcementService: announcementService, authz: authz}
 }
 
 func announcementToJSON(a *models.Announcement, isRead bool, isAcknowledged bool) fiber.Map {
@@ -60,11 +62,17 @@ func (h *AnnouncementHandler) ListCourseAnnouncements(c *fiber.Ctx) error {
 
 	responses.SetPaginationHeaders(c, result.TotalCount, result.Page, result.PerPage)
 
+	// Batch-fetch read/ack status in one query instead of N+1
+	announcementIDs := make([]uint, len(result.Items))
+	for i, a := range result.Items {
+		announcementIDs[i] = a.ID
+	}
+	statusMap := h.announcementService.GetBulkReadStatus(c.Context(), announcementIDs, userID)
+
 	announcements := make([]fiber.Map, len(result.Items))
 	for i, a := range result.Items {
-		isRead := h.announcementService.IsRead(c.Context(), a.ID, userID)
-		isAck := h.announcementService.IsAcknowledged(c.Context(), a.ID, userID)
-		announcements[i] = announcementToJSON(&a, isRead, isAck)
+		s := statusMap[a.ID]
+		announcements[i] = announcementToJSON(&a, s.IsRead, s.IsAcknowledged)
 	}
 
 	return c.JSON(announcements)
@@ -90,6 +98,10 @@ func (h *AnnouncementHandler) CreateCourseAnnouncement(c *fiber.Ctx) error {
 
 	if err := c.BodyParser(&input); err != nil {
 		return responses.BadRequest(c, "Invalid input")
+	}
+
+	if strings.TrimSpace(input.Title) == "" {
+		return responses.BadRequest(c, "Announcement title is required")
 	}
 
 	userID, _ := c.Locals("user_id").(uint)
@@ -133,6 +145,13 @@ func (h *AnnouncementHandler) GetAnnouncement(c *fiber.Ctx) error {
 		return responses.NotFound(c, "announcement")
 	}
 
+	// Authorize: user must be enrolled in the announcement's course
+	if announcement.CourseID != nil {
+		if err := h.authz.RequireCourseEnrolled(c, *announcement.CourseID); err != nil {
+			return err
+		}
+	}
+
 	// Auto-mark as read on view
 	_ = h.announcementService.MarkAsRead(c.Context(), announcement.ID, userID)
 
@@ -152,6 +171,13 @@ func (h *AnnouncementHandler) UpdateAnnouncement(c *fiber.Ctx) error {
 	announcement, err := h.announcementService.GetAnnouncement(c.Context(), uint(id))
 	if err != nil {
 		return responses.NotFound(c, "announcement")
+	}
+
+	// Authorize: user must be an instructor in the announcement's course
+	if announcement.CourseID != nil {
+		if err := h.authz.RequireCourseInstructor(c, *announcement.CourseID); err != nil {
+			return err
+		}
 	}
 
 	var input struct {
@@ -212,6 +238,19 @@ func (h *AnnouncementHandler) DeleteAnnouncement(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid announcement ID")
 	}
 
+	// Fetch announcement to check authorization
+	announcement, err := h.announcementService.GetAnnouncement(c.Context(), uint(id))
+	if err != nil {
+		return responses.NotFound(c, "announcement")
+	}
+
+	// Authorize: user must be an instructor in the announcement's course
+	if announcement.CourseID != nil {
+		if err := h.authz.RequireCourseInstructor(c, *announcement.CourseID); err != nil {
+			return err
+		}
+	}
+
 	if err := h.announcementService.DeleteAnnouncement(c.Context(), uint(id)); err != nil {
 		return responses.InternalError(c, "Could not delete announcement")
 	}
@@ -224,6 +263,19 @@ func (h *AnnouncementHandler) MarkAsRead(c *fiber.Ctx) error {
 	id, err := c.ParamsInt("id")
 	if err != nil {
 		return responses.BadRequest(c, "Invalid announcement ID")
+	}
+
+	// Fetch announcement to check authorization
+	announcement, err := h.announcementService.GetAnnouncement(c.Context(), uint(id))
+	if err != nil {
+		return responses.NotFound(c, "announcement")
+	}
+
+	// Authorize: user must be enrolled in the announcement's course
+	if announcement.CourseID != nil {
+		if err := h.authz.RequireCourseEnrolled(c, *announcement.CourseID); err != nil {
+			return err
+		}
 	}
 
 	userID, _ := c.Locals("user_id").(uint)
@@ -240,6 +292,19 @@ func (h *AnnouncementHandler) AcknowledgeAnnouncement(c *fiber.Ctx) error {
 	id, err := c.ParamsInt("id")
 	if err != nil {
 		return responses.BadRequest(c, "Invalid announcement ID")
+	}
+
+	// Fetch announcement to check authorization
+	announcement, err := h.announcementService.GetAnnouncement(c.Context(), uint(id))
+	if err != nil {
+		return responses.NotFound(c, "announcement")
+	}
+
+	// Authorize: user must be enrolled in the announcement's course
+	if announcement.CourseID != nil {
+		if err := h.authz.RequireCourseEnrolled(c, *announcement.CourseID); err != nil {
+			return err
+		}
 	}
 
 	userID, _ := c.Locals("user_id").(uint)
@@ -310,11 +375,17 @@ func (h *AnnouncementHandler) ListAccountAnnouncements(c *fiber.Ctx) error {
 
 	userID, _ := c.Locals("user_id").(uint)
 
+	// Batch-fetch read/ack status in one query instead of N+1
+	announcementIDs := make([]uint, len(result.Items))
+	for i, a := range result.Items {
+		announcementIDs[i] = a.ID
+	}
+	statusMap := h.announcementService.GetBulkReadStatus(c.Context(), announcementIDs, userID)
+
 	announcements := make([]fiber.Map, len(result.Items))
 	for i, a := range result.Items {
-		isRead := h.announcementService.IsRead(c.Context(), a.ID, userID)
-		isAck := h.announcementService.IsAcknowledged(c.Context(), a.ID, userID)
-		announcements[i] = announcementToJSON(&a, isRead, isAck)
+		s := statusMap[a.ID]
+		announcements[i] = announcementToJSON(&a, s.IsRead, s.IsAcknowledged)
 	}
 
 	return c.JSON(announcements)

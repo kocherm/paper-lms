@@ -19,8 +19,8 @@ const GradingPeriodsPage = () => {
 
   const fetchGroups = async () => {
     try {
-      const result = await api.getGradingPeriodGroups(accountId, 1, 100);
-      setGroups(result.data);
+      const { data } = await api.getGradingPeriodGroups(accountId, 1, 100);
+      setGroups(data?.grading_period_groups || []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -31,7 +31,7 @@ const GradingPeriodsPage = () => {
   const fetchPeriods = async (groupId) => {
     try {
       const data = await api.getGradingPeriods(accountId, groupId);
-      setPeriods(prev => ({ ...prev, [groupId]: data }));
+      setPeriods(prev => ({ ...prev, [groupId]: data?.grading_periods || [] }));
     } catch (err) {
       setError(err.message);
     }
@@ -103,7 +103,10 @@ const GradingPeriodsPage = () => {
   };
 
   if (loading) {
-    return <Layout><div className="text-center py-12 text-gray-500">Loading grading periods...</div></Layout>;
+    return <Layout><div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+  Loading grading periods...
+</div></Layout>;
   }
 
   return (

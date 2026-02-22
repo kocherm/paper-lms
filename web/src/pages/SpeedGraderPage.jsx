@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, Navigate } from 'react-router-dom';
 import {
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   CheckCircle,
   Clock,
   AlertCircle,
@@ -12,10 +14,13 @@ import {
   User,
   MessageSquare,
   FileText,
+  Grid,
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import useIsTeacher from '../hooks/useIsTeacher';
 import Layout from '../components/Layout';
+import { sanitizeHTML } from '../components/RichContentViewer';
 
 const STATUS_CONFIG = {
   submitted: { label: 'Submitted', color: 'bg-blue-100 text-blue-800', icon: CheckCircle, dot: 'bg-blue-500' },
@@ -33,6 +38,7 @@ const getStatusConfig = (student) => {
 const SpeedGraderPage = () => {
   const { courseId, assignmentId } = useParams();
   const { user } = useAuth();
+  const isTeacher = useIsTeacher(courseId);
   const [assignment, setAssignment] = useState(null);
   const [students, setStudents] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -47,6 +53,14 @@ const SpeedGraderPage = () => {
   // Comment state
   const [commentText, setCommentText] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
+
+  // Rubric state
+  const [rubric, setRubric] = useState(null); // {rubric, rubric_association}
+  const [rubricCriteria, setRubricCriteria] = useState([]); // parsed criteria array
+  const [rubricScores, setRubricScores] = useState({}); // {criterion_id: {points, comments}}
+  const [rubricExpanded, setRubricExpanded] = useState(true);
+  const [rubricSaving, setRubricSaving] = useState(false);
+  const [existingAssessmentId, setExistingAssessmentId] = useState(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -65,6 +79,67 @@ const SpeedGraderPage = () => {
     fetchData();
   }, [fetchData]);
 
+  const selectedStudent = students[selectedIndex] || null;
+
+  // Fetch rubric for this assignment
+  useEffect(() => {
+    if (!courseId || !assignmentId) return;
+    api.getAssignmentRubric(courseId, assignmentId)
+      .then((data) => {
+        setRubric(data);
+        try {
+          const rubricData = data?.rubric?.data;
+          const criteria = typeof rubricData === 'string'
+            ? JSON.parse(rubricData)
+            : rubricData;
+          setRubricCriteria(Array.isArray(criteria) ? criteria : []);
+        } catch {
+          setRubricCriteria([]);
+        }
+      })
+      .catch(() => {
+        setRubric(null);
+        setRubricCriteria([]);
+      });
+  }, [courseId, assignmentId]);
+
+  // Load existing rubric assessment when student changes
+  useEffect(() => {
+    if (!rubric || !selectedStudent) {
+      setRubricScores({});
+      setExistingAssessmentId(null);
+      return;
+    }
+    const assocId = rubric.rubric_association?.id;
+    if (!assocId) return;
+
+    api.getRubricAssessments(courseId, assocId, 1, 200)
+      .then((result) => {
+        const assessments = result.data || [];
+        const existing = assessments.find(
+          (a) => a.user_id === selectedStudent.user_id
+        );
+        if (existing) {
+          setExistingAssessmentId(existing.id);
+          try {
+            const data = typeof existing.data === 'string'
+              ? JSON.parse(existing.data)
+              : existing.data;
+            setRubricScores(data || {});
+          } catch {
+            setRubricScores({});
+          }
+        } else {
+          setExistingAssessmentId(null);
+          setRubricScores({});
+        }
+      })
+      .catch(() => {
+        setExistingAssessmentId(null);
+        setRubricScores({});
+      });
+  }, [courseId, rubric, selectedStudent?.user_id]);
+
   // Update grade input when selected student changes
   useEffect(() => {
     if (students.length > 0 && students[selectedIndex]) {
@@ -77,8 +152,6 @@ const SpeedGraderPage = () => {
       setGradeSuccess(false);
     }
   }, [selectedIndex, students]);
-
-  const selectedStudent = students[selectedIndex] || null;
 
   const handleGrade = async (e) => {
     e.preventDefault();
@@ -151,6 +224,45 @@ const SpeedGraderPage = () => {
     }
   };
 
+  const rubricTotal = Object.values(rubricScores).reduce(
+    (sum, c) => sum + (parseFloat(c.points) || 0), 0
+  );
+
+  const handleRubricCriterionChange = (criterionId, field, value) => {
+    setRubricScores((prev) => ({
+      ...prev,
+      [criterionId]: { ...prev[criterionId], [field]: value },
+    }));
+  };
+
+  const handleSaveRubric = async () => {
+    if (!rubric || !selectedStudent || !rubric.rubric_association?.id) return;
+    const assocId = rubric.rubric_association.id;
+    setRubricSaving(true);
+    try {
+      const dataStr = JSON.stringify(rubricScores);
+      if (existingAssessmentId) {
+        await api.updateRubricAssessment(courseId, assocId, existingAssessmentId, {
+          data: dataStr,
+          assessment_type: 'grading',
+        });
+      } else {
+        const created = await api.createRubricAssessment(courseId, assocId, {
+          user_id: selectedStudent.user_id,
+          data: dataStr,
+          assessment_type: 'grading',
+        });
+        setExistingAssessmentId(created.id);
+      }
+      // Auto-fill grade input with rubric total
+      setGradeInput(String(rubricTotal));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setRubricSaving(false);
+    }
+  };
+
   const navigateStudent = (direction) => {
     const newIndex = selectedIndex + direction;
     if (newIndex >= 0 && newIndex < students.length) {
@@ -163,10 +275,19 @@ const SpeedGraderPage = () => {
     return new Date(dateStr).toLocaleString();
   };
 
+  if (isTeacher === false) return <Navigate to={`/courses/${courseId}`} replace />;
+  if (isTeacher === null) return <Layout><div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+  Loading...
+</div></Layout>;
+
   if (loading) {
     return (
       <Layout>
-        <div className="text-center py-12 text-gray-500">Loading SpeedGrader...</div>
+        <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+          Loading SpeedGrader...
+        </div>
       </Layout>
     );
   }
@@ -174,7 +295,10 @@ const SpeedGraderPage = () => {
   if (error) {
     return (
       <Layout>
-        <div className="text-red-600 text-center py-12">{error}</div>
+        <div className="text-center py-12">
+          <p className="text-red-600 mb-3">{error}</p>
+          <button onClick={() => { setError(null); window.location.reload(); }} className="text-blue-600 hover:text-blue-800 text-sm font-medium">Try Again</button>
+        </div>
       </Layout>
     );
   }
@@ -207,6 +331,11 @@ const SpeedGraderPage = () => {
         <div className="flex items-center justify-between mt-2">
           <h2 className="text-2xl font-bold text-gray-900">SpeedGrader</h2>
           <div className="flex items-center gap-4 text-sm text-gray-500">
+            {assignment.anonymous_grading && (
+              <span className="px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-700">
+                Anonymous Grading
+              </span>
+            )}
             <span>{submittedCount}/{students.length} submitted</span>
             <span>{gradedCount}/{students.length} graded</span>
           </div>
@@ -355,7 +484,7 @@ const SpeedGraderPage = () => {
                       <div
                         className="prose max-w-none text-gray-700"
                         dangerouslySetInnerHTML={{
-                          __html: selectedStudent.submission.body,
+                          __html: sanitizeHTML(selectedStudent.submission.body),
                         }}
                       />
                     )}
@@ -373,8 +502,36 @@ const SpeedGraderPage = () => {
                       </div>
                     )}
 
+                    {selectedStudent.submission.attachments?.length > 0 && (
+                      <div className="mt-4">
+                        <h4 className="text-sm font-medium text-gray-600 mb-2">Attachments</h4>
+                        <div className="space-y-2">
+                          {selectedStudent.submission.attachments.map((file, idx) => (
+                            <a
+                              key={file.id || idx}
+                              href={file.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 p-2 border border-gray-200 rounded hover:bg-gray-50 text-sm"
+                            >
+                              <FileText className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                              <span className="text-blue-600 truncate">{file.display_name || file.filename}</span>
+                              {file.size && (
+                                <span className="text-xs text-gray-400 ml-auto flex-shrink-0">
+                                  {file.size > 1048576
+                                    ? `${(file.size / 1048576).toFixed(1)} MB`
+                                    : `${Math.round(file.size / 1024)} KB`}
+                                </span>
+                              )}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     {!selectedStudent.submission.body &&
-                      !selectedStudent.submission.url && (
+                      !selectedStudent.submission.url &&
+                      !selectedStudent.submission.attachments?.length && (
                         <p className="text-gray-400 italic">
                           No content available for this submission type.
                         </p>
@@ -439,6 +596,101 @@ const SpeedGraderPage = () => {
             </form>
           </div>
 
+          {/* Rubric Scoring */}
+          {rubricCriteria.length > 0 && (
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <button
+                onClick={() => setRubricExpanded(!rubricExpanded)}
+                className="w-full p-3 border-b bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
+              >
+                <h3 className="font-semibold text-sm text-gray-700 flex items-center space-x-2">
+                  <Grid className="w-4 h-4" />
+                  <span>Rubric ({rubricCriteria.length} criteria)</span>
+                </h3>
+                {rubricExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+              </button>
+              {rubricExpanded && (
+                <div className="p-3 space-y-4">
+                  {rubricCriteria.map((criterion) => {
+                    const cId = criterion.id || criterion.description;
+                    const currentScore = rubricScores[cId] || {};
+                    const ratings = criterion.ratings || [];
+                    return (
+                      <div key={cId} className="border-b border-gray-100 pb-3 last:border-0 last:pb-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-xs font-semibold text-gray-700">{criterion.description}</p>
+                          <span className="text-xs text-gray-400">{criterion.points} pts</span>
+                        </div>
+                        {criterion.long_description && (
+                          <p className="text-xs text-gray-400 mb-2">{criterion.long_description}</p>
+                        )}
+                        {/* Rating buttons */}
+                        {ratings.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            {ratings.map((rating) => {
+                              const isSelected = parseFloat(currentScore.points) === rating.points;
+                              return (
+                                <button
+                                  key={rating.id || rating.description}
+                                  type="button"
+                                  onClick={() => handleRubricCriterionChange(cId, 'points', rating.points)}
+                                  className={`text-xs px-2 py-1 rounded border transition-colors ${
+                                    isSelected
+                                      ? 'bg-blue-100 border-blue-400 text-blue-800 font-medium'
+                                      : 'bg-white border-gray-200 text-gray-600 hover:border-blue-300 hover:bg-blue-50'
+                                  }`}
+                                  title={rating.description}
+                                  disabled={!selectedStudent}
+                                >
+                                  {rating.points} - {rating.description}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                        {/* Custom points + comments */}
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            step="any"
+                            min="0"
+                            max={criterion.points}
+                            value={currentScore.points ?? ''}
+                            onChange={(e) => handleRubricCriterionChange(cId, 'points', e.target.value)}
+                            placeholder="Pts"
+                            className="w-16 border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            disabled={!selectedStudent}
+                          />
+                          <input
+                            type="text"
+                            value={currentScore.comments || ''}
+                            onChange={(e) => handleRubricCriterionChange(cId, 'comments', e.target.value)}
+                            placeholder="Comment..."
+                            className="flex-1 border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            disabled={!selectedStudent}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {/* Rubric total + save */}
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <span className="text-sm font-semibold text-gray-700">
+                      Total: {rubricTotal} / {rubric?.rubric?.points_possible ?? rubricCriteria.reduce((s, c) => s + (c.points || 0), 0)}
+                    </span>
+                    <button
+                      onClick={handleSaveRubric}
+                      disabled={!selectedStudent || rubricSaving}
+                      className="bg-blue-600 text-white text-xs px-3 py-1.5 rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {rubricSaving ? 'Saving...' : 'Apply Rubric'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Comments */}
           <div className="bg-white rounded-lg shadow flex-1 flex flex-col overflow-hidden">
             <div className="p-4 border-b bg-gray-50">
@@ -461,7 +713,11 @@ const SpeedGraderPage = () => {
                   <div key={comment.id} className="border-b border-gray-100 pb-3 last:border-0">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-medium text-gray-600">
-                        {comment.author_id === user?.id ? 'You' : `User ${comment.author_id}`}
+                        {comment.author_id === user?.id
+                          ? 'You'
+                          : comment.author_name || comment.author?.display_name || comment.author?.name
+                            || students.find(s => s.user_id === comment.author_id)?.user_name
+                            || `User ${comment.author_id}`}
                       </span>
                       <span className="text-xs text-gray-400">
                         {formatDate(comment.created_at)}

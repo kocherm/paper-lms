@@ -67,3 +67,28 @@ func (r *enrollmentRepo) FindByUserAndCourse(ctx context.Context, userID, course
 	}
 	return &enrollment, nil
 }
+
+func (r *enrollmentRepo) CountByCourseIDs(ctx context.Context, courseIDs []uint) (map[uint]int64, error) {
+	if len(courseIDs) == 0 {
+		return map[uint]int64{}, nil
+	}
+	type result struct {
+		CourseID uint
+		Count    int64
+	}
+	var results []result
+	err := r.db.WithContext(ctx).
+		Model(&models.Enrollment{}).
+		Select("course_id, count(*) as count").
+		Where("course_id IN ? AND workflow_state = ? AND type = ?", courseIDs, "active", "StudentEnrollment").
+		Group("course_id").
+		Find(&results).Error
+	if err != nil {
+		return nil, err
+	}
+	counts := make(map[uint]int64, len(results))
+	for _, r := range results {
+		counts[r.CourseID] = r.Count
+	}
+	return counts, nil
+}

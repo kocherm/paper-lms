@@ -1,6 +1,10 @@
 package config
 
 import (
+	"crypto/rand"
+	"encoding/hex"
+	"fmt"
+	"log"
 	"os"
 	"strconv"
 )
@@ -13,6 +17,14 @@ type Config struct {
 	FrontendURL     string
 	FileStoragePath string
 	MaxUploadSize   int
+	AutoMigrate     bool
+	// Storage backend
+	StorageBackend string // "local" or "s3"
+	S3Bucket       string
+	S3Region       string
+	S3Endpoint     string // For MinIO, Cloudflare R2, etc.
+	S3AccessKey    string
+	S3SecretKey    string
 	// SAML SSO
 	SAMLEntityID string
 	SAMLCertFile string
@@ -44,6 +56,48 @@ func Load() *Config {
 		SMTPPassword:    getEnv("SMTP_PASSWORD", ""),
 		SMTPFrom:        getEnv("SMTP_FROM", "noreply@paperlms.org"),
 		SMTPEnabled:     getEnv("SMTP_ENABLED", "false") == "true",
+		AutoMigrate:     getEnv("AUTO_MIGRATE", "true") == "true",
+		StorageBackend:  getEnv("STORAGE_BACKEND", "local"),
+		S3Bucket:        getEnv("S3_BUCKET", ""),
+		S3Region:        getEnv("S3_REGION", "us-east-1"),
+		S3Endpoint:      getEnv("S3_ENDPOINT", ""),
+		S3AccessKey:     getEnv("S3_ACCESS_KEY", ""),
+		S3SecretKey:     getEnv("S3_SECRET_KEY", ""),
+	}
+}
+
+const defaultJWTSecret = "your-super-secret-key-change-this-in-production"
+
+// Validate checks that critical configuration values are set for production.
+// In production, it will fatally exit if the JWT secret is the default value.
+// In development, it will auto-generate a random secret if the default is detected.
+func (c *Config) Validate() {
+	if c.JWTSecret == defaultJWTSecret {
+		if c.Environment == "production" {
+			log.Fatal("FATAL: JWT_SECRET must be changed from the default value in production. Set the JWT_SECRET environment variable to a secure random string (at least 32 characters).")
+		}
+		// In development, generate a random secret and warn
+		b := make([]byte, 32)
+		if _, err := rand.Read(b); err != nil {
+			log.Fatal("FATAL: Could not generate random JWT secret: ", err)
+		}
+		c.JWTSecret = hex.EncodeToString(b)
+		fmt.Println("WARNING: JWT_SECRET not set — using auto-generated secret. Sessions will not persist across restarts. Set JWT_SECRET for stable sessions.")
+	}
+
+	if c.Environment == "production" {
+		if c.DatabaseURL == "postgres://paper:paper@localhost:5432/paper_lms?sslmode=disable" {
+			log.Fatal("FATAL: DATABASE_URL must be configured for production. Do not use the default development database URL.")
+		}
+		if c.FrontendURL == "http://localhost:5173" || c.FrontendURL == "" {
+			log.Fatal("FATAL: FRONTEND_URL must be configured for production. Set it to your production domain (e.g., https://app.paperlms.org).")
+		}
+		if c.AutoMigrate {
+			fmt.Println("WARNING: AUTO_MIGRATE=true in production. Set AUTO_MIGRATE=false to use versioned SQL migrations instead of GORM AutoMigrate.")
+		}
+		if !c.SMTPEnabled {
+			fmt.Println("WARNING: SMTP is not enabled (SMTP_ENABLED=true). Email notifications (grade posted, assignment due, announcements) will not be delivered to students or parents.")
+		}
 	}
 }
 

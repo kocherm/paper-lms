@@ -34,4 +34,7 @@ type GroupMembershipRepository interface {
 	Delete(ctx context.Context, id uint) error
 	ListByGroupID(ctx context.Context, groupID uint, params PaginationParams) (*PaginatedResult[models.GroupMembership], error)
 	FindByGroupAndUser(ctx context.Context, groupID, userID uint) (*models.GroupMembership, error)
+	// FindUserGroupInCategory finds the group a user belongs to within a given group category.
+	// Returns the group ID or an error if the user is not in any group in that category.
+	FindUserGroupInCategory(ctx context.Context, userID, groupCategoryID uint) (*models.Group, error)
 }

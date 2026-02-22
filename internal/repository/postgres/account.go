@@ -28,6 +28,10 @@ func (r *accountRepo) FindByID(ctx context.Context, id uint) (*models.Account, e
 	return &account, nil
 }
 
+func (r *accountRepo) Update(ctx context.Context, account *models.Account) error {
+	return r.db.WithContext(ctx).Save(account).Error
+}
+
 func (r *accountRepo) List(ctx context.Context, params repository.PaginationParams) (*repository.PaginatedResult[models.Account], error) {
 	var accounts []models.Account
 	var count int64

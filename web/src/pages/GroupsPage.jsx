@@ -3,7 +3,9 @@ import { useParams, Link } from 'react-router-dom';
 import { Users, FolderOpen, Plus, X, Edit2, Trash2, UserPlus, UserMinus, ToggleLeft, ToggleRight } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import useIsTeacher from '../hooks/useIsTeacher';
 import Layout from '../components/Layout';
+import CourseNav from '../components/CourseNav';
 
 const GroupsPage = () => {
   const { courseId } = useParams();
@@ -31,6 +33,7 @@ const GroupsPage = () => {
   const [selectedUserId, setSelectedUserId] = useState('');
 
   const [saving, setSaving] = useState(false);
+  const isTeacher = useIsTeacher(courseId);
 
   const fetchData = async () => {
     try {
@@ -53,7 +56,8 @@ const GroupsPage = () => {
       setMembersByGroup(membersMap);
 
       const enrollResult = await api.getEnrollments(courseId);
-      setEnrollments(enrollResult.data || []);
+      const enrollList = enrollResult.data || [];
+      setEnrollments(enrollList);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -227,7 +231,10 @@ const GroupsPage = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="text-center py-12 text-gray-500">Loading groups...</div>
+        <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+  Loading groups...
+</div>
       </Layout>
     );
   }
@@ -235,26 +242,32 @@ const GroupsPage = () => {
   if (error) {
     return (
       <Layout>
-        <div className="text-red-600 text-center py-12">{error}</div>
+        <div className="text-center py-12">
+          <p className="text-red-600 mb-3">{error}</p>
+          <button onClick={() => window.location.reload()} className="text-blue-600 hover:text-blue-800 text-sm font-medium">Try Again</button>
+        </div>
       </Layout>
     );
   }
 
   return (
     <Layout>
+      <CourseNav />
       <div className="mb-6">
         <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm">
           &larr; Back to Course
         </Link>
         <div className="flex items-center justify-between mt-2">
           <h2 className="text-2xl font-bold text-gray-900">Groups</h2>
-          <button
-            onClick={openCreateCategory}
-            className="inline-flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium"
-          >
-            <Plus className="w-4 h-4" />
-            <span>New Category</span>
-          </button>
+          {isTeacher && (
+            <button
+              onClick={openCreateCategory}
+              className="inline-flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium"
+            >
+              <Plus className="w-4 h-4" />
+              <span>New Category</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -287,30 +300,32 @@ const GroupsPage = () => {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => openCreateGroup(cat.id)}
-                    className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-sm"
-                    title="Add Group"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Add Group</span>
-                  </button>
-                  <button
-                    onClick={() => openEditCategory(cat)}
-                    className="text-gray-400 hover:text-gray-600"
-                    title="Edit Category"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteCategory(cat.id)}
-                    className="text-gray-400 hover:text-red-600"
-                    title="Delete Category"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+                {isTeacher && (
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => openCreateGroup(cat.id)}
+                      className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-sm"
+                      title="Add Group"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add Group</span>
+                    </button>
+                    <button
+                      onClick={() => openEditCategory(cat)}
+                      className="text-gray-400 hover:text-gray-600"
+                      title="Edit Category"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteCategory(cat.id)}
+                      className="text-gray-400 hover:text-red-600"
+                      title="Delete Category"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Groups within category */}
@@ -335,32 +350,34 @@ const GroupsPage = () => {
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <button
-                            onClick={() => {
-                              setAddingMemberGroup(addingMemberGroup === group.id ? null : group.id);
-                              setSelectedUserId('');
-                            }}
-                            className="text-green-600 hover:text-green-800 text-sm inline-flex items-center space-x-1"
-                            title="Add Member"
-                          >
-                            <UserPlus className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => openEditGroup(group, cat.id)}
-                            className="text-gray-400 hover:text-gray-600"
-                            title="Edit Group"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteGroup(group.id)}
-                            className="text-gray-400 hover:text-red-600"
-                            title="Delete Group"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
+                        {isTeacher && (
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => {
+                                setAddingMemberGroup(addingMemberGroup === group.id ? null : group.id);
+                                setSelectedUserId('');
+                              }}
+                              className="text-green-600 hover:text-green-800 text-sm inline-flex items-center space-x-1"
+                              title="Add Member"
+                            >
+                              <UserPlus className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => openEditGroup(group, cat.id)}
+                              className="text-gray-400 hover:text-gray-600"
+                              title="Edit Group"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteGroup(group.id)}
+                              className="text-gray-400 hover:text-red-600"
+                              title="Delete Group"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
                       </div>
 
                       {group.description && (
@@ -410,13 +427,15 @@ const GroupsPage = () => {
                               {member.moderator && (
                                 <span className="text-blue-600 font-semibold">(mod)</span>
                               )}
-                              <button
-                                onClick={() => handleRemoveMember(member.id)}
-                                className="text-gray-400 hover:text-red-500 ml-1"
-                                title="Remove member"
-                              >
-                                <UserMinus className="w-3 h-3" />
-                              </button>
+                              {isTeacher && (
+                                <button
+                                  onClick={() => handleRemoveMember(member.id)}
+                                  className="text-gray-400 hover:text-red-500 ml-1"
+                                  title="Remove member"
+                                >
+                                  <UserMinus className="w-3 h-3" />
+                                </button>
+                              )}
                             </span>
                           ))}
                         </div>

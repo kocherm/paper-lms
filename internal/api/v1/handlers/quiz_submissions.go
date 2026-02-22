@@ -9,15 +9,16 @@ import (
 )
 
 type QuizSubmissionHandler struct {
-	quizService *service.QuizService
+	quizService     *service.QuizService
+	observerService *service.ObserverService
 }
 
-func NewQuizSubmissionHandler(quizService *service.QuizService) *QuizSubmissionHandler {
-	return &QuizSubmissionHandler{quizService: quizService}
+func NewQuizSubmissionHandler(quizService *service.QuizService, observerService *service.ObserverService) *QuizSubmissionHandler {
+	return &QuizSubmissionHandler{quizService: quizService, observerService: observerService}
 }
 
 func quizSubmissionToJSON(qs *models.QuizSubmission) fiber.Map {
-	return fiber.Map{
+	m := fiber.Map{
 		"id":               qs.ID,
 		"quiz_id":          qs.QuizID,
 		"user_id":          qs.UserID,
@@ -34,6 +35,10 @@ func quizSubmissionToJSON(qs *models.QuizSubmission) fiber.Map {
 		"created_at":       qs.CreatedAt,
 		"updated_at":       qs.UpdatedAt,
 	}
+	if qs.SelectedQuestions != "" {
+		m["selected_questions"] = qs.SelectedQuestions
+	}
+	return m
 }
 
 func quizSubmissionAnswerToJSON(a *models.QuizSubmissionAnswer) fiber.Map {
@@ -56,7 +61,10 @@ func (h *QuizSubmissionHandler) StartSubmission(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid quiz ID")
 	}
 
-	userID := c.Locals("user_id").(uint)
+	userID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 
 	var input struct {
 		TimeLimit *int `json:"time_limit"` // optional override in minutes
@@ -76,6 +84,11 @@ func (h *QuizSubmissionHandler) StartSubmission(c *fiber.Ctx) error {
 
 // GetSubmission handles GET /courses/:course_id/quizzes/:quiz_id/submissions/:submission_id
 func (h *QuizSubmissionHandler) GetSubmission(c *fiber.Ctx) error {
+	quizID, err := c.ParamsInt("quiz_id")
+	if err != nil {
+		return responses.BadRequest(c, "Invalid quiz ID")
+	}
+
 	submissionID, err := c.ParamsInt("submission_id")
 	if err != nil {
 		return responses.BadRequest(c, "Invalid submission ID")
@@ -86,6 +99,25 @@ func (h *QuizSubmissionHandler) GetSubmission(c *fiber.Ctx) error {
 		return responses.NotFound(c, "quiz submission")
 	}
 
+	// Verify submission belongs to the URL's quiz (prevents cross-course IDOR)
+	if submission.QuizID != uint(quizID) {
+		return responses.NotFound(c, "quiz submission")
+	}
+
+	// Authorization: only the submission owner, instructor, or observer can view it
+	userID, _ := c.Locals("user_id").(uint)
+	if submission.UserID != userID {
+		enrollmentType, _ := c.Locals("enrollment_type").(string)
+		isTeacherOrTA := enrollmentType == "TeacherEnrollment" || enrollmentType == "TaEnrollment"
+		isObserver := false
+		if h.observerService != nil {
+			isObserver, _ = h.observerService.IsObserverOf(c.Context(), userID, submission.UserID)
+		}
+		if !isTeacherOrTA && !isObserver {
+			return responses.Error(c, fiber.StatusForbidden, "You do not have permission to view this submission")
+		}
+	}
+
 	return c.JSON(fiber.Map{
 		"quiz_submissions": []fiber.Map{quizSubmissionToJSON(submission)},
 	})
@@ -93,6 +125,11 @@ func (h *QuizSubmissionHandler) GetSubmission(c *fiber.Ctx) error {
 
 // AnswerQuestion handles PUT /courses/:course_id/quizzes/:quiz_id/submissions/:submission_id/questions/:question_id
 func (h *QuizSubmissionHandler) AnswerQuestion(c *fiber.Ctx) error {
+	quizID, err := c.ParamsInt("quiz_id")
+	if err != nil {
+		return responses.BadRequest(c, "Invalid quiz ID")
+	}
+
 	submissionID, err := c.ParamsInt("submission_id")
 	if err != nil {
 		return responses.BadRequest(c, "Invalid submission ID")
@@ -101,6 +138,20 @@ func (h *QuizSubmissionHandler) AnswerQuestion(c *fiber.Ctx) error {
 	questionID, err := c.ParamsInt("question_id")
 	if err != nil {
 		return responses.BadRequest(c, "Invalid question ID")
+	}
+
+	// Authorization: only the submission owner can answer questions
+	userID, _ := c.Locals("user_id").(uint)
+	submission, err := h.quizService.GetSubmission(c.Context(), uint(submissionID))
+	if err != nil {
+		return responses.NotFound(c, "quiz submission")
+	}
+	// Verify submission belongs to the URL's quiz
+	if submission.QuizID != uint(quizID) {
+		return responses.NotFound(c, "quiz submission")
+	}
+	if submission.UserID != userID {
+		return responses.Error(c, fiber.StatusForbidden, "You do not have permission to modify this submission")
 	}
 
 	var input struct {
@@ -121,12 +172,29 @@ func (h *QuizSubmissionHandler) AnswerQuestion(c *fiber.Ctx) error {
 
 // CompleteSubmission handles POST /courses/:course_id/quizzes/:quiz_id/submissions/:submission_id/complete
 func (h *QuizSubmissionHandler) CompleteSubmission(c *fiber.Ctx) error {
+	quizID, err := c.ParamsInt("quiz_id")
+	if err != nil {
+		return responses.BadRequest(c, "Invalid quiz ID")
+	}
+
 	submissionID, err := c.ParamsInt("submission_id")
 	if err != nil {
 		return responses.BadRequest(c, "Invalid submission ID")
 	}
 
-	userID := c.Locals("user_id").(uint)
+	// Verify submission belongs to the URL's quiz
+	sub, err := h.quizService.GetSubmission(c.Context(), uint(submissionID))
+	if err != nil {
+		return responses.NotFound(c, "quiz submission")
+	}
+	if sub.QuizID != uint(quizID) {
+		return responses.NotFound(c, "quiz submission")
+	}
+
+	userID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 
 	submission, err := h.quizService.CompleteSubmission(c.Context(), uint(submissionID), userID)
 	if err != nil {
@@ -136,6 +204,96 @@ func (h *QuizSubmissionHandler) CompleteSubmission(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"quiz_submissions": []fiber.Map{quizSubmissionToJSON(submission)},
 	})
+}
+
+// GetSubmissionAnswers handles GET /courses/:course_id/quizzes/:quiz_id/submissions/:submission_id/answers
+func (h *QuizSubmissionHandler) GetSubmissionAnswers(c *fiber.Ctx) error {
+	quizID, err := c.ParamsInt("quiz_id")
+	if err != nil {
+		return responses.BadRequest(c, "Invalid quiz ID")
+	}
+
+	submissionID, err := c.ParamsInt("submission_id")
+	if err != nil {
+		return responses.BadRequest(c, "Invalid submission ID")
+	}
+
+	// Verify submission belongs to the URL's quiz
+	sub, err := h.quizService.GetSubmission(c.Context(), uint(submissionID))
+	if err != nil {
+		return responses.NotFound(c, "quiz submission")
+	}
+	if sub.QuizID != uint(quizID) {
+		return responses.NotFound(c, "quiz submission")
+	}
+
+	userID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
+
+	answers, err := h.quizService.ListSubmissionAnswers(c.Context(), uint(submissionID), userID)
+	if err != nil {
+		return responses.BadRequest(c, err.Error())
+	}
+
+	result := make([]fiber.Map, len(answers))
+	for i, a := range answers {
+		result[i] = quizSubmissionAnswerToJSON(&a)
+	}
+
+	return c.JSON(fiber.Map{
+		"quiz_submission_answers": result,
+	})
+}
+
+// GetSubmissionQuestions handles GET /courses/:course_id/quizzes/:quiz_id/submissions/:submission_id/questions
+// Returns the personalized set of questions for this submission (randomized from groups).
+func (h *QuizSubmissionHandler) GetSubmissionQuestions(c *fiber.Ctx) error {
+	quizID, err := c.ParamsInt("quiz_id")
+	if err != nil {
+		return responses.BadRequest(c, "Invalid quiz ID")
+	}
+
+	submissionID, err := c.ParamsInt("submission_id")
+	if err != nil {
+		return responses.BadRequest(c, "Invalid submission ID")
+	}
+
+	// Verify submission exists and belongs to this quiz
+	submission, err := h.quizService.GetSubmission(c.Context(), uint(submissionID))
+	if err != nil {
+		return responses.NotFound(c, "quiz submission")
+	}
+	if submission.QuizID != uint(quizID) {
+		return responses.NotFound(c, "quiz submission")
+	}
+
+	// Authorization: only the submission owner, instructor, or observer can view
+	userID, _ := c.Locals("user_id").(uint)
+	if submission.UserID != userID {
+		enrollmentType, _ := c.Locals("enrollment_type").(string)
+		isTeacherOrTA := enrollmentType == "TeacherEnrollment" || enrollmentType == "TaEnrollment"
+		isObserver := false
+		if h.observerService != nil {
+			isObserver, _ = h.observerService.IsObserverOf(c.Context(), userID, submission.UserID)
+		}
+		if !isTeacherOrTA && !isObserver {
+			return responses.Error(c, fiber.StatusForbidden, "You do not have permission to view this submission's questions")
+		}
+	}
+
+	questions, err := h.quizService.GetSubmissionQuestions(c.Context(), uint(submissionID))
+	if err != nil {
+		return responses.InternalError(c, "Could not fetch submission questions")
+	}
+
+	result := make([]fiber.Map, len(questions))
+	for i, q := range questions {
+		result[i] = quizQuestionToJSON(&q)
+	}
+
+	return c.JSON(result)
 }
 
 // ListSubmissions handles GET /courses/:course_id/quizzes/:quiz_id/submissions

@@ -66,7 +66,10 @@ func channelToJSON(ch *models.CommunicationChannel) fiber.Map {
 // ListDeliveries returns a paginated delivery log for the current user.
 // GET /api/v1/users/self/notification_deliveries
 func (h *NotificationDeliveryHandler) ListDeliveries(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(uint)
+	userID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 	params := middleware.GetPagination(c)
 	status := c.Query("status")
 
@@ -125,7 +128,10 @@ func (h *NotificationDeliveryHandler) RetryFailedDeliveries(c *fiber.Ctx) error 
 // ListChannels lists the current user's communication channels.
 // GET /api/v1/users/self/communication_channels
 func (h *NotificationDeliveryHandler) ListChannels(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(uint)
+	userID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 
 	channels, err := h.channelRepo.ListByUserID(c.Context(), userID)
 	if err != nil {
@@ -142,7 +148,10 @@ func (h *NotificationDeliveryHandler) ListChannels(c *fiber.Ctx) error {
 // CreateChannel adds a new communication channel for the current user.
 // POST /api/v1/users/self/communication_channels
 func (h *NotificationDeliveryHandler) CreateChannel(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(uint)
+	userID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 
 	var input struct {
 		CommunicationChannel struct {
@@ -190,7 +199,10 @@ func (h *NotificationDeliveryHandler) CreateChannel(c *fiber.Ctx) error {
 // DeleteChannel removes a communication channel for the current user (soft-delete via workflow_state).
 // DELETE /api/v1/users/self/communication_channels/:id
 func (h *NotificationDeliveryHandler) DeleteChannel(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(uint)
+	userID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 
 	channelID, err := c.ParamsInt("id")
 	if err != nil {

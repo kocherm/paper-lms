@@ -1,10 +1,15 @@
 const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
+function getCSRFToken() {
+  const match = document.cookie.match(/(?:^|;\s*)paper_csrf=([^;]*)/);
+  return match ? match[1] : '';
+}
+
 const getHeaders = () => {
-  const headers = { 'Content-Type': 'application/json' };
-  const token = localStorage.getItem('token');
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-  return headers;
+  return {
+    'Content-Type': 'application/json',
+    'X-CSRF-Token': getCSRFToken(),
+  };
 };
 
 function parseLinkHeader(header) {
@@ -28,6 +33,9 @@ async function request(path, options = {}) {
   });
 
   if (!response.ok) {
+    if (response.status === 401) {
+      window.dispatchEvent(new Event('auth:session-expired'));
+    }
     const body = await response.json().catch(() => ({}));
     const message = body.errors?.[0]?.message || `Request failed: ${response.status}`;
     throw new Error(message);
@@ -47,6 +55,9 @@ async function requestRaw(path, options = {}) {
     headers: { ...getHeaders(), ...options.headers },
   });
   if (!response.ok) {
+    if (response.status === 401) {
+      window.dispatchEvent(new Event('auth:session-expired'));
+    }
     const body = await response.json().catch(() => ({}));
     const message = body.errors?.[0]?.message || `Request failed: ${response.status}`;
     throw new Error(message);
@@ -58,9 +69,13 @@ async function uploadFile(path, formData) {
   const response = await fetch(`${API_URL}${path}`, {
     method: 'POST',
     credentials: 'include',
+    headers: { 'X-CSRF-Token': getCSRFToken() },
     body: formData,
   });
   if (!response.ok) {
+    if (response.status === 401) {
+      window.dispatchEvent(new Event('auth:session-expired'));
+    }
     const body = await response.json().catch(() => ({}));
     const message = body.errors?.[0]?.message || `Request failed: ${response.status}`;
     throw new Error(message);
@@ -69,11 +84,37 @@ async function uploadFile(path, formData) {
 }
 
 export const api = {
+  // Generic request method for pages that need direct API access
+  request,
+
+  // Setup
+  getSetupStatus: () => request('/setup/status'),
+  completeSetup: (data) => request('/setup/complete', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
   // Auth
   login: async (email, password) => {
     const { data } = await request('/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
+    });
+    return data;
+  },
+
+  requestPasswordReset: async (email) => {
+    const { data } = await request('/password/reset', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+    return data;
+  },
+
+  resetPassword: async (token, newPassword) => {
+    const { data } = await request('/password/reset/confirm', {
+      method: 'POST',
+      body: JSON.stringify({ token, new_password: newPassword }),
     });
     return data;
   },
@@ -102,9 +143,27 @@ export const api = {
     return data;
   },
 
+  searchUsers: async (searchTerm, page = 1, perPage = 10) => {
+    return request(`/users?search_term=${encodeURIComponent(searchTerm)}&page=${page}&per_page=${perPage}`);
+  },
+
+  // Masquerade (act-as-user)
+  startMasquerade: async (userId) => {
+    const { data } = await request(`/users/${userId}/masquerade`, { method: 'POST' });
+    return data;
+  },
+  endMasquerade: async () => {
+    const { data } = await request('/masquerade', { method: 'DELETE' });
+    return data;
+  },
+
   // Courses
   getCourses: async (page = 1, perPage = 10) => {
     return request(`/courses?page=${page}&per_page=${perPage}`);
+  },
+
+  getAllCourses: async (page = 1, perPage = 10) => {
+    return request(`/courses?scope=all&page=${page}&per_page=${perPage}`);
   },
 
   getCourse: async (id) => {
@@ -200,6 +259,45 @@ export const api = {
     const { data } = await request(`/courses/${courseId}/modules/${moduleId}/items`, {
       method: 'POST',
       body: JSON.stringify({ module_item: moduleItem }),
+    });
+    return data;
+  },
+
+  updateModuleItem: async (courseId, moduleId, itemId, moduleItem) => {
+    const { data } = await request(`/courses/${courseId}/modules/${moduleId}/items/${itemId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ module_item: moduleItem }),
+    });
+    return data;
+  },
+
+  deleteModuleItem: async (courseId, moduleId, itemId) => {
+    const { data } = await request(`/courses/${courseId}/modules/${moduleId}/items/${itemId}`, {
+      method: 'DELETE',
+    });
+    return data;
+  },
+
+  reorderModules: async (courseId, order) => {
+    const { data } = await request(`/courses/${courseId}/modules/reorder`, {
+      method: 'POST',
+      body: JSON.stringify({ order }),
+    });
+    return data;
+  },
+
+  reorderModuleItems: async (courseId, moduleId, order) => {
+    const { data } = await request(`/courses/${courseId}/modules/${moduleId}/items/reorder`, {
+      method: 'POST',
+      body: JSON.stringify({ order }),
+    });
+    return data;
+  },
+
+  moveModuleItem: async (courseId, moduleId, itemId, targetModuleId, position) => {
+    const { data } = await request(`/courses/${courseId}/modules/${moduleId}/items/${itemId}/move`, {
+      method: 'POST',
+      body: JSON.stringify({ module_id: targetModuleId, position }),
     });
     return data;
   },
@@ -303,6 +401,26 @@ export const api = {
     return data;
   },
 
+  bulkGrade: async (courseId, gradeData) => {
+    const { data } = await request(`/courses/${courseId}/submissions/bulk_grade`, {
+      method: 'POST', body: JSON.stringify({ grade_data: gradeData }),
+    });
+    return data;
+  },
+
+  postGrades: async (courseId, assignmentId) => {
+    const { data } = await request(`/courses/${courseId}/assignments/${assignmentId}/post_grades`, {
+      method: 'POST',
+    });
+    return data;
+  },
+  hideGrades: async (courseId, assignmentId) => {
+    const { data } = await request(`/courses/${courseId}/assignments/${assignmentId}/hide_grades`, {
+      method: 'POST',
+    });
+    return data;
+  },
+
   // Submission Comments
   getSubmissionComments: async (courseId, assignmentId, userId) => {
     const { data } = await request(`/courses/${courseId}/assignments/${assignmentId}/submissions/${userId}/comments`);
@@ -315,6 +433,12 @@ export const api = {
     return data;
   },
 
+  // Course Submissions (bulk)
+  getCourseSubmissions: async (courseId, page = 1, perPage = 10000, userId = null) => {
+    const userFilter = userId ? `&user_id=${userId}` : '';
+    return request(`/courses/${courseId}/submissions?page=${page}&per_page=${perPage}${userFilter}`);
+  },
+
   // Gradebook
   getGradebook: async (courseId) => {
     const { data } = await request(`/courses/${courseId}/gradebook`);
@@ -323,6 +447,28 @@ export const api = {
   getStudentGrade: async (courseId, studentId) => {
     const { data } = await request(`/courses/${courseId}/students/${studentId}/grade`);
     return data;
+  },
+
+  // Grading Standards
+  getGradingStandards: async (courseId) => {
+    const { data } = await request(`/courses/${courseId}/grading_standards`);
+    return data;
+  },
+  createGradingStandard: async (courseId, title, data) => {
+    const { data: result } = await request(`/courses/${courseId}/grading_standards`, {
+      method: 'POST', body: JSON.stringify({ grading_standard: { title, data } }),
+    });
+    return result;
+  },
+  updateGradingStandard: async (courseId, id, title, data) => {
+    const { data: result } = await request(`/courses/${courseId}/grading_standards/${id}`, {
+      method: 'PUT', body: JSON.stringify({ grading_standard: { title, data } }),
+    });
+    return result;
+  },
+  deleteGradingStandard: async (courseId, id) => {
+    const { data: result } = await request(`/courses/${courseId}/grading_standards/${id}`, { method: 'DELETE' });
+    return result;
   },
 
   // Developer Keys
@@ -465,6 +611,36 @@ export const api = {
     return data;
   },
   getFileDownloadUrl: (fileId) => `${API_URL}/files/${fileId}/download`,
+  uploadCourseFileWithProgress: (courseId, file, onProgress) => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      const formData = new FormData();
+      formData.append('file', file);
+      xhr.open('POST', `${API_URL}/courses/${courseId}/files`);
+      xhr.withCredentials = true;
+      xhr.setRequestHeader('X-CSRF-Token', getCSRFToken());
+      if (onProgress) {
+        xhr.upload.addEventListener('progress', (e) => {
+          if (e.lengthComputable) onProgress(e.loaded / e.total);
+        });
+      }
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try { resolve(JSON.parse(xhr.responseText)); }
+          catch { resolve(null); }
+        } else {
+          if (xhr.status === 401) window.dispatchEvent(new Event('auth:session-expired'));
+          try {
+            const body = JSON.parse(xhr.responseText);
+            reject(new Error(body.errors?.[0]?.message || `Upload failed: ${xhr.status}`));
+          } catch { reject(new Error(`Upload failed: ${xhr.status}`)); }
+        }
+      });
+      xhr.addEventListener('error', () => reject(new Error('Upload failed: network error')));
+      xhr.addEventListener('abort', () => reject(new Error('Upload cancelled')));
+      xhr.send(formData);
+    });
+  },
   getFolderFiles: async (folderId, page = 1, perPage = 20) => {
     return request(`/folders/${folderId}/files?page=${page}&per_page=${perPage}`);
   },
@@ -567,14 +743,36 @@ export const api = {
     return data;
   },
 
-  // Quiz Submissions
+  // Quiz Question Groups
+  listQuizQuestionGroups: async (courseId, quizId) => {
+    const { data } = await request(`/courses/${courseId}/quizzes/${quizId}/groups`);
+    return data || [];
+  },
+  createQuizQuestionGroup: async (courseId, quizId, group) => {
+    const { data } = await request(`/courses/${courseId}/quizzes/${quizId}/groups`, {
+      method: 'POST', body: JSON.stringify(group),
+    });
+    return data;
+  },
+  updateQuizQuestionGroup: async (courseId, quizId, groupId, group) => {
+    const { data } = await request(`/courses/${courseId}/quizzes/${quizId}/groups/${groupId}`, {
+      method: 'PUT', body: JSON.stringify(group),
+    });
+    return data;
+  },
+  deleteQuizQuestionGroup: async (courseId, quizId, groupId) => {
+    const { data } = await request(`/courses/${courseId}/quizzes/${quizId}/groups/${groupId}`, { method: 'DELETE' });
+    return data;
+  },
+
+  // Quiz Submissions (backend wraps in {"quiz_submissions": [...]})
   startQuizSubmission: async (courseId, quizId) => {
     const { data } = await request(`/courses/${courseId}/quizzes/${quizId}/submissions`, { method: 'POST' });
-    return data;
+    return data?.quiz_submissions?.[0] || data;
   },
   getQuizSubmission: async (courseId, quizId, submissionId) => {
     const { data } = await request(`/courses/${courseId}/quizzes/${quizId}/submissions/${submissionId}`);
-    return data;
+    return data?.quiz_submissions?.[0] || data;
   },
   answerQuizQuestion: async (courseId, quizId, submissionId, questionId, answer) => {
     const { data } = await request(`/courses/${courseId}/quizzes/${quizId}/submissions/${submissionId}/questions/${questionId}`, {
@@ -584,13 +782,28 @@ export const api = {
   },
   completeQuizSubmission: async (courseId, quizId, submissionId) => {
     const { data } = await request(`/courses/${courseId}/quizzes/${quizId}/submissions/${submissionId}/complete`, { method: 'POST' });
-    return data;
+    return data?.quiz_submissions?.[0] || data;
   },
   getQuizSubmissions: async (courseId, quizId, page = 1, perPage = 50) => {
-    return request(`/courses/${courseId}/quizzes/${quizId}/submissions?page=${page}&per_page=${perPage}`);
+    const { data } = await request(`/courses/${courseId}/quizzes/${quizId}/submissions?page=${page}&per_page=${perPage}`);
+    return { data: data?.quiz_submissions || data || [] };
+  },
+  getQuizSubmissionAnswers: async (courseId, quizId, submissionId) => {
+    const { data } = await request(`/courses/${courseId}/quizzes/${quizId}/submissions/${submissionId}/answers`);
+    return data?.quiz_submission_answers || data || [];
+  },
+
+  // Quiz Statistics (instructor only)
+  getQuizStatistics: async (courseId, quizId) => {
+    const { data } = await request(`/courses/${courseId}/quizzes/${quizId}/statistics`);
+    return data;
   },
 
   // Rubrics
+  getAssignmentRubric: async (courseId, assignmentId) => {
+    const { data } = await request(`/courses/${courseId}/assignments/${assignmentId}/rubric`);
+    return data;
+  },
   getCourseRubrics: async (courseId, page = 1, perPage = 20) => {
     return request(`/courses/${courseId}/rubrics?page=${page}&per_page=${perPage}`);
   },
@@ -910,6 +1123,39 @@ export const api = {
   deleteOutcome: async (courseId, outcomeId) => {
     const { data } = await request(`/courses/${courseId}/outcomes/${outcomeId}`, { method: 'DELETE' });
     return data;
+  },
+
+  // Learning Outcome Alignments
+  getOutcomeAlignments: async (courseId) => {
+    const { data } = await request(`/courses/${courseId}/outcome_alignments`);
+    return data || [];
+  },
+  createOutcomeAlignment: async (courseId, alignment) => {
+    const { data } = await request(`/courses/${courseId}/outcome_alignments`, {
+      method: 'POST', body: JSON.stringify(alignment),
+    });
+    return data;
+  },
+  deleteOutcomeAlignment: async (courseId, alignmentId) => {
+    const { data } = await request(`/courses/${courseId}/outcome_alignments/${alignmentId}`, { method: 'DELETE' });
+    return data;
+  },
+  getCourseOutcomes: async (courseId) => {
+    const groupsResult = await request(`/courses/${courseId}/outcome_groups?page=1&per_page=100`);
+    const groups = groupsResult.data || [];
+    const outcomes = [];
+    for (const group of groups) {
+      try {
+        const outcomeResult = await request(`/courses/${courseId}/outcome_groups/${group.id}/outcomes?page=1&per_page=100`);
+        const groupOutcomes = outcomeResult.data || [];
+        for (const o of groupOutcomes) {
+          outcomes.push({ ...o, group_title: group.title });
+        }
+      } catch {
+        // skip groups that fail
+      }
+    }
+    return outcomes;
   },
 
   // Learning Outcome Results
@@ -1906,6 +2152,92 @@ export const api = {
   },
   deleteTodaysLessonOverride: async (courseId, overrideId) => {
     const { data } = await request(`/courses/${courseId}/home/overrides/${overrideId}`, { method: 'DELETE' });
+    return data;
+  },
+
+  // Peer Reviews
+  assignPeerReviews: async (courseId, assignmentId, count = 1) => {
+    const { data } = await request(`/courses/${courseId}/assignments/${assignmentId}/peer_reviews`, {
+      method: 'POST', body: JSON.stringify({ count }),
+    });
+    return data;
+  },
+  listPeerReviews: async (courseId, assignmentId) => {
+    const { data } = await request(`/courses/${courseId}/assignments/${assignmentId}/peer_reviews`);
+    return data || [];
+  },
+  listMyPeerReviews: async (courseId, assignmentId) => {
+    const { data } = await request(`/courses/${courseId}/assignments/${assignmentId}/peer_reviews/mine`);
+    return data || [];
+  },
+  submitPeerReview: async (reviewId, score, comments) => {
+    const { data } = await request(`/peer_reviews/${reviewId}`, {
+      method: 'PUT', body: JSON.stringify({ score, comments }),
+    });
+    return data;
+  },
+
+  // Question Banks
+  listQuestionBanks: async (courseId, page = 1, perPage = 20) => {
+    const { data } = await request(`/courses/${courseId}/question_banks?page=${page}&per_page=${perPage}`);
+    return data || [];
+  },
+  createQuestionBank: async (courseId, title) => {
+    const { data } = await request(`/courses/${courseId}/question_banks`, {
+      method: 'POST', body: JSON.stringify({ title }),
+    });
+    return data;
+  },
+  getQuestionBank: async (courseId, bankId) => {
+    const { data } = await request(`/courses/${courseId}/question_banks/${bankId}`);
+    return data;
+  },
+  updateQuestionBank: async (courseId, bankId, title) => {
+    const { data } = await request(`/courses/${courseId}/question_banks/${bankId}`, {
+      method: 'PUT', body: JSON.stringify({ title }),
+    });
+    return data;
+  },
+  deleteQuestionBank: async (courseId, bankId) => {
+    const { data } = await request(`/courses/${courseId}/question_banks/${bankId}`, { method: 'DELETE' });
+    return data;
+  },
+  listBankQuestions: async (courseId, bankId) => {
+    const { data } = await request(`/courses/${courseId}/question_banks/${bankId}/questions`);
+    return data || [];
+  },
+  addBankQuestion: async (courseId, bankId, question) => {
+    const { data } = await request(`/courses/${courseId}/question_banks/${bankId}/questions`, {
+      method: 'POST', body: JSON.stringify(question),
+    });
+    return data;
+  },
+  updateBankQuestion: async (courseId, bankId, questionId, question) => {
+    const { data } = await request(`/courses/${courseId}/question_banks/${bankId}/questions/${questionId}`, {
+      method: 'PUT', body: JSON.stringify(question),
+    });
+    return data;
+  },
+  deleteBankQuestion: async (courseId, bankId, questionId) => {
+    const { data } = await request(`/courses/${courseId}/question_banks/${bankId}/questions/${questionId}`, { method: 'DELETE' });
+    return data;
+  },
+  pullBankQuestionsToQuiz: async (courseId, bankId, quizId, questionIds = []) => {
+    const { data } = await request(`/courses/${courseId}/question_banks/${bankId}/pull_to_quiz`, {
+      method: 'POST', body: JSON.stringify({ quiz_id: quizId, question_ids: questionIds }),
+    });
+    return data;
+  },
+
+  // Module Prerequisites
+  getModulePrerequisites: async (courseId, moduleId) => {
+    const { data } = await request(`/courses/${courseId}/modules/${moduleId}/prerequisites`);
+    return data;
+  },
+  setModulePrerequisites: async (courseId, moduleId, prerequisiteModuleIds) => {
+    const { data } = await request(`/courses/${courseId}/modules/${moduleId}/prerequisites`, {
+      method: 'PUT', body: JSON.stringify({ prerequisite_module_ids: prerequisiteModuleIds }),
+    });
     return data;
   },
 };

@@ -2,20 +2,26 @@ package handlers
 
 import (
 	"fmt"
+	"net/url"
+	"path/filepath"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/kocherm/paper-lms/internal/api/v1/middleware"
 	"github.com/kocherm/paper-lms/internal/api/v1/responses"
 	"github.com/kocherm/paper-lms/internal/domain/models"
+	"github.com/kocherm/paper-lms/internal/repository"
 	"github.com/kocherm/paper-lms/internal/service"
+	"github.com/kocherm/paper-lms/internal/storage"
 )
 
 type FileHandler struct {
-	fileService *service.FileService
+	fileService    *service.FileService
+	enrollmentRepo repository.EnrollmentRepository
 }
 
-func NewFileHandler(fileService *service.FileService) *FileHandler {
-	return &FileHandler{fileService: fileService}
+func NewFileHandler(fileService *service.FileService, enrollmentRepo repository.EnrollmentRepository) *FileHandler {
+	return &FileHandler{fileService: fileService, enrollmentRepo: enrollmentRepo}
 }
 
 func attachmentToJSON(a *models.Attachment) fiber.Map {
@@ -79,10 +85,15 @@ func (h *FileHandler) UploadCourseFile(c *fiber.Ctx) error {
 	}
 	defer file.Close()
 
+	uploaderID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
+
 	attachment := &models.Attachment{
 		ContextType: "Course",
 		ContextID:   uint(courseID),
-		UserID:      c.Locals("user_id").(uint),
+		UserID:      uploaderID,
 		DisplayName: fileHeader.Filename,
 		Filename:    fileHeader.Filename,
 		ContentType: fileHeader.Header.Get("Content-Type"),
@@ -134,13 +145,46 @@ func (h *FileHandler) DownloadFile(c *fiber.Ctx) error {
 		return responses.NotFound(c, "file")
 	}
 
-	filePath, err := h.fileService.GetFilePath(c.Context(), uint(id))
+	// Authorization: verify user is enrolled in the course that owns this file
+	if attachment.ContextType == "Course" {
+		userID, _ := c.Locals("user_id").(uint)
+		enrollment, _ := h.enrollmentRepo.FindByUserAndCourse(c.Context(), userID, attachment.ContextID)
+		if enrollment == nil || enrollment.WorkflowState != "active" {
+			return responses.Error(c, fiber.StatusForbidden, "You do not have access to this file")
+		}
+	}
+
+	// Sanitize filename for Content-Disposition to prevent header injection
+	safeName := filepath.Base(attachment.Filename)
+	safeName = strings.ReplaceAll(safeName, "\"", "")
+	safeName = strings.ReplaceAll(safeName, "\r", "")
+	safeName = strings.ReplaceAll(safeName, "\n", "")
+	disposition := "attachment"
+	if strings.HasPrefix(attachment.ContentType, "image/") {
+		disposition = "inline"
+	}
+	c.Set("Content-Disposition", fmt.Sprintf("%s; filename=\"%s\"; filename*=UTF-8''%s", disposition, safeName, url.PathEscape(safeName)))
+
+	backend := h.fileService.StorageBackend()
+
+	// For S3 backend, redirect to presigned URL instead of proxying
+	if _, isS3 := backend.(*storage.S3Backend); isS3 {
+		downloadURL, err := h.fileService.GetFileURL(c.Context(), uint(id))
+		if err != nil {
+			return responses.InternalError(c, "Could not generate download URL")
+		}
+		return c.Redirect(downloadURL, fiber.StatusTemporaryRedirect)
+	}
+
+	// For local backend, stream the file directly
+	reader, err := backend.Get(c.Context(), attachment.StoragePath)
 	if err != nil {
 		return responses.InternalError(c, "Could not locate file")
 	}
+	defer reader.Close()
 
-	c.Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", attachment.Filename))
-	return c.SendFile(filePath)
+	c.Set("Content-Type", attachment.ContentType)
+	return c.SendStream(reader)
 }
 
 func (h *FileHandler) ListFolderFiles(c *fiber.Ctx) error {

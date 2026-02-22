@@ -10,10 +10,34 @@ import (
 
 type GroupHandler struct {
 	groupService *service.GroupService
+	authz        *ResourceAuthorizer
 }
 
-func NewGroupHandler(groupService *service.GroupService) *GroupHandler {
-	return &GroupHandler{groupService: groupService}
+func NewGroupHandler(groupService *service.GroupService, authz *ResourceAuthorizer) *GroupHandler {
+	return &GroupHandler{groupService: groupService, authz: authz}
+}
+
+// getCourseIDFromCategory fetches a group category and returns its CourseID.
+// Returns 0 if the category has no associated course.
+func (h *GroupHandler) getCourseIDFromCategory(c *fiber.Ctx, categoryID uint) (uint, error) {
+	category, err := h.groupService.GetCategory(c.Context(), categoryID)
+	if err != nil {
+		return 0, err
+	}
+	if category.CourseID != nil {
+		return *category.CourseID, nil
+	}
+	return 0, nil
+}
+
+// getCourseIDFromGroup fetches a group, then its category, to resolve the CourseID.
+// Returns 0 if the category has no associated course.
+func (h *GroupHandler) getCourseIDFromGroup(c *fiber.Ctx, groupID uint) (uint, error) {
+	group, err := h.groupService.GetGroup(c.Context(), groupID)
+	if err != nil {
+		return 0, err
+	}
+	return h.getCourseIDFromCategory(c, group.GroupCategoryID)
 }
 
 // ---- JSON converters ----
@@ -147,6 +171,13 @@ func (h *GroupHandler) GetGroupCategory(c *fiber.Ctx) error {
 		return responses.NotFound(c, "group category")
 	}
 
+	// Authorization: require enrollment for course-scoped categories
+	if category.CourseID != nil {
+		if err := h.authz.RequireCourseEnrolled(c, *category.CourseID); err != nil {
+			return err
+		}
+	}
+
 	return c.JSON(groupCategoryToJSON(category))
 }
 
@@ -159,6 +190,13 @@ func (h *GroupHandler) UpdateGroupCategory(c *fiber.Ctx) error {
 	category, err := h.groupService.GetCategory(c.Context(), uint(id))
 	if err != nil {
 		return responses.NotFound(c, "group category")
+	}
+
+	// Authorization: require instructor for course-scoped categories
+	if category.CourseID != nil {
+		if err := h.authz.RequireCourseInstructor(c, *category.CourseID); err != nil {
+			return err
+		}
 	}
 
 	var input struct {
@@ -204,7 +242,20 @@ func (h *GroupHandler) DeleteGroupCategory(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid category ID")
 	}
 
-	if err := h.groupService.DeleteCategory(c.Context(), uint(id)); err != nil {
+	// Fetch first to check authorization
+	category, err := h.groupService.GetCategory(c.Context(), uint(id))
+	if err != nil {
+		return responses.NotFound(c, "group category")
+	}
+
+	// Authorization: require instructor for course-scoped categories
+	if category.CourseID != nil {
+		if err := h.authz.RequireCourseInstructor(c, *category.CourseID); err != nil {
+			return err
+		}
+	}
+
+	if err := h.groupService.DeleteCategory(c.Context(), category.ID); err != nil {
 		return responses.InternalError(c, "Could not delete group category")
 	}
 
@@ -217,6 +268,17 @@ func (h *GroupHandler) ListGroupsByCategory(c *fiber.Ctx) error {
 	categoryID, err := c.ParamsInt("category_id")
 	if err != nil {
 		return responses.BadRequest(c, "Invalid category ID")
+	}
+
+	// Authorization: require enrollment for course-scoped categories
+	courseID, err := h.getCourseIDFromCategory(c, uint(categoryID))
+	if err != nil {
+		return responses.NotFound(c, "group category")
+	}
+	if courseID != 0 {
+		if err := h.authz.RequireCourseEnrolled(c, courseID); err != nil {
+			return err
+		}
 	}
 
 	params := middleware.GetPagination(c)
@@ -240,6 +302,17 @@ func (h *GroupHandler) CreateGroup(c *fiber.Ctx) error {
 	categoryID, err := c.ParamsInt("category_id")
 	if err != nil {
 		return responses.BadRequest(c, "Invalid category ID")
+	}
+
+	// Authorization: require instructor for course-scoped categories
+	courseID, err := h.getCourseIDFromCategory(c, uint(categoryID))
+	if err != nil {
+		return responses.NotFound(c, "group category")
+	}
+	if courseID != 0 {
+		if err := h.authz.RequireCourseInstructor(c, courseID); err != nil {
+			return err
+		}
 	}
 
 	var input struct {
@@ -287,6 +360,14 @@ func (h *GroupHandler) GetGroup(c *fiber.Ctx) error {
 		return responses.NotFound(c, "group")
 	}
 
+	// Authorization: require enrollment for course-scoped groups
+	courseID, err := h.getCourseIDFromCategory(c, group.GroupCategoryID)
+	if err == nil && courseID != 0 {
+		if err := h.authz.RequireCourseEnrolled(c, courseID); err != nil {
+			return err
+		}
+	}
+
 	return c.JSON(groupToJSON(group))
 }
 
@@ -299,6 +380,14 @@ func (h *GroupHandler) UpdateGroup(c *fiber.Ctx) error {
 	group, err := h.groupService.GetGroup(c.Context(), uint(id))
 	if err != nil {
 		return responses.NotFound(c, "group")
+	}
+
+	// Authorization: require instructor for course-scoped groups
+	courseID, err := h.getCourseIDFromCategory(c, group.GroupCategoryID)
+	if err == nil && courseID != 0 {
+		if err := h.authz.RequireCourseInstructor(c, courseID); err != nil {
+			return err
+		}
 	}
 
 	var input struct {
@@ -344,7 +433,21 @@ func (h *GroupHandler) DeleteGroup(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid group ID")
 	}
 
-	if err := h.groupService.DeleteGroup(c.Context(), uint(id)); err != nil {
+	// Fetch first to check authorization
+	group, err := h.groupService.GetGroup(c.Context(), uint(id))
+	if err != nil {
+		return responses.NotFound(c, "group")
+	}
+
+	// Authorization: require instructor for course-scoped groups
+	courseID, err := h.getCourseIDFromCategory(c, group.GroupCategoryID)
+	if err == nil && courseID != 0 {
+		if err := h.authz.RequireCourseInstructor(c, courseID); err != nil {
+			return err
+		}
+	}
+
+	if err := h.groupService.DeleteGroup(c.Context(), group.ID); err != nil {
 		return responses.InternalError(c, "Could not delete group")
 	}
 
@@ -357,6 +460,17 @@ func (h *GroupHandler) ListGroupMemberships(c *fiber.Ctx) error {
 	groupID, err := c.ParamsInt("group_id")
 	if err != nil {
 		return responses.BadRequest(c, "Invalid group ID")
+	}
+
+	// Authorization: require enrollment for course-scoped groups
+	courseID, err := h.getCourseIDFromGroup(c, uint(groupID))
+	if err != nil {
+		return responses.NotFound(c, "group")
+	}
+	if courseID != 0 {
+		if err := h.authz.RequireCourseEnrolled(c, courseID); err != nil {
+			return err
+		}
 	}
 
 	params := middleware.GetPagination(c)
@@ -380,6 +494,17 @@ func (h *GroupHandler) CreateGroupMembership(c *fiber.Ctx) error {
 	groupID, err := c.ParamsInt("group_id")
 	if err != nil {
 		return responses.BadRequest(c, "Invalid group ID")
+	}
+
+	// Authorization: require instructor for course-scoped groups
+	courseID, err := h.getCourseIDFromGroup(c, uint(groupID))
+	if err != nil {
+		return responses.NotFound(c, "group")
+	}
+	if courseID != 0 {
+		if err := h.authz.RequireCourseInstructor(c, courseID); err != nil {
+			return err
+		}
 	}
 
 	var input struct {
@@ -429,6 +554,14 @@ func (h *GroupHandler) UpdateGroupMembership(c *fiber.Ctx) error {
 		return responses.NotFound(c, "group membership")
 	}
 
+	// Authorization: require instructor for course-scoped groups
+	courseID, err := h.getCourseIDFromGroup(c, membership.GroupID)
+	if err == nil && courseID != 0 {
+		if err := h.authz.RequireCourseInstructor(c, courseID); err != nil {
+			return err
+		}
+	}
+
 	var input struct {
 		Membership struct {
 			WorkflowState *string `json:"workflow_state"`
@@ -460,7 +593,21 @@ func (h *GroupHandler) DeleteGroupMembership(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid membership ID")
 	}
 
-	if err := h.groupService.RemoveMember(c.Context(), uint(membershipID)); err != nil {
+	// Fetch first to check authorization
+	membership, err := h.groupService.GetMembership(c.Context(), uint(membershipID))
+	if err != nil {
+		return responses.NotFound(c, "group membership")
+	}
+
+	// Authorization: require instructor for course-scoped groups
+	courseID, err := h.getCourseIDFromGroup(c, membership.GroupID)
+	if err == nil && courseID != 0 {
+		if err := h.authz.RequireCourseInstructor(c, courseID); err != nil {
+			return err
+		}
+	}
+
+	if err := h.groupService.RemoveMember(c.Context(), membership.ID); err != nil {
 		return responses.InternalError(c, "Could not remove group membership")
 	}
 

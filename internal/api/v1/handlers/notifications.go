@@ -51,7 +51,10 @@ func notificationPreferenceToJSON(p *models.NotificationPreference) fiber.Map {
 // GET /api/v1/notifications
 // Query param "unread=true" filters to unread only.
 func (h *NotificationHandler) ListNotifications(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(uint)
+	userID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 	params := middleware.GetPagination(c)
 
 	unread := c.Query("unread")
@@ -86,7 +89,10 @@ func (h *NotificationHandler) ListNotifications(c *fiber.Ctx) error {
 // MarkAsRead marks a single notification as read.
 // PUT /api/v1/notifications/:id/mark_as_read
 func (h *NotificationHandler) MarkAsRead(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(uint)
+	userID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 
 	notificationID, err := c.ParamsInt("id")
 	if err != nil {
@@ -103,7 +109,10 @@ func (h *NotificationHandler) MarkAsRead(c *fiber.Ctx) error {
 // MarkAllAsRead marks all notifications as read for the authenticated user.
 // PUT /api/v1/notifications/mark_all_as_read
 func (h *NotificationHandler) MarkAllAsRead(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(uint)
+	userID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 
 	if err := h.notificationService.MarkAllAsRead(c.Context(), userID); err != nil {
 		return responses.InternalError(c, "Could not mark notifications as read")
@@ -115,7 +124,10 @@ func (h *NotificationHandler) MarkAllAsRead(c *fiber.Ctx) error {
 // GetPreferences returns the notification preferences for the authenticated user.
 // GET /api/v1/users/self/notification_preferences
 func (h *NotificationHandler) GetPreferences(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(uint)
+	userID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 
 	prefs, err := h.notificationService.GetOrCreatePreferences(c.Context(), userID)
 	if err != nil {
@@ -128,7 +140,10 @@ func (h *NotificationHandler) GetPreferences(c *fiber.Ctx) error {
 // UpdatePreferences updates the notification preferences for the authenticated user.
 // PUT /api/v1/users/self/notification_preferences
 func (h *NotificationHandler) UpdatePreferences(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(uint)
+	userID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 
 	var input struct {
 		NotificationPreference struct {

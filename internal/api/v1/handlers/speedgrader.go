@@ -1,8 +1,12 @@
 package handlers
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/kocherm/paper-lms/internal/api/v1/responses"
+	"github.com/kocherm/paper-lms/internal/domain/models"
 	"github.com/kocherm/paper-lms/internal/service"
 )
 
@@ -14,6 +18,37 @@ type SpeedGraderHandler struct {
 // NewSpeedGraderHandler creates a new SpeedGraderHandler.
 func NewSpeedGraderHandler(speedGraderService *service.SpeedGraderService) *SpeedGraderHandler {
 	return &SpeedGraderHandler{speedGraderService: speedGraderService}
+}
+
+func speedGraderSubmissionJSON(sub *models.Submission) fiber.Map {
+	if sub == nil {
+		return nil
+	}
+	result := fiber.Map{
+		"id":              sub.ID,
+		"assignment_id":   sub.AssignmentID,
+		"user_id":         sub.UserID,
+		"submission_type": sub.SubmissionType,
+		"body":            sub.Body,
+		"url":             sub.URL,
+		"score":           sub.Score,
+		"grade":           sub.Grade,
+		"graded_at":       sub.GradedAt,
+		"grader_id":       sub.GraderID,
+		"submitted_at":    sub.SubmittedAt,
+		"attempt":         sub.Attempt,
+		"late":            sub.Late,
+		"missing":         sub.Missing,
+		"excused":         sub.Excused,
+		"workflow_state":  sub.WorkflowState,
+	}
+	if sub.Attachments != nil && *sub.Attachments != "" {
+		var attachments []map[string]interface{}
+		if err := json.Unmarshal([]byte(*sub.Attachments), &attachments); err == nil {
+			result["attachments"] = attachments
+		}
+	}
+	return result
 }
 
 // GetSpeedGraderData returns the full SpeedGrader data set for an assignment,
@@ -35,37 +70,23 @@ func (h *SpeedGraderHandler) GetSpeedGraderData(c *fiber.Ctx) error {
 		return responses.InternalError(c, "Could not fetch SpeedGrader data")
 	}
 
+	// Use the full user name map (includes teachers, TAs, and students)
+	userNameLookup := data.UserNameMap
+
 	// Build the response with assignment details and students
 	studentsJSON := make([]fiber.Map, len(data.Students))
 	for i, student := range data.Students {
-		var submissionJSON fiber.Map
-		if student.Submission != nil {
-			submissionJSON = fiber.Map{
-				"id":              student.Submission.ID,
-				"assignment_id":   student.Submission.AssignmentID,
-				"user_id":         student.Submission.UserID,
-				"submission_type": student.Submission.SubmissionType,
-				"body":            student.Submission.Body,
-				"url":             student.Submission.URL,
-				"score":           student.Submission.Score,
-				"grade":           student.Submission.Grade,
-				"graded_at":       student.Submission.GradedAt,
-				"grader_id":       student.Submission.GraderID,
-				"submitted_at":    student.Submission.SubmittedAt,
-				"attempt":         student.Submission.Attempt,
-				"late":            student.Submission.Late,
-				"missing":         student.Submission.Missing,
-				"excused":         student.Submission.Excused,
-				"workflow_state":  student.Submission.WorkflowState,
-			}
-		}
-
 		commentsJSON := make([]fiber.Map, len(student.Comments))
 		for j, comment := range student.Comments {
+			authorName := userNameLookup[comment.AuthorID]
+			if authorName == "" {
+				authorName = fmt.Sprintf("User %d", comment.AuthorID)
+			}
 			commentsJSON[j] = fiber.Map{
 				"id":            comment.ID,
 				"submission_id": comment.SubmissionID,
 				"author_id":     comment.AuthorID,
+				"author_name":   authorName,
 				"comment":       comment.Comment,
 				"draft":         comment.Draft,
 				"created_at":    comment.CreatedAt,
@@ -76,7 +97,7 @@ func (h *SpeedGraderHandler) GetSpeedGraderData(c *fiber.Ctx) error {
 		studentsJSON[i] = fiber.Map{
 			"user_id":    student.UserID,
 			"user_name":  student.UserName,
-			"submission": submissionJSON,
+			"submission": speedGraderSubmissionJSON(student.Submission),
 			"comments":   commentsJSON,
 		}
 	}
@@ -121,28 +142,6 @@ func (h *SpeedGraderHandler) GetStudentSubmission(c *fiber.Ctx) error {
 		return responses.InternalError(c, "Could not fetch student submission")
 	}
 
-	var submissionJSON fiber.Map
-	if data.Submission != nil {
-		submissionJSON = fiber.Map{
-			"id":              data.Submission.ID,
-			"assignment_id":   data.Submission.AssignmentID,
-			"user_id":         data.Submission.UserID,
-			"submission_type": data.Submission.SubmissionType,
-			"body":            data.Submission.Body,
-			"url":             data.Submission.URL,
-			"score":           data.Submission.Score,
-			"grade":           data.Submission.Grade,
-			"graded_at":       data.Submission.GradedAt,
-			"grader_id":       data.Submission.GraderID,
-			"submitted_at":    data.Submission.SubmittedAt,
-			"attempt":         data.Submission.Attempt,
-			"late":            data.Submission.Late,
-			"missing":         data.Submission.Missing,
-			"excused":         data.Submission.Excused,
-			"workflow_state":  data.Submission.WorkflowState,
-		}
-	}
-
 	commentsJSON := make([]fiber.Map, len(data.Comments))
 	for i, comment := range data.Comments {
 		commentsJSON[i] = fiber.Map{
@@ -157,7 +156,7 @@ func (h *SpeedGraderHandler) GetStudentSubmission(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{
-		"submission": submissionJSON,
+		"submission": speedGraderSubmissionJSON(data.Submission),
 		"comments":   commentsJSON,
 	})
 }

@@ -101,6 +101,20 @@ func (s *RubricService) DeleteAssociation(ctx context.Context, id uint) error {
 	return s.assocRepo.Delete(ctx, id)
 }
 
+func (s *RubricService) GetRubricForAssignment(ctx context.Context, assignmentID uint) (*models.Rubric, *models.RubricAssociation, error) {
+	assoc, err := s.assocRepo.FindByAssociation(ctx, assignmentID, "Assignment")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	rubric, err := s.rubricRepo.FindByID(ctx, assoc.RubricID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return rubric, assoc, nil
+}
+
 // Assessment methods
 
 func (s *RubricService) CreateAssessment(ctx context.Context, assessment *models.RubricAssessment) error {

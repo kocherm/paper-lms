@@ -2,15 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Upload, Download, AlertCircle, CheckCircle, Clock, RefreshCw, X, ChevronDown, FileText } from 'lucide-react';
 import Layout from '../components/Layout';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
 const ACCOUNT_ID = 1;
 
-const getHeaders = () => {
-  const token = localStorage.getItem('token');
-  return {
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-};
+const apiFetch = (url, options = {}) => fetch(url, {
+  ...options,
+  credentials: 'include',
+  headers: { 'Content-Type': 'application/json', ...options.headers },
+});
 
 const SISImportPage = () => {
   const [activeTab, setActiveTab] = useState('import');
@@ -27,9 +26,7 @@ const SISImportPage = () => {
 
   const fetchBatches = useCallback(async () => {
     try {
-      const response = await fetch(`${API_URL}/accounts/${ACCOUNT_ID}/sis_imports?page=1&per_page=50`, {
-        headers: getHeaders(),
-      });
+      const response = await apiFetch(`${API_URL}/accounts/${ACCOUNT_ID}/sis_imports?page=1&per_page=50`);
       if (!response.ok) throw new Error('Failed to fetch import history');
       const data = await response.json();
       setBatches(Array.isArray(data) ? data : []);
@@ -62,7 +59,7 @@ const SISImportPage = () => {
 
       const response = await fetch(`${API_URL}/accounts/${ACCOUNT_ID}/sis_imports`, {
         method: 'POST',
-        headers: getHeaders(),
+        credentials: 'include',
         body: formData,
       });
 
@@ -91,9 +88,7 @@ const SISImportPage = () => {
     setBatchErrors([]);
 
     try {
-      const response = await fetch(`${API_URL}/accounts/${ACCOUNT_ID}/sis_imports/${batch.id}/errors`, {
-        headers: getHeaders(),
-      });
+      const response = await apiFetch(`${API_URL}/accounts/${ACCOUNT_ID}/sis_imports/${batch.id}/errors`);
       if (!response.ok) throw new Error('Failed to fetch errors');
       const data = await response.json();
       setBatchErrors(Array.isArray(data) ? data : []);
@@ -105,10 +100,8 @@ const SISImportPage = () => {
   };
 
   const handleExport = (type) => {
-    const token = localStorage.getItem('token');
     const url = `${API_URL}/accounts/${ACCOUNT_ID}/sis_exports/${type}.csv`;
-    // Use fetch with auth header, then trigger download
-    fetch(url, { headers: getHeaders() })
+    fetch(url, { credentials: 'include' })
       .then((res) => {
         if (!res.ok) throw new Error('Export failed');
         return res.blob();
@@ -325,7 +318,10 @@ const SISImportPage = () => {
             </div>
 
             {loading ? (
-              <div className="text-center py-12 text-gray-500">Loading import history...</div>
+              <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+  Loading import history...
+</div>
             ) : batches.length === 0 ? (
               <div className="text-center py-12">
                 <Upload className="w-12 h-12 text-gray-300 mx-auto mb-4" />

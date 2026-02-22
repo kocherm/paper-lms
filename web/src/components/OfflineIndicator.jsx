@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function OfflineIndicator() {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);

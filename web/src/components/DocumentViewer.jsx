@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { sanitizeHTML } from './RichContentViewer';
 
 const ANNOTATION_TYPES = {
   highlight: { label: 'Highlight', icon: Highlighter, color: '#FFFF00' },
@@ -393,7 +394,7 @@ const DocumentViewer = ({
     return (
       <div
         className="prose max-w-none text-gray-700 leading-relaxed"
-        dangerouslySetInnerHTML={{ __html: content }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHTML(content) }}
       />
     );
   };

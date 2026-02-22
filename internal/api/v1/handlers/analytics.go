@@ -164,7 +164,10 @@ func (h *AnalyticsHandler) GetDepartmentStatistics(c *fiber.Ctx) error {
 
 // CreatePageView handles POST /page_views
 func (h *AnalyticsHandler) CreatePageView(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(uint)
+	userID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 
 	var input struct {
 		ContextType        string `json:"context_type"`
@@ -198,7 +201,10 @@ func (h *AnalyticsHandler) CreatePageView(c *fiber.Ctx) error {
 
 // ListUserPageViews handles GET /users/self/page_views
 func (h *AnalyticsHandler) ListUserPageViews(c *fiber.Ctx) error {
-	userID := c.Locals("user_id").(uint)
+	userID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 
 	params := middleware.GetPagination(c)
 

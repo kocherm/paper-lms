@@ -64,8 +64,18 @@ func (h *DiscussionV2Handler) GetFullViewV2(c *fiber.Ctx) error {
 		entries[i] = entryViewV2ToJSON(&view.Entries[i])
 	}
 
+	topicJSON := topicToJSON(view.Topic)
+	// Resolve topic author name
+	if view.Topic.UserID > 0 {
+		userInfoMap := h.discussionV2Service.ResolveUserInfo(c.Context(), []uint{view.Topic.UserID})
+		if info, ok := userInfoMap[view.Topic.UserID]; ok {
+			topicJSON["user_name"] = info.Name
+			topicJSON["user_avatar_url"] = info.AvatarURL
+		}
+	}
+
 	return c.JSON(fiber.Map{
-		"topic":   topicToJSON(view.Topic),
+		"topic":   topicJSON,
 		"entries": entries,
 	})
 }

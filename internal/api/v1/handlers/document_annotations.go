@@ -5,22 +5,49 @@ import (
 	"github.com/kocherm/paper-lms/internal/api/v1/middleware"
 	"github.com/kocherm/paper-lms/internal/api/v1/responses"
 	"github.com/kocherm/paper-lms/internal/domain/models"
+	"github.com/kocherm/paper-lms/internal/repository"
 	"github.com/kocherm/paper-lms/internal/service"
 )
 
 type DocumentAnnotationHandler struct {
 	annotationService *service.DocumentAnnotationService
 	submissionService *service.SubmissionService
+	assignmentRepo    repository.AssignmentRepository
+	submissionRepo    repository.SubmissionRepository
+	authz             *ResourceAuthorizer
 }
 
 func NewDocumentAnnotationHandler(
 	annotationService *service.DocumentAnnotationService,
 	submissionService *service.SubmissionService,
+	assignmentRepo repository.AssignmentRepository,
+	submissionRepo repository.SubmissionRepository,
+	authz *ResourceAuthorizer,
 ) *DocumentAnnotationHandler {
 	return &DocumentAnnotationHandler{
 		annotationService: annotationService,
 		submissionService: submissionService,
+		assignmentRepo:    assignmentRepo,
+		submissionRepo:    submissionRepo,
+		authz:             authz,
 	}
+}
+
+// getCourseIDForAnnotation resolves the course ID from annotation -> submission -> assignment chain.
+func (h *DocumentAnnotationHandler) getCourseIDForAnnotation(c *fiber.Ctx, annotationID uint) (uint, error) {
+	annotation, err := h.annotationService.GetAnnotation(c.Context(), annotationID)
+	if err != nil {
+		return 0, err
+	}
+	submission, err := h.submissionRepo.FindByID(c.Context(), annotation.SubmissionID)
+	if err != nil {
+		return 0, err
+	}
+	assignment, err := h.assignmentRepo.FindByID(c.Context(), submission.AssignmentID)
+	if err != nil {
+		return 0, err
+	}
+	return assignment.CourseID, nil
 }
 
 func annotationToJSON(a *models.DocumentAnnotation) fiber.Map {
@@ -120,7 +147,10 @@ func (h *DocumentAnnotationHandler) CreateAnnotation(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid user ID")
 	}
 
-	currentUserID := c.Locals("user_id").(uint)
+	currentUserID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 
 	// Find the submission
 	submission, err := h.submissionService.GetByAssignmentAndUser(c.Context(), uint(assignmentID), uint(submissionUserID))
@@ -187,6 +217,14 @@ func (h *DocumentAnnotationHandler) GetAnnotation(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid annotation ID")
 	}
 
+	courseID, err := h.getCourseIDForAnnotation(c, uint(annotationID))
+	if err != nil {
+		return responses.NotFound(c, "annotation")
+	}
+	if authErr := h.authz.RequireCourseEnrolled(c, courseID); authErr != nil {
+		return authErr
+	}
+
 	annotation, err := h.annotationService.GetAnnotation(c.Context(), uint(annotationID))
 	if err != nil {
 		return responses.NotFound(c, "annotation")
@@ -203,7 +241,10 @@ func (h *DocumentAnnotationHandler) UpdateAnnotation(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid annotation ID")
 	}
 
-	currentUserID := c.Locals("user_id").(uint)
+	currentUserID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 
 	var input struct {
 		Annotation map[string]interface{} `json:"annotation"`
@@ -238,7 +279,10 @@ func (h *DocumentAnnotationHandler) DeleteAnnotation(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid annotation ID")
 	}
 
-	currentUserID := c.Locals("user_id").(uint)
+	currentUserID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 
 	if err := h.annotationService.DeleteAnnotation(c.Context(), uint(annotationID), currentUserID, uint(courseID)); err != nil {
 		return responses.BadRequest(c, err.Error())
@@ -255,7 +299,18 @@ func (h *DocumentAnnotationHandler) ResolveAnnotation(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid annotation ID")
 	}
 
-	currentUserID := c.Locals("user_id").(uint)
+	courseID, err := h.getCourseIDForAnnotation(c, uint(annotationID))
+	if err != nil {
+		return responses.NotFound(c, "annotation")
+	}
+	if authErr := h.authz.RequireCourseEnrolled(c, courseID); authErr != nil {
+		return authErr
+	}
+
+	currentUserID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 
 	if err := h.annotationService.ResolveAnnotation(c.Context(), uint(annotationID), currentUserID); err != nil {
 		return responses.BadRequest(c, err.Error())
@@ -270,6 +325,14 @@ func (h *DocumentAnnotationHandler) UnresolveAnnotation(c *fiber.Ctx) error {
 	annotationID, err := c.ParamsInt("id")
 	if err != nil {
 		return responses.BadRequest(c, "Invalid annotation ID")
+	}
+
+	courseID, err := h.getCourseIDForAnnotation(c, uint(annotationID))
+	if err != nil {
+		return responses.NotFound(c, "annotation")
+	}
+	if authErr := h.authz.RequireCourseEnrolled(c, courseID); authErr != nil {
+		return authErr
 	}
 
 	if err := h.annotationService.UnresolveAnnotation(c.Context(), uint(annotationID)); err != nil {
@@ -297,7 +360,10 @@ func (h *DocumentAnnotationHandler) ReplyToAnnotation(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid annotation ID")
 	}
 
-	currentUserID := c.Locals("user_id").(uint)
+	currentUserID, err := getUserID(c)
+	if err != nil {
+		return err
+	}
 
 	var input struct {
 		Annotation struct {

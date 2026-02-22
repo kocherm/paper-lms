@@ -3,7 +3,9 @@ import { useParams } from 'react-router-dom';
 import { BookOpen, Calendar, CheckCircle, Clock, AlertTriangle, Star, Filter, ChevronDown } from 'lucide-react';
 import { api } from '../services/api';
 import Layout from '../components/Layout';
+import CourseNav from '../components/CourseNav';
 import { useAuth } from '../contexts/AuthContext';
+import { sanitizeHTML } from '../components/RichContentViewer';
 
 const GROUP_COLORS = {
   '#3b82f6': { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300', dot: 'bg-blue-500' },
@@ -320,6 +322,7 @@ const SyllabusPage = () => {
 
   return (
     <Layout>
+      <CourseNav />
       <div className="max-w-4xl mx-auto space-y-8 print:space-y-6">
         {/* Header */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -338,7 +341,7 @@ const SyllabusPage = () => {
             <div className="px-6 py-6 sm:px-8 border-t border-gray-100">
               <div
                 className="prose prose-sm max-w-none text-gray-700 prose-headings:text-gray-900 prose-a:text-blue-600"
-                dangerouslySetInnerHTML={{ __html: course.syllabus_body }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHTML(course.syllabus_body) }}
               />
             </div>
           )}

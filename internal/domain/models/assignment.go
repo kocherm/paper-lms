@@ -13,10 +13,15 @@ type Assignment struct {
 	PointsPossible  *float64   `json:"points_possible"`
 	GradingType     string     `json:"grading_type" gorm:"default:'points'"` // points, percent, letter_grade, gpa_scale, pass_fail, not_graded
 	SubmissionTypes string     `json:"submission_types" gorm:"default:'online_text_entry'"` // comma-separated
-	AssignmentGroupID *uint     `json:"assignment_group_id"`
-	Position        int        `json:"position"`
-	WorkflowState   string     `json:"workflow_state" gorm:"not null;default:'unpublished'"`
-	Published       bool       `json:"published" gorm:"default:false"`
-	CreatedAt       time.Time  `json:"created_at"`
-	UpdatedAt       time.Time  `json:"updated_at"`
+	AssignmentGroupID  *uint      `json:"assignment_group_id" gorm:"index"`
+	Position           int        `json:"position"`
+	WorkflowState      string     `json:"workflow_state" gorm:"not null;default:'unpublished';index"`
+	Published          bool       `json:"published" gorm:"default:false"`
+	AnonymousGrading   bool       `json:"anonymous_grading" gorm:"default:false"`
+	PostPolicy         string     `json:"post_policy" gorm:"default:'automatic'"` // automatic, manual
+	PeerReviewsEnabled bool       `json:"peer_reviews_enabled" gorm:"default:false"`
+	PeerReviewCount    int        `json:"peer_review_count" gorm:"default:0"`
+	GroupCategoryID    *uint      `json:"group_category_id" gorm:"index"`
+	CreatedAt          time.Time  `json:"created_at"`
+	UpdatedAt          time.Time  `json:"updated_at"`
 }

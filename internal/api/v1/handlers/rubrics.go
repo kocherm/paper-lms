@@ -199,6 +199,23 @@ func (h *RubricHandler) DeleteRubric(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"delete": true})
 }
 
+func (h *RubricHandler) GetAssignmentRubric(c *fiber.Ctx) error {
+	assignmentID, err := c.ParamsInt("assignment_id")
+	if err != nil {
+		return responses.BadRequest(c, "Invalid assignment ID")
+	}
+
+	rubric, assoc, err := h.rubricService.GetRubricForAssignment(c.Context(), uint(assignmentID))
+	if err != nil {
+		return responses.NotFound(c, "rubric")
+	}
+
+	return c.JSON(fiber.Map{
+		"rubric":              rubricToJSON(rubric),
+		"rubric_association":  rubricAssociationToJSON(assoc),
+	})
+}
+
 func (h *RubricHandler) AssociateRubric(c *fiber.Ctx) error {
 	rubricID, err := c.ParamsInt("rubric_id")
 	if err != nil {

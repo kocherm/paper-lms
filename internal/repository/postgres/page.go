@@ -36,6 +36,14 @@ func (r *pageRepo) FindByCourseAndURL(ctx context.Context, courseID uint, url st
 	return &page, nil
 }
 
+func (r *pageRepo) FindPublicByCourseAndURL(ctx context.Context, courseID uint, url string) (*models.WikiPage, error) {
+	var page models.WikiPage
+	if err := r.db.WithContext(ctx).Where("course_id = ? AND url = ? AND public = ? AND workflow_state = ?", courseID, url, true, "active").First(&page).Error; err != nil {
+		return nil, err
+	}
+	return &page, nil
+}
+
 func (r *pageRepo) Update(ctx context.Context, page *models.WikiPage) error {
 	return r.db.WithContext(ctx).Save(page).Error
 }

@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.23-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 RUN apk add --no-cache git
 
@@ -10,17 +10,23 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /paper-lms ./cmd/server/main.go
+ARG VERSION=dev
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-X main.Version=${VERSION}" -o /paper-lms ./cmd/server
+RUN CGO_ENABLED=0 GOOS=linux go build -o /migrate ./cmd/migrate
 
 # Run stage
-FROM alpine:3.19
+FROM alpine:3.20
 
 RUN apk add --no-cache ca-certificates tzdata
 
 WORKDIR /app
 
 COPY --from=builder /paper-lms .
+COPY --from=builder /migrate .
 
 EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:3000/health || exit 1
 
 CMD ["./paper-lms"]

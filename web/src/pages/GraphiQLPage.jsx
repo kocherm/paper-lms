@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Layout from '../components/Layout';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
 const DEFAULT_QUERY = `{
   self {
@@ -54,12 +54,11 @@ const GraphiQLPage = () => {
         }
       }
 
-      const token = localStorage.getItem('token');
       const response = await fetch(API_URL + '/graphql', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           query: query,

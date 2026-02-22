@@ -64,6 +64,22 @@ func (m *MockUserRepository) List(ctx context.Context, params repository.Paginat
 	return args.Get(0).(*repository.PaginatedResult[models.User]), args.Error(1)
 }
 
+func (m *MockUserRepository) FindByResetToken(ctx context.Context, token string) (*models.User, error) {
+	args := m.Called(ctx, token)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.User), args.Error(1)
+}
+
+func (m *MockUserRepository) Search(ctx context.Context, searchTerm string, params repository.PaginationParams) (*repository.PaginatedResult[models.User], error) {
+	args := m.Called(ctx, searchTerm, params)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*repository.PaginatedResult[models.User]), args.Error(1)
+}
+
 // MockCourseRepository mocks repository.CourseRepository
 type MockCourseRepository struct {
 	mock.Mock
@@ -161,6 +177,14 @@ func (m *MockEnrollmentRepository) FindByUserAndCourse(ctx context.Context, user
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*models.Enrollment), args.Error(1)
+}
+
+func (m *MockEnrollmentRepository) CountByCourseIDs(ctx context.Context, courseIDs []uint) (map[uint]int64, error) {
+	args := m.Called(ctx, courseIDs)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(map[uint]int64), args.Error(1)
 }
 
 // MockSectionRepository mocks repository.SectionRepository
@@ -286,6 +310,11 @@ func (m *MockSubmissionRepository) BulkListByCourse(ctx context.Context, courseI
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*repository.PaginatedResult[models.Submission]), args.Error(1)
+}
+
+func (m *MockSubmissionRepository) PostGradesByAssignment(ctx context.Context, assignmentID uint, postedAt *time.Time) error {
+	args := m.Called(ctx, assignmentID, postedAt)
+	return args.Error(0)
 }
 
 // MockAssignmentGroupRepository mocks repository.AssignmentGroupRepository
@@ -425,6 +454,11 @@ func (m *MockModuleRepository) FindActiveByDateRange(ctx context.Context, course
 	return args.Get(0).(*models.ContextModule), args.Error(1)
 }
 
+func (m *MockModuleRepository) ReorderModules(ctx context.Context, courseID uint, moduleIDs []uint) error {
+	args := m.Called(ctx, courseID, moduleIDs)
+	return args.Error(0)
+}
+
 // MockModuleItemRepository mocks repository.ModuleItemRepository
 type MockModuleItemRepository struct {
 	mock.Mock
@@ -443,12 +477,32 @@ func (m *MockModuleItemRepository) FindByID(ctx context.Context, id uint) (*mode
 	return args.Get(0).(*models.ContentTag), args.Error(1)
 }
 
+func (m *MockModuleItemRepository) Update(ctx context.Context, item *models.ContentTag) error {
+	args := m.Called(ctx, item)
+	return args.Error(0)
+}
+
+func (m *MockModuleItemRepository) Delete(ctx context.Context, id uint) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
 func (m *MockModuleItemRepository) ListByModuleID(ctx context.Context, moduleID uint, params repository.PaginationParams) (*repository.PaginatedResult[models.ContentTag], error) {
 	args := m.Called(ctx, moduleID, params)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*repository.PaginatedResult[models.ContentTag]), args.Error(1)
+}
+
+func (m *MockModuleItemRepository) ReorderItems(ctx context.Context, moduleID uint, itemIDs []uint) error {
+	args := m.Called(ctx, moduleID, itemIDs)
+	return args.Error(0)
+}
+
+func (m *MockModuleItemRepository) MoveItemToModule(ctx context.Context, itemID uint, targetModuleID uint, position int) error {
+	args := m.Called(ctx, itemID, targetModuleID, position)
+	return args.Error(0)
 }
 
 // MockPageRepository mocks repository.PageRepository
@@ -539,6 +593,14 @@ func (m *MockQuizQuestionRepository) ListByQuizID(ctx context.Context, quizID ui
 	return args.Get(0).(*repository.PaginatedResult[models.QuizQuestion]), args.Error(1)
 }
 
+func (m *MockQuizQuestionRepository) ListByGroupID(ctx context.Context, groupID uint) ([]models.QuizQuestion, error) {
+	args := m.Called(ctx, groupID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.QuizQuestion), args.Error(1)
+}
+
 // MockQuizSubmissionRepository mocks repository.QuizSubmissionRepository
 type MockQuizSubmissionRepository struct {
 	mock.Mock
@@ -576,6 +638,14 @@ func (m *MockQuizSubmissionRepository) ListByQuizID(ctx context.Context, quizID 
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*repository.PaginatedResult[models.QuizSubmission]), args.Error(1)
+}
+
+func (m *MockQuizSubmissionRepository) ListCompletedByQuizID(ctx context.Context, quizID uint) ([]models.QuizSubmission, error) {
+	args := m.Called(ctx, quizID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.QuizSubmission), args.Error(1)
 }
 
 // MockQuizSubmissionAnswerRepository mocks repository.QuizSubmissionAnswerRepository
@@ -622,6 +692,14 @@ func (m *MockQuizSubmissionAnswerRepository) FindBySubmissionAndQuestion(ctx con
 	return args.Get(0).(*models.QuizSubmissionAnswer), args.Error(1)
 }
 
+func (m *MockQuizSubmissionAnswerRepository) ListBySubmissionIDs(ctx context.Context, submissionIDs []uint) ([]models.QuizSubmissionAnswer, error) {
+	args := m.Called(ctx, submissionIDs)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.QuizSubmissionAnswer), args.Error(1)
+}
+
 // MockSubmissionCommentRepository mocks repository.SubmissionCommentRepository
 type MockSubmissionCommentRepository struct {
 	mock.Mock
@@ -638,4 +716,280 @@ func (m *MockSubmissionCommentRepository) ListBySubmissionID(ctx context.Context
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]models.SubmissionComment), args.Error(1)
+}
+
+// MockAttachmentRepository mocks repository.AttachmentRepository
+type MockAttachmentRepository struct {
+	mock.Mock
+}
+
+func (m *MockAttachmentRepository) Create(ctx context.Context, attachment *models.Attachment) error {
+	args := m.Called(ctx, attachment)
+	return args.Error(0)
+}
+
+func (m *MockAttachmentRepository) FindByID(ctx context.Context, id uint) (*models.Attachment, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.Attachment), args.Error(1)
+}
+
+func (m *MockAttachmentRepository) Update(ctx context.Context, attachment *models.Attachment) error {
+	args := m.Called(ctx, attachment)
+	return args.Error(0)
+}
+
+func (m *MockAttachmentRepository) Delete(ctx context.Context, id uint) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockAttachmentRepository) ListByContext(ctx context.Context, contextType string, contextID uint, params repository.PaginationParams) (*repository.PaginatedResult[models.Attachment], error) {
+	args := m.Called(ctx, contextType, contextID, params)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*repository.PaginatedResult[models.Attachment]), args.Error(1)
+}
+
+func (m *MockAttachmentRepository) ListByFolderID(ctx context.Context, folderID uint, params repository.PaginationParams) (*repository.PaginatedResult[models.Attachment], error) {
+	args := m.Called(ctx, folderID, params)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*repository.PaginatedResult[models.Attachment]), args.Error(1)
+}
+
+// MockQuizRepository mocks repository.QuizRepository
+type MockQuizRepository struct {
+	mock.Mock
+}
+
+func (m *MockQuizRepository) Create(ctx context.Context, quiz *models.Quiz) error {
+	args := m.Called(ctx, quiz)
+	return args.Error(0)
+}
+
+func (m *MockQuizRepository) FindByID(ctx context.Context, id uint) (*models.Quiz, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.Quiz), args.Error(1)
+}
+
+func (m *MockQuizRepository) Update(ctx context.Context, quiz *models.Quiz) error {
+	args := m.Called(ctx, quiz)
+	return args.Error(0)
+}
+
+func (m *MockQuizRepository) Delete(ctx context.Context, id uint) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockQuizRepository) ListByCourseID(ctx context.Context, courseID uint, params repository.PaginationParams) (*repository.PaginatedResult[models.Quiz], error) {
+	args := m.Called(ctx, courseID, params)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*repository.PaginatedResult[models.Quiz]), args.Error(1)
+}
+
+// MockLatePolicyRepository mocks repository.LatePolicyRepository
+type MockLatePolicyRepository struct {
+	mock.Mock
+}
+
+func (m *MockLatePolicyRepository) Create(ctx context.Context, policy *models.LatePolicy) error {
+	args := m.Called(ctx, policy)
+	return args.Error(0)
+}
+
+func (m *MockLatePolicyRepository) FindByCourseID(ctx context.Context, courseID uint) (*models.LatePolicy, error) {
+	args := m.Called(ctx, courseID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.LatePolicy), args.Error(1)
+}
+
+func (m *MockLatePolicyRepository) Update(ctx context.Context, policy *models.LatePolicy) error {
+	args := m.Called(ctx, policy)
+	return args.Error(0)
+}
+
+func (m *MockLatePolicyRepository) Delete(ctx context.Context, courseID uint) error {
+	args := m.Called(ctx, courseID)
+	return args.Error(0)
+}
+
+// MockGradingPeriodGroupRepository mocks repository.GradingPeriodGroupRepository
+type MockGradingPeriodGroupRepository struct {
+	mock.Mock
+}
+
+func (m *MockGradingPeriodGroupRepository) Create(ctx context.Context, group *models.GradingPeriodGroup) error {
+	args := m.Called(ctx, group)
+	return args.Error(0)
+}
+
+func (m *MockGradingPeriodGroupRepository) FindByID(ctx context.Context, id uint) (*models.GradingPeriodGroup, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.GradingPeriodGroup), args.Error(1)
+}
+
+func (m *MockGradingPeriodGroupRepository) Update(ctx context.Context, group *models.GradingPeriodGroup) error {
+	args := m.Called(ctx, group)
+	return args.Error(0)
+}
+
+func (m *MockGradingPeriodGroupRepository) Delete(ctx context.Context, id uint) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockGradingPeriodGroupRepository) ListByAccountID(ctx context.Context, accountID uint, params repository.PaginationParams) (*repository.PaginatedResult[models.GradingPeriodGroup], error) {
+	args := m.Called(ctx, accountID, params)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*repository.PaginatedResult[models.GradingPeriodGroup]), args.Error(1)
+}
+
+// MockGradingPeriodRepository mocks repository.GradingPeriodRepository
+type MockGradingPeriodRepository struct {
+	mock.Mock
+}
+
+func (m *MockGradingPeriodRepository) Create(ctx context.Context, period *models.GradingPeriod) error {
+	args := m.Called(ctx, period)
+	return args.Error(0)
+}
+
+func (m *MockGradingPeriodRepository) FindByID(ctx context.Context, id uint) (*models.GradingPeriod, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.GradingPeriod), args.Error(1)
+}
+
+func (m *MockGradingPeriodRepository) Update(ctx context.Context, period *models.GradingPeriod) error {
+	args := m.Called(ctx, period)
+	return args.Error(0)
+}
+
+func (m *MockGradingPeriodRepository) Delete(ctx context.Context, id uint) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockGradingPeriodRepository) ListByGroupID(ctx context.Context, groupID uint) ([]models.GradingPeriod, error) {
+	args := m.Called(ctx, groupID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.GradingPeriod), args.Error(1)
+}
+
+// MockGradingStandardRepository mocks repository.GradingStandardRepository
+type MockGradingStandardRepository struct {
+	mock.Mock
+}
+
+func (m *MockGradingStandardRepository) Create(ctx context.Context, standard *models.GradingStandard) error {
+	args := m.Called(ctx, standard)
+	return args.Error(0)
+}
+
+func (m *MockGradingStandardRepository) FindByID(ctx context.Context, id uint) (*models.GradingStandard, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.GradingStandard), args.Error(1)
+}
+
+func (m *MockGradingStandardRepository) Update(ctx context.Context, standard *models.GradingStandard) error {
+	args := m.Called(ctx, standard)
+	return args.Error(0)
+}
+
+func (m *MockGradingStandardRepository) Delete(ctx context.Context, id uint) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockGradingStandardRepository) ListByCourse(ctx context.Context, courseID uint) ([]models.GradingStandard, error) {
+	args := m.Called(ctx, courseID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.GradingStandard), args.Error(1)
+}
+
+func (m *MockGradingStandardRepository) FindActiveByCourse(ctx context.Context, courseID uint) (*models.GradingStandard, error) {
+	args := m.Called(ctx, courseID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.GradingStandard), args.Error(1)
+}
+
+// MockGroupMembershipRepository implements repository.GroupMembershipRepository for testing.
+type MockGroupMembershipRepository struct {
+	mock.Mock
+}
+
+func (m *MockGroupMembershipRepository) Create(ctx context.Context, membership *models.GroupMembership) error {
+	args := m.Called(ctx, membership)
+	return args.Error(0)
+}
+
+func (m *MockGroupMembershipRepository) FindByID(ctx context.Context, id uint) (*models.GroupMembership, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.GroupMembership), args.Error(1)
+}
+
+func (m *MockGroupMembershipRepository) Update(ctx context.Context, membership *models.GroupMembership) error {
+	args := m.Called(ctx, membership)
+	return args.Error(0)
+}
+
+func (m *MockGroupMembershipRepository) Delete(ctx context.Context, id uint) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockGroupMembershipRepository) ListByGroupID(ctx context.Context, groupID uint, params repository.PaginationParams) (*repository.PaginatedResult[models.GroupMembership], error) {
+	args := m.Called(ctx, groupID, params)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*repository.PaginatedResult[models.GroupMembership]), args.Error(1)
+}
+
+func (m *MockGroupMembershipRepository) FindByGroupAndUser(ctx context.Context, groupID, userID uint) (*models.GroupMembership, error) {
+	args := m.Called(ctx, groupID, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.GroupMembership), args.Error(1)
+}
+
+func (m *MockGroupMembershipRepository) FindUserGroupInCategory(ctx context.Context, userID, groupCategoryID uint) (*models.Group, error) {
+	args := m.Called(ctx, userID, groupCategoryID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.Group), args.Error(1)
 }

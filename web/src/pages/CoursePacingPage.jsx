@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, Navigate } from 'react-router-dom';
 import { Clock, Calendar, Play, Save, Settings, ChevronDown, ChevronRight, Users, User } from 'lucide-react';
 import { api } from '../services/api';
+import useIsTeacher from '../hooks/useIsTeacher';
 import Layout from '../components/Layout';
+import CourseNav from '../components/CourseNav';
 
 const CoursePacingPage = () => {
   const { courseId } = useParams();
+  const isTeacher = useIsTeacher(courseId);
   const [pace, setPace] = useState(null);
   const [paces, setPaces] = useState([]);
   const [moduleItems, setModuleItems] = useState([]);
@@ -164,16 +167,26 @@ const CoursePacingPage = () => {
     return 'Course Default';
   };
 
+  if (isTeacher === false) return <Navigate to={`/courses/${courseId}`} replace />;
+  if (isTeacher === null) return <Layout><div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+  Loading...
+</div></Layout>;
+
   if (loading && !pace) {
     return (
       <Layout>
-        <div className="text-center py-12 text-gray-500">Loading course pacing...</div>
+        <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
+  Loading course pacing...
+</div>
       </Layout>
     );
   }
 
   return (
     <Layout>
+      <CourseNav />
       <div className="mb-6">
         <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm">
           &larr; Back to Course
