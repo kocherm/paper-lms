@@ -46,7 +46,7 @@ func Load() *Config {
 		Environment:     getEnv("ENVIRONMENT", "development"),
 		FrontendURL:     getEnv("FRONTEND_URL", "http://localhost:5173"),
 		FileStoragePath: getEnv("FILE_STORAGE_PATH", "./storage/files"),
-		MaxUploadSize:   getEnvInt("MAX_UPLOAD_SIZE_MB", 50),
+		MaxUploadSize:   getEnvInt("MAX_UPLOAD_SIZE_MB", 500),
 		SAMLEntityID:    getEnv("SAML_ENTITY_ID", ""),
 		SAMLCertFile:    getEnv("SAML_CERT_FILE", ""),
 		SAMLKeyFile:     getEnv("SAML_KEY_FILE", ""),
