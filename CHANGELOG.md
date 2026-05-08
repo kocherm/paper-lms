@@ -1,6 +1,33 @@
-# Paper LMS - Implementation History
+# Paper LMS — Changelog
 
-This file documents the phased implementation history of Paper LMS. For current architecture and development patterns, see [CLAUDE.md](./CLAUDE.md).
+This file documents Paper LMS releases. For deeper architectural context, see [CLAUDE.md](./CLAUDE.md).
+
+## v0.1.0 — Public Launch (2026-05-08)
+
+First public release. The 30+ phases below shipped privately; this is the moment they go on GitHub under the MIT License.
+
+**At launch:**
+- 84 domain models · 81 repositories · 52 services · 60 handlers · 360 API routes
+- 67 React pages · 27 shared components · 40 lazy-loaded chunks
+- **Backend**: Go 1.25, Fiber v2, GORM, PostgreSQL 14+ (pgvector optional)
+- **Frontend**: React 18, React Router 7, Tailwind CSS 3.4, Vite, TipTap RCE V2
+- **Auth**: JWT cookies · OAuth 2.0 · Personal Access Tokens · SAML 2.0 · LDAP · CAS 2.0
+- **Storage**: pluggable local disk / S3 / MinIO / R2
+- **Bundle**: 417 KB main / 117 KB gzipped
+- **Accessibility**: WCAG 2.1 AA, Reading Preferences (font/spacing/TTS)
+- **K-12**: K-2 picture-cue mode, parent observer accounts, pairing codes, weekly digests
+
+**Phase 5 Wave 1 (shipped today):**
+- RCE V2 rolled out to 6 more pages with autoSaveKey draft scoping
+- RTL migration: `tailwindcss-logical` enabled, top components migrated to logical properties
+- Discussion Checkpoints (Canvas multi-deadline thread participation)
+- Smart Search via pgvector embeddings (HashingEmbedder default, swappable)
+- Commons content library for district-wide template sharing
+- AI Assist in the rich content editor (Anthropic Claude Haiku 4.5, per-user rate-limited)
+
+## Implementation History
+
+The phased build leading up to v0.1.0:
 
 ## Phase 1: Foundation (COMPLETE)
 PostgreSQL, clean architecture, Docker, Canvas API paths, 10 models, ~35 endpoints

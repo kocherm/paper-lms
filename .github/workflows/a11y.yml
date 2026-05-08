@@ -1,10 +1,10 @@
 name: Accessibility
 
+# Manual trigger only for now — Puppeteer/Chromium download flow needs more
+# work in CI before this can gate every push. Run on demand via the Actions
+# tab or `gh workflow run a11y.yml`. See web/scripts/run-axe.mjs.
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
   axe:

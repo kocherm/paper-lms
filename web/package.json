@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "axe": "node scripts/run-axe.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
