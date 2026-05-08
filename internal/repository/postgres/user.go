@@ -28,6 +28,17 @@ func (r *userRepo) FindByID(ctx context.Context, id uint) (*models.User, error) 
 	return &user, nil
 }
 
+func (r *userRepo) FindByIDs(ctx context.Context, ids []uint) ([]models.User, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	var users []models.User
+	if err := r.db.WithContext(ctx).Where("id IN ?", ids).Find(&users).Error; err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
 func (r *userRepo) FindByLoginID(ctx context.Context, loginID string) (*models.User, error) {
 	var user models.User
 	if err := r.db.WithContext(ctx).Where("login_id = ?", loginID).First(&user).Error; err != nil {

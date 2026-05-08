@@ -993,3 +993,51 @@ func (m *MockGroupMembershipRepository) FindUserGroupInCategory(ctx context.Cont
 	}
 	return args.Get(0).(*models.Group), args.Error(1)
 }
+
+// FindByIDs mocks for batch fetcher methods (P1 INTERFACES_PATCH).
+
+func (m *MockUserRepository) FindByIDs(ctx context.Context, ids []uint) ([]models.User, error) {
+	args := m.Called(ctx, ids)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.User), args.Error(1)
+}
+
+func (m *MockAssignmentRepository) FindByIDs(ctx context.Context, ids []uint) ([]models.Assignment, error) {
+	args := m.Called(ctx, ids)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.Assignment), args.Error(1)
+}
+
+func (m *MockSubmissionRepository) FindByIDs(ctx context.Context, ids []uint) ([]models.Submission, error) {
+	args := m.Called(ctx, ids)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.Submission), args.Error(1)
+}
+
+func (m *MockSubmissionRepository) FindByAssignmentAndUserIDs(ctx context.Context, assignmentID uint, userIDs []uint) ([]models.Submission, error) {
+	args := m.Called(ctx, assignmentID, userIDs)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.Submission), args.Error(1)
+}
+
+func (m *MockSubmissionRepository) RunInTransaction(ctx context.Context, fn func(txRepo repository.SubmissionRepository) error) error {
+	return fn(m)
+}
+
+func (m *MockQuizQuestionRepository) FindByIDs(ctx context.Context, ids []uint) ([]models.QuizQuestion, error) {
+	args := m.Called(ctx, ids)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.QuizQuestion), args.Error(1)
+}
+
+// PortfolioSectionRepository mock not yet written; add when first portfolio service test lands.

@@ -3,10 +3,69 @@ package service
 import (
 	"context"
 	"errors"
+	"sort"
+	"time"
 
 	"github.com/kocherm/paper-lms/internal/domain/models"
 	"github.com/kocherm/paper-lms/internal/repository"
 )
+
+// ObserverAnnouncementRepository is a consumer-side interface so this file
+// can use the announcement repo (defined in postgres pkg) without import cycles.
+type ObserverAnnouncementRepository interface {
+	ListByCourseID(ctx context.Context, courseID uint, params repository.PaginationParams) (*repository.PaginatedResult[models.Announcement], error)
+}
+
+// ChildOverview aggregates the per-child data shown on the parent dashboard.
+type ChildOverview struct {
+	Courses          []ChildCourseSummary `json:"courses"`
+	UpcomingThisWeek []UpcomingItem       `json:"upcoming_this_week"`
+	RecentGrades     []RecentGradeItem    `json:"recent_grades"`
+	RecentActivity   []ActivityItem       `json:"recent_activity"`
+}
+
+// ChildCourseSummary represents a course the child is enrolled in plus
+// summary stats (current grade %, count of assignments still pending).
+type ChildCourseSummary struct {
+	CourseID     uint     `json:"course_id"`
+	Name         string   `json:"name"`
+	CourseCode   string   `json:"course_code"`
+	CurrentGrade *float64 `json:"current_grade,omitempty"`
+	PendingCount int      `json:"pending_count"`
+}
+
+// UpcomingItem is an assignment or quiz due within the next 7 days.
+type UpcomingItem struct {
+	ID         uint      `json:"id"`
+	Type       string    `json:"type"` // "assignment" or "quiz"
+	Title      string    `json:"title"`
+	CourseID   uint      `json:"course_id"`
+	CourseName string    `json:"course_name"`
+	DueAt      time.Time `json:"due_at"`
+}
+
+// RecentGradeItem is one of the last graded submissions for the child.
+type RecentGradeItem struct {
+	SubmissionID   uint      `json:"submission_id"`
+	AssignmentID   uint      `json:"assignment_id"`
+	AssignmentName string    `json:"assignment_name"`
+	CourseID       uint      `json:"course_id"`
+	CourseName     string    `json:"course_name"`
+	Score          *float64  `json:"score,omitempty"`
+	PointsPossible *float64  `json:"points_possible,omitempty"`
+	GradedAt       time.Time `json:"graded_at"`
+}
+
+// ActivityItem is an announcement or page-update from a course the child
+// is enrolled in.
+type ActivityItem struct {
+	Type       string    `json:"type"` // "announcement" or "page"
+	ID         uint      `json:"id"`
+	Title      string    `json:"title"`
+	CourseID   uint      `json:"course_id"`
+	CourseName string    `json:"course_name"`
+	OccurredAt time.Time `json:"occurred_at"`
+}
 
 // ObserverEnrollmentRepository defines the enrollment repo methods needed by the
 // observer service. The main EnrollmentRepository interface will be extended with
@@ -23,8 +82,18 @@ type ObserverEnrollmentRepository interface {
 
 type ObserverService struct {
 	enrollmentRepo ObserverEnrollmentRepository
-	courseRepo      repository.CourseRepository
-	userRepo        repository.UserRepository
+	courseRepo     repository.CourseRepository
+	userRepo       repository.UserRepository
+
+	// Optional dependencies — only required for GetChildOverview. They are
+	// configured via SetOverviewDeps so the existing constructor signature
+	// (called from main.go) does not have to change. If nil, GetChildOverview
+	// returns an error.
+	assignmentRepo   repository.AssignmentRepository
+	submissionRepo   repository.SubmissionRepository
+	quizRepo         repository.QuizRepository
+	announcementRepo ObserverAnnouncementRepository
+	pageRepo         repository.PageRepository
 }
 
 func NewObserverService(
@@ -34,9 +103,26 @@ func NewObserverService(
 ) *ObserverService {
 	return &ObserverService{
 		enrollmentRepo: enrollmentRepo,
-		courseRepo:      courseRepo,
-		userRepo:        userRepo,
+		courseRepo:     courseRepo,
+		userRepo:       userRepo,
 	}
+}
+
+// SetOverviewDeps wires the additional repositories needed to power
+// GetChildOverview. Call this from cmd/server/main.go after constructing
+// the service. Safe to call multiple times.
+func (s *ObserverService) SetOverviewDeps(
+	assignmentRepo repository.AssignmentRepository,
+	submissionRepo repository.SubmissionRepository,
+	quizRepo repository.QuizRepository,
+	announcementRepo ObserverAnnouncementRepository,
+	pageRepo repository.PageRepository,
+) {
+	s.assignmentRepo = assignmentRepo
+	s.submissionRepo = submissionRepo
+	s.quizRepo = quizRepo
+	s.announcementRepo = announcementRepo
+	s.pageRepo = pageRepo
 }
 
 // LinkObserverToStudent creates an ObserverEnrollment for each active course the
@@ -224,6 +310,205 @@ func (s *ObserverService) GetObserveeCourses(ctx context.Context, observerUserID
 	}
 
 	return courses, nil
+}
+
+// GetChildOverview returns aggregated dashboard data for a single child
+// (current courses + grades, upcoming work this week, recent grades, and
+// recent activity). The caller must be linked to childID via an active
+// ObserverEnrollment, otherwise an error is returned.
+func (s *ObserverService) GetChildOverview(ctx context.Context, parentID, childID uint) (*ChildOverview, error) {
+	if s.assignmentRepo == nil || s.submissionRepo == nil || s.quizRepo == nil || s.announcementRepo == nil || s.pageRepo == nil {
+		return nil, errors.New("observer overview dependencies not configured")
+	}
+
+	linked, err := s.IsObserverOf(ctx, parentID, childID)
+	if err != nil {
+		return nil, err
+	}
+	if !linked {
+		return nil, errors.New("observer is not linked to this student")
+	}
+
+	studentEnrollments, err := s.enrollmentRepo.ListByUserID(ctx, childID)
+	if err != nil {
+		return nil, errors.New("could not fetch student enrollments")
+	}
+
+	// Build the unique active course set for the child.
+	courseIDs := []uint{}
+	courseByID := map[uint]*models.Course{}
+	for _, e := range studentEnrollments {
+		if e.WorkflowState != "active" {
+			continue
+		}
+		if _, ok := courseByID[e.CourseID]; ok {
+			continue
+		}
+		course, cerr := s.courseRepo.FindByID(ctx, e.CourseID)
+		if cerr != nil {
+			continue
+		}
+		courseByID[e.CourseID] = course
+		courseIDs = append(courseIDs, e.CourseID)
+	}
+
+	now := time.Now()
+	weekFromNow := now.Add(7 * 24 * time.Hour)
+
+	courseSummaries := make([]ChildCourseSummary, 0, len(courseIDs))
+	upcoming := []UpcomingItem{}
+	recentGrades := []RecentGradeItem{}
+	activity := []ActivityItem{}
+
+	listParams := repository.PaginationParams{Page: 1, PerPage: 100}
+
+	for _, courseID := range courseIDs {
+		course := courseByID[courseID]
+
+		// Per-course assignments (used for upcoming + grade calculation).
+		assignments, _ := s.assignmentRepo.ListByCourseID(ctx, courseID, listParams)
+		assignmentByID := map[uint]models.Assignment{}
+		if assignments != nil {
+			for _, a := range assignments.Items {
+				assignmentByID[a.ID] = a
+				if a.WorkflowState == "deleted" || !a.Published {
+					continue
+				}
+				if a.DueAt != nil && a.DueAt.After(now) && a.DueAt.Before(weekFromNow) {
+					upcoming = append(upcoming, UpcomingItem{
+						ID:         a.ID,
+						Type:       "assignment",
+						Title:      a.Name,
+						CourseID:   courseID,
+						CourseName: course.Name,
+						DueAt:      *a.DueAt,
+					})
+				}
+			}
+		}
+
+		// Quizzes — also count toward "due this week".
+		quizzes, _ := s.quizRepo.ListByCourseID(ctx, courseID, listParams)
+		if quizzes != nil {
+			for _, q := range quizzes.Items {
+				if q.WorkflowState == "deleted" || !q.Published {
+					continue
+				}
+				if q.DueAt != nil && q.DueAt.After(now) && q.DueAt.Before(weekFromNow) {
+					upcoming = append(upcoming, UpcomingItem{
+						ID:         q.ID,
+						Type:       "quiz",
+						Title:      q.Title,
+						CourseID:   courseID,
+						CourseName: course.Name,
+						DueAt:      *q.DueAt,
+					})
+				}
+			}
+		}
+
+		// Submissions for this child in this course (drives grade % + recent + pending).
+		subs, serr := s.submissionRepo.ListByUserAndCourse(ctx, childID, courseID)
+		var earned, possible float64
+		pending := 0
+		if serr == nil {
+			for _, sub := range subs {
+				assn, ok := assignmentByID[sub.AssignmentID]
+				if !ok {
+					continue
+				}
+				// Pending = published assignment with a future or past due date that
+				// the student has not submitted yet (and is not graded/excused).
+				if assn.Published && !sub.Excused && sub.WorkflowState != "graded" {
+					if sub.SubmittedAt == nil {
+						pending++
+					}
+				}
+				// Grade contribution: only graded, posted submissions with score.
+				if sub.Score != nil && assn.PointsPossible != nil && *assn.PointsPossible > 0 && sub.PostedAt != nil {
+					earned += *sub.Score
+					possible += *assn.PointsPossible
+				}
+				// Recent grades feed.
+				if sub.GradedAt != nil && sub.Score != nil {
+					recentGrades = append(recentGrades, RecentGradeItem{
+						SubmissionID:   sub.ID,
+						AssignmentID:   sub.AssignmentID,
+						AssignmentName: assn.Name,
+						CourseID:       courseID,
+						CourseName:     course.Name,
+						Score:          sub.Score,
+						PointsPossible: assn.PointsPossible,
+						GradedAt:       *sub.GradedAt,
+					})
+				}
+			}
+		}
+
+		var grade *float64
+		if possible > 0 {
+			pct := (earned / possible) * 100.0
+			grade = &pct
+		}
+		courseSummaries = append(courseSummaries, ChildCourseSummary{
+			CourseID:     courseID,
+			Name:         course.Name,
+			CourseCode:   course.CourseCode,
+			CurrentGrade: grade,
+			PendingCount: pending,
+		})
+
+		// Recent activity: announcements + page updates.
+		anns, _ := s.announcementRepo.ListByCourseID(ctx, courseID, listParams)
+		if anns != nil {
+			for _, a := range anns.Items {
+				occurred := a.CreatedAt
+				if a.PostedAt != nil {
+					occurred = *a.PostedAt
+				}
+				activity = append(activity, ActivityItem{
+					Type:       "announcement",
+					ID:         a.ID,
+					Title:      a.Title,
+					CourseID:   courseID,
+					CourseName: course.Name,
+					OccurredAt: occurred,
+				})
+			}
+		}
+
+		pages, _ := s.pageRepo.ListByCourseID(ctx, courseID, listParams)
+		if pages != nil {
+			for _, p := range pages.Items {
+				activity = append(activity, ActivityItem{
+					Type:       "page",
+					ID:         p.ID,
+					Title:      p.Title,
+					CourseID:   courseID,
+					CourseName: course.Name,
+					OccurredAt: p.UpdatedAt,
+				})
+			}
+		}
+	}
+
+	// Sort + truncate the feeds.
+	sort.Slice(upcoming, func(i, j int) bool { return upcoming[i].DueAt.Before(upcoming[j].DueAt) })
+	sort.Slice(recentGrades, func(i, j int) bool { return recentGrades[i].GradedAt.After(recentGrades[j].GradedAt) })
+	if len(recentGrades) > 10 {
+		recentGrades = recentGrades[:10]
+	}
+	sort.Slice(activity, func(i, j int) bool { return activity[i].OccurredAt.After(activity[j].OccurredAt) })
+	if len(activity) > 10 {
+		activity = activity[:10]
+	}
+
+	return &ChildOverview{
+		Courses:          courseSummaries,
+		UpcomingThisWeek: upcoming,
+		RecentGrades:     recentGrades,
+		RecentActivity:   activity,
+	}, nil
 }
 
 // GetObserverDashboard returns the courses where the observer has an active

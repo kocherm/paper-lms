@@ -91,6 +91,29 @@ func (h *ObserverHandler) ListObservees(c *fiber.Ctx) error {
 	return c.JSON(observees)
 }
 
+// GetChildOverview handles GET /users/:user_id/observees/:child_id/overview
+// Returns aggregated dashboard data (courses + grades, upcoming work this
+// week, recent grades, recent activity) for one observed child. The caller
+// (parent) must already be linked to the child via observer enrollment.
+func (h *ObserverHandler) GetChildOverview(c *fiber.Ctx) error {
+	userID, err := c.ParamsInt("user_id")
+	if err != nil || userID <= 0 {
+		return responses.BadRequest(c, "Invalid user ID")
+	}
+
+	childID, err := c.ParamsInt("child_id")
+	if err != nil || childID <= 0 {
+		return responses.BadRequest(c, "Invalid child ID")
+	}
+
+	overview, err := h.observerService.GetChildOverview(c.Context(), uint(userID), uint(childID))
+	if err != nil {
+		return responses.BadRequest(c, err.Error())
+	}
+
+	return c.JSON(overview)
+}
+
 // GetObserveeCourses handles GET /users/:user_id/observees/:observee_id/courses
 func (h *ObserverHandler) GetObserveeCourses(c *fiber.Ctx) error {
 	userID, err := c.ParamsInt("user_id")

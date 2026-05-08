@@ -3,6 +3,7 @@ import { Mail, Send, Plus, MessageSquare, X, Search, ArrowLeft, Loader2 } from '
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const InboxPage = () => {
   const { user } = useAuth();
@@ -194,9 +195,12 @@ const InboxPage = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center py-12 text-gray-500">
-          <Loader2 className="w-6 h-6 animate-spin mr-2" />
-          <span>Loading inbox...</span>
+        <div className="space-y-3 p-6">
+          <Skeleton className="h-9 w-48" />
+          <Skeleton className="h-12 w-full" />
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-16 w-full" />
+          ))}
         </div>
       </Layout>
     );

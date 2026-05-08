@@ -5,6 +5,9 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -19,6 +22,7 @@ import (
 	"github.com/kocherm/paper-lms/internal/db"
 	"github.com/kocherm/paper-lms/internal/graphql"
 	"github.com/kocherm/paper-lms/internal/repository/postgres"
+	"github.com/kocherm/paper-lms/internal/scheduler"
 	"github.com/kocherm/paper-lms/internal/service"
 	storageLib "github.com/kocherm/paper-lms/internal/storage"
 )
@@ -189,6 +193,22 @@ func main() {
 	modulePrerequisiteRepo := postgres.NewModulePrerequisiteRepository(database)
 	// Quiz Question Group repository
 	quizQuestionGroupRepo := postgres.NewQuizQuestionGroupRepository(database)
+	// P3 Feature repositories
+	featureFlagRepo := postgres.NewFeatureFlagRepository(database)
+	customGradebookColumnRepo := postgres.NewCustomGradebookColumnRepository(database)
+	customColumnDatumRepo := postgres.NewCustomColumnDatumRepository(database)
+	masteryPathRepo := postgres.NewMasteryPathRepository(database)
+	appointmentGroupRepo := postgres.NewAppointmentGroupRepository(database)
+	appointmentSlotRepo := postgres.NewAppointmentSlotRepository(database)
+	appointmentReservationRepo := postgres.NewAppointmentReservationRepository(database)
+	outcomeProficiencyRepo := postgres.NewOutcomeProficiencyRepository(database)
+	// Parent/observer pairing codes
+	pairingCodeRepo := postgres.NewPairingCodeRepository(database)
+	// Phase 5 Wave 1: Discussion Checkpoints, Smart Search, Commons
+	discussionCheckpointRepo := postgres.NewDiscussionCheckpointRepository(database)
+	discussionCheckpointSubmissionRepo := postgres.NewDiscussionCheckpointSubmissionRepository(database)
+	contentEmbeddingRepo := postgres.NewContentEmbeddingRepository(database)
+	sharedContentRepo := postgres.NewSharedContentRepository(database)
 
 	// Initialize services
 	userService := service.NewUserService(userRepo)
@@ -269,6 +289,13 @@ func main() {
 	conferenceService := service.NewConferenceService(conferenceRepo, conferenceParticipantRepo)
 	analyticsService := service.NewAnalyticsService(pageViewRepo, submissionRepo, enrollmentRepo, assignmentRepo)
 	observerService := service.NewObserverService(enrollmentRepo, courseRepo, userRepo)
+	observerService.SetOverviewDeps(
+		assignmentRepo,
+		submissionRepo,
+		quizRepo,
+		announcementRepo,
+		pageRepo,
+	)
 	// Phase 8C services
 	authProviderService := service.NewAuthProviderService(authProviderRepo)
 	// Phase 10 services
@@ -313,6 +340,48 @@ func main() {
 	courseHomeService := service.NewCourseHomeService(courseRepo, courseHomeButtonRepo, todaysLessonOverrideRepo, courseVisitRepo, moduleRepo)
 	peerReviewService := service.NewPeerReviewService(peerReviewRepo, submissionRepo, enrollmentRepo)
 	questionBankService := service.NewQuestionBankService(questionBankRepo, questionBankEntryRepo, quizQuestionRepo)
+	// P3 Feature services
+	featureFlagService := service.NewFeatureFlagService(featureFlagRepo, courseRepo, accountRepo, userRepo)
+	customGradebookColumnService := service.NewCustomGradebookColumnService(customGradebookColumnRepo, customColumnDatumRepo)
+	masteryPathService := service.NewMasteryPathService(masteryPathRepo, submissionRepo, assignmentRepo)
+	appointmentGroupService := service.NewAppointmentGroupService(appointmentGroupRepo, appointmentSlotRepo, appointmentReservationRepo, database)
+	outcomeProficiencyService := service.NewOutcomeProficiencyService(outcomeProficiencyRepo)
+	masteryGradebookService := service.NewMasteryGradebookService(enrollmentRepo, outcomeRepo, outcomeResultRepo, userRepo, outcomeProficiencyService)
+
+	// Wire mastery-paths evaluation to fire after every successful grade.
+	submissionService.OnGraded(func(ctx context.Context, subID uint) {
+		if err := masteryPathService.EvaluateForStudent(ctx, subID); err != nil {
+			slog.Warn("MasteryPathService.EvaluateForStudent failed",
+				"submission_id", subID, "err", err)
+		}
+	})
+
+	// Pairing codes (parent/observer linking).
+	pairingCodeService := service.NewPairingCodeService(pairingCodeRepo, observerService)
+
+	// Phase 5 Wave 1: Discussion Checkpoints, Smart Search, Commons, AI Assist
+	discussionCheckpointService := service.NewDiscussionCheckpointService(
+		discussionCheckpointRepo,
+		discussionCheckpointSubmissionRepo,
+		discussionTopicRepo,
+		discussionEntryRepo,
+		assignmentRepo,
+	)
+	smartSearchEmbedder := service.NewHashingEmbedder(0) // 0 -> default 384 dims
+	smartSearchService, err := service.NewSmartSearchService(contentEmbeddingRepo, smartSearchEmbedder)
+	if err != nil {
+		log.Fatalf("Failed to initialize smart search service: %v", err)
+	}
+	commonsService := service.NewCommonsService(
+		sharedContentRepo,
+		courseRepo,
+		assignmentRepo,
+		pageRepo,
+		quizRepo,
+		moduleRepo,
+		discussionTopicRepo,
+	)
+	aiAssistService := service.NewAIAssistService(cfg.AnthropicAPIKey)
 
 	batchService := service.NewBatchService(
 		courseRepo, moduleRepo, moduleItemRepo, assignmentRepo, quizRepo, quizQuestionRepo,
@@ -420,6 +489,21 @@ func main() {
 	quizQuestionGroupHandler := handlers.NewQuizQuestionGroupHandler(quizService)
 	quizStatisticsHandler := handlers.NewQuizStatisticsHandler(quizService)
 	setupHandler := handlers.NewSetupHandler(userService, accountRepo, userRepo, cfg.JWTSecret, cfg.Environment)
+	// P3 Feature handlers
+	featureFlagHandler := handlers.NewFeatureFlagHandler(featureFlagService, enrollmentRepo, userRepo)
+	customGradebookColumnHandler := handlers.NewCustomGradebookColumnHandler(customGradebookColumnService)
+	masteryPathHandler := handlers.NewMasteryPathHandler(masteryPathService)
+	appointmentGroupHandler := handlers.NewAppointmentGroupHandler(appointmentGroupService, authz)
+	outcomeProficiencyHandler := handlers.NewOutcomeProficiencyHandler(outcomeProficiencyService, masteryGradebookService)
+	pairingCodeHandler := handlers.NewPairingCodeHandler(pairingCodeService)
+	// Phase 5 Wave 1 handlers
+	discussionCheckpointHandler := handlers.NewDiscussionCheckpointHandler(discussionCheckpointService)
+	// TODO Phase 5 Wave 2: implement reindex source adapter wiring (announcement /
+	// assignment / page / discussion topic listers). Until then Search works,
+	// Reindex returns 501.
+	smartSearchHandler := handlers.NewSmartSearchHandler(smartSearchService, nil)
+	commonsHandler := handlers.NewCommonsHandler(commonsService, courseRepo)
+	aiAssistHandler := handlers.NewAIAssistHandler(aiAssistService)
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret, accessTokenService, userRepo, tokenBlacklist)
 	permMiddleware := middleware.NewPermissionMiddleware(enrollmentRepo, userRepo)
 
@@ -510,6 +594,19 @@ func main() {
 		quizStatisticsHandler,
 		// Setup
 		setupHandler,
+		// P3 Features
+		featureFlagHandler,
+		customGradebookColumnHandler,
+		masteryPathHandler,
+		appointmentGroupHandler,
+		outcomeProficiencyHandler,
+		// Pairing codes
+		pairingCodeHandler,
+		// Phase 5 Wave 1
+		discussionCheckpointHandler,
+		smartSearchHandler,
+		commonsHandler,
+		aiAssistHandler,
 		authMiddleware,
 		permMiddleware,
 	)
@@ -552,6 +649,32 @@ func main() {
 
 	// Register routes
 	router.Register(app)
+
+	// --- Background scheduler (weekly + daily digest jobs) ---------------------
+	// DISABLE_SCHEDULER=1 short-circuits this for test/CI environments where the
+	// scheduler would otherwise spam the notifications table.
+	if os.Getenv("DISABLE_SCHEDULER") != "1" {
+		sched := scheduler.NewScheduler(time.Hour)
+		weeklyJob, dailyJob := scheduler.NewDigestJobs(notificationDeliveryService)
+		sched.Register("weeklyDigest", scheduler.WeeklyAt(time.Monday, 7), weeklyJob)
+		sched.Register("dailyDigest", scheduler.DailyAt(7), dailyJob)
+
+		schedCtx, schedCancel := context.WithCancel(context.Background())
+		defer schedCancel()
+		sched.Start(schedCtx)
+
+		// Graceful shutdown: stop the scheduler when the process receives
+		// SIGINT/SIGTERM. Fiber's app.Listen blocks the main goroutine, so we
+		// run signal handling in its own goroutine.
+		go func() {
+			sigCh := make(chan os.Signal, 1)
+			signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+			<-sigCh
+			sched.Stop()
+			_ = app.Shutdown()
+		}()
+	}
+	// --------------------------------------------------------------------------
 
 	// Start server
 	slog.Info("Paper LMS starting", "port", cfg.Port, "environment", cfg.Environment, "version", Version)

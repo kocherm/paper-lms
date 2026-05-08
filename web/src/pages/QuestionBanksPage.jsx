@@ -196,7 +196,7 @@ const PullToQuizModal = ({ courseId, bankId, questions, onClose, onSuccess }) =>
           >
             {pulling ? (
               <>
-                <svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none">
+                <svg className="animate-spin h-4 w-4 me-2" viewBox="0 0 24 24" fill="none">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                 </svg>
@@ -204,7 +204,7 @@ const PullToQuizModal = ({ courseId, bankId, questions, onClose, onSuccess }) =>
               </>
             ) : (
               <>
-                <Download className="w-4 h-4 mr-1" />
+                <Download className="w-4 h-4 me-1" />
                 Pull {selectedQuestionIds.length} Question{selectedQuestionIds.length !== 1 ? 's' : ''}
               </>
             )}
@@ -563,7 +563,7 @@ const BankCard = ({ bank, courseId, isTeacher, onDelete, onUpdate }) => {
             )}
           </div>
 
-          <div className="flex items-center gap-2 flex-shrink-0 ml-3" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-2 flex-shrink-0 ms-3" onClick={(e) => e.stopPropagation()}>
             {pullSuccess && (
               <span className="text-xs text-green-700 bg-green-50 px-2 py-1 rounded-full whitespace-nowrap">
                 Pulled {pullSuccess} question{pullSuccess !== 1 ? 's' : ''}
@@ -575,7 +575,7 @@ const BankCard = ({ bank, courseId, isTeacher, onDelete, onUpdate }) => {
                 className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-50"
                 title="Pull questions to a quiz"
               >
-                <Download className="w-3.5 h-3.5 mr-1" />
+                <Download className="w-3.5 h-3.5 me-1" />
                 Pull to Quiz
               </button>
             )}
@@ -608,7 +608,7 @@ const BankCard = ({ bank, courseId, isTeacher, onDelete, onUpdate }) => {
                 <span>{questionsError}</span>
                 <button
                   onClick={fetchQuestions}
-                  className="text-red-800 hover:text-red-900 text-xs font-medium ml-3 whitespace-nowrap"
+                  className="text-red-800 hover:text-red-900 text-xs font-medium ms-3 whitespace-nowrap"
                 >
                   Try Again
                 </button>
@@ -723,7 +723,7 @@ const BankCard = ({ bank, courseId, isTeacher, onDelete, onUpdate }) => {
                         onClick={() => setShowAddQuestion(true)}
                         className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 font-medium"
                       >
-                        <Plus className="w-4 h-4 mr-1" />
+                        <Plus className="w-4 h-4 me-1" />
                         Add Question
                       </button>
                     )}
@@ -857,7 +857,7 @@ const QuestionBanksPage = () => {
               onClick={() => setShowCreate(!showCreate)}
               className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium"
             >
-              <Plus className="w-4 h-4 mr-1" />
+              <Plus className="w-4 h-4 me-1" />
               New Bank
             </button>
           )}
@@ -867,7 +867,7 @@ const QuestionBanksPage = () => {
       {error && (
         <div className="bg-red-50 text-red-700 p-3 rounded mb-4 flex items-center justify-between">
           <span className="text-sm">{error}</span>
-          <button onClick={() => setError(null)} className="text-red-800 hover:text-red-900 text-xs font-medium ml-3">
+          <button onClick={() => setError(null)} className="text-red-800 hover:text-red-900 text-xs font-medium ms-3">
             Dismiss
           </button>
         </div>

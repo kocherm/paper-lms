@@ -1,0 +1,62 @@
+/* Reading Preferences — applied globally to .prose and .reading-surface
+ * Trade-off: we DO NOT self-host Lexend / Atkinson Hyperlegible / OpenDyslexic.
+ * The font-family stack falls back to system fonts when the chosen face is
+ * unavailable, keeping bundle size small. Schools that want guaranteed
+ * coverage can add the fonts via their CDN of choice and they will be picked up automatically.
+ */
+
+.prose,
+.prose *,
+.reading-surface,
+.reading-surface * {
+  font-family: var(--reading-font-family, inherit);
+  letter-spacing: var(--reading-letter-spacing, 0);
+}
+
+.prose,
+.reading-surface {
+  font-size: calc(1rem * var(--reading-font-scale, 1));
+  line-height: var(--reading-line-height, 1.6);
+}
+
+/* Headings scale proportionally but keep their own line-height for rhythm */
+.prose :where(h1, h2, h3, h4, h5, h6),
+.reading-surface :where(h1, h2, h3, h4, h5, h6) {
+  line-height: 1.25;
+  letter-spacing: var(--reading-letter-spacing, 0);
+}
+
+/* Reading column width — applies only when an explicit max is set */
+.reading-surface {
+  max-width: var(--reading-max-width, none);
+}
+
+/* Background themes — opt-in via data attribute on <html> */
+html[data-reading-bg="cream"] .prose,
+html[data-reading-bg="cream"] .reading-surface,
+html[data-reading-bg="gray"]  .prose,
+html[data-reading-bg="gray"]  .reading-surface,
+html[data-reading-bg="dark"]  .prose,
+html[data-reading-bg="dark"]  .reading-surface {
+  background-color: var(--reading-bg);
+  color: var(--reading-fg);
+  padding: 1rem 1.25rem;
+  border-radius: 0.5rem;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+html[data-reading-bg="dark"] .prose :where(h1, h2, h3, h4, h5, h6),
+html[data-reading-bg="dark"] .reading-surface :where(h1, h2, h3, h4, h5, h6) {
+  color: var(--reading-fg);
+}
+
+/* Suppress italics for dyslexic readers */
+html[data-reading-no-italic="1"] .prose :where(em, i, cite, blockquote),
+html[data-reading-no-italic="1"] .reading-surface :where(em, i, cite, blockquote) {
+  font-style: normal;
+}
+
+/* Honour reduced-motion users on the live preview transitions */
+@media (prefers-reduced-motion: reduce) {
+  .reading-surface { transition: none; }
+}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { api } from '../services/api';
 import useIsTeacher from '../hooks/useIsTeacher';
@@ -6,10 +6,22 @@ import useUnsavedChanges from '../hooks/useUnsavedChanges';
 import { useCourseUI } from '../contexts/CourseUIContext';
 import Layout from '../components/Layout';
 import CourseNav from '../components/CourseNav';
-import IconPicker from '../components/settings/IconPicker';
-import ColorPicker from '../components/settings/ColorPicker';
+import { useLiveRegion } from '../components/LiveRegion';
 import ButtonEditor from '../components/settings/ButtonEditor';
 import OverrideEditor from '../components/settings/OverrideEditor';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 // All available CourseNav tabs in default order
 const DEFAULT_NAV_TABS = [
@@ -42,117 +54,305 @@ const DEFAULT_NAV_TABS = [
   { id: 'settings', label: 'Settings' },
 ];
 
+const TABS = [
+  { id: 'general', label: 'General' },
+  { id: 'navigation', label: 'Navigation' },
+  { id: 'grading', label: 'Grading' },
+];
+
+const DEFAULT_LATE_POLICY = {
+  late_submission_deduction_enabled: false,
+  late_submission_deduction: 0,
+  late_submission_interval: 'day',
+  late_submission_minimum_percent_enabled: false,
+  late_submission_minimum_percent: 0,
+  missing_submission_deduction_enabled: false,
+  missing_submission_deduction: 0,
+};
+
+const DEFAULT_GRADING_SCALE = [
+  ['A', 0.93], ['A-', 0.90], ['B+', 0.87], ['B', 0.83], ['B-', 0.80],
+  ['C+', 0.77], ['C', 0.73], ['C-', 0.70], ['D+', 0.67], ['D', 0.63],
+  ['D-', 0.60], ['F', 0.0],
+];
+
+const fmtDate = (d) => {
+  if (!d) return '';
+  const dt = new Date(d);
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+};
+
+const eq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+// --- Local components -------------------------------------------------------
+
+const SettingsTab = ({ tab, isActive, hasUnsaved, onSelect }) => (
+  <button
+    type="button"
+    role="tab"
+    id={`settings-tab-${tab.id}`}
+    aria-controls={`settings-panel-${tab.id}`}
+    aria-selected={isActive}
+    aria-current={isActive ? 'page' : undefined}
+    data-active={isActive}
+    onClick={() => onSelect(tab.id)}
+    className={cn(
+      'group inline-flex items-center whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium',
+      'text-text-secondary hover:text-text-primary hover:bg-surface-1',
+      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+      'transition-colors duration-fast ease-emphatic',
+      'data-[active=true]:bg-brand-50 data-[active=true]:text-brand-700'
+    )}
+  >
+    {tab.label}
+    {hasUnsaved && (
+      <span
+        aria-hidden="true"
+        className="w-1.5 h-1.5 rounded-full bg-brand-500 ml-1.5"
+      />
+    )}
+    {hasUnsaved && <span className="sr-only"> (unsaved changes)</span>}
+  </button>
+);
+
+const SaveBar = ({ unsavedCount, saving, onSave, onDiscard, message }) => (
+  <div
+    role="region"
+    aria-label="Unsaved changes"
+    className={cn(
+      'fixed bottom-0 inset-x-0 z-20 bg-surface-0 border-t border-border-default',
+      'px-6 py-3 flex items-center justify-between shadow-md',
+      'animate-in slide-in-from-bottom-4 duration-base ease-emphatic'
+    )}
+  >
+    <div className="flex items-center gap-3 min-w-0">
+      <span className="text-sm text-text-secondary">
+        {unsavedCount} unsaved {unsavedCount === 1 ? 'change' : 'changes'}
+      </span>
+      {message && (
+        <span
+          className={cn(
+            'text-sm truncate',
+            message.startsWith('Error')
+              ? 'text-accent-danger'
+              : message.includes('failed')
+                ? 'text-accent-warning'
+                : 'text-accent-success'
+          )}
+        >
+          {message}
+        </span>
+      )}
+    </div>
+    <div className="flex gap-2">
+      <Button
+        variant="outline"
+        onClick={onDiscard}
+        disabled={saving}
+        aria-label="Discard unsaved changes"
+      >
+        Discard
+      </Button>
+      <Button
+        onClick={onSave}
+        aria-busy={saving}
+        disabled={saving}
+        aria-label={saving ? 'Saving changes' : 'Save changes'}
+      >
+        {saving ? 'Saving…' : 'Save changes'}
+      </Button>
+    </div>
+  </div>
+);
+
+const SettingsLoadingSkeleton = () => (
+  <Layout>
+    <div className="mb-4">
+      <Skeleton className="h-8 w-48" />
+    </div>
+    <div className="flex gap-1 mb-6 border-b border-border-default pb-2">
+      <Skeleton className="h-9 w-20" />
+      <Skeleton className="h-9 w-24" />
+      <Skeleton className="h-9 w-20" />
+    </div>
+    <div className="space-y-6">
+      {[0, 1, 2].map((i) => (
+        <Card key={i}>
+          <CardHeader>
+            <Skeleton className="h-5 w-40" />
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-9 w-3/4" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  </Layout>
+);
+
+// --- Main page --------------------------------------------------------------
+
 const CourseSettingsPage = () => {
   const { courseId } = useParams();
   const { course, setCourse } = useCourseUI();
   const isTeacher = useIsTeacher(courseId);
+  const { announce } = useLiveRegion();
+
   const [form, setForm] = useState({
     name: '', course_code: '', default_view: 'modules', ui_mode: 'standard',
     license: 'private', is_public: false, start_at: '', end_at: '',
     apply_assignment_group_weights: false,
   });
-  const [navTabs, setNavTabs] = useState(null); // null = not loaded yet
+  const [navTabs, setNavTabs] = useState(null);
   const [buttons, setButtons] = useState([]);
   const [overrides, setOverrides] = useState([]);
-  const [latePolicy, setLatePolicy] = useState({
-    late_submission_deduction_enabled: false,
-    late_submission_deduction: 0,
-    late_submission_interval: 'day',
-    late_submission_minimum_percent_enabled: false,
-    late_submission_minimum_percent: 0,
-    missing_submission_deduction_enabled: false,
-    missing_submission_deduction: 0,
-  });
+  const [latePolicy, setLatePolicy] = useState(DEFAULT_LATE_POLICY);
   const [latePolicyExists, setLatePolicyExists] = useState(false);
-  const [gradingScale, setGradingScale] = useState([
-    ['A', 0.93], ['A-', 0.90], ['B+', 0.87], ['B', 0.83], ['B-', 0.80],
-    ['C+', 0.77], ['C', 0.73], ['C-', 0.70], ['D+', 0.67], ['D', 0.63],
-    ['D-', 0.60], ['F', 0.0],
-  ]);
+  const [gradingScale, setGradingScale] = useState(DEFAULT_GRADING_SCALE);
   const [gradingStandardId, setGradingStandardId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
-  const [isDirty, setIsDirty] = useState(false);
+  const [activeTab, setActiveTab] = useState('general');
 
-  useUnsavedChanges(isDirty);
+  // Baseline snapshots for change detection
+  const baselineRef = useRef({
+    form: null,
+    navTabs: null,
+    latePolicy: null,
+    gradingScale: null,
+  });
 
+  const captureBaseline = useCallback(() => {
+    baselineRef.current = {
+      form: JSON.parse(JSON.stringify(form)),
+      navTabs: JSON.parse(JSON.stringify(navTabs)),
+      latePolicy: JSON.parse(JSON.stringify(latePolicy)),
+      gradingScale: JSON.parse(JSON.stringify(gradingScale)),
+    };
+  }, [form, navTabs, latePolicy, gradingScale]);
+
+  // Initialize from course
   useEffect(() => {
-    if (course) {
-      const fmtDate = (d) => {
-        if (!d) return '';
-        const dt = new Date(d);
-        return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
-      };
-      setForm({
-        name: course.name || '',
-        course_code: course.course_code || '',
-        default_view: course.default_view || 'modules',
-        ui_mode: course.ui_mode || 'standard',
-        license: course.license || 'private',
-        is_public: course.is_public || false,
-        start_at: fmtDate(course.start_at),
-        end_at: fmtDate(course.end_at),
-        apply_assignment_group_weights: course.apply_assignment_group_weights || false,
-      });
-      // Initialize navigation tabs from course data or defaults
-      if (Array.isArray(course.navigation_tabs) && course.navigation_tabs.length > 0) {
-        // Merge saved config with defaults (in case new tabs were added since last save)
-        const savedIds = new Set(course.navigation_tabs.map(t => t.id));
-        const merged = [
-          ...course.navigation_tabs,
-          ...DEFAULT_NAV_TABS
-            .filter(t => !savedIds.has(t.id))
-            .map((t, i) => ({ id: t.id, hidden: false, position: course.navigation_tabs.length + i })),
-        ];
-        setNavTabs(merged);
-      } else {
-        setNavTabs(DEFAULT_NAV_TABS.map((t, i) => ({ id: t.id, hidden: false, position: i })));
-      }
+    if (!course) return;
+    const nextForm = {
+      name: course.name || '',
+      course_code: course.course_code || '',
+      default_view: course.default_view || 'modules',
+      ui_mode: course.ui_mode || 'standard',
+      license: course.license || 'private',
+      is_public: course.is_public || false,
+      start_at: fmtDate(course.start_at),
+      end_at: fmtDate(course.end_at),
+      apply_assignment_group_weights: course.apply_assignment_group_weights || false,
+    };
+    setForm(nextForm);
+
+    let nextNavTabs;
+    if (Array.isArray(course.navigation_tabs) && course.navigation_tabs.length > 0) {
+      const savedIds = new Set(course.navigation_tabs.map((t) => t.id));
+      nextNavTabs = [
+        ...course.navigation_tabs,
+        ...DEFAULT_NAV_TABS
+          .filter((t) => !savedIds.has(t.id))
+          .map((t, i) => ({ id: t.id, hidden: false, position: course.navigation_tabs.length + i })),
+      ];
+    } else {
+      nextNavTabs = DEFAULT_NAV_TABS.map((t, i) => ({ id: t.id, hidden: false, position: i }));
     }
+    setNavTabs(nextNavTabs);
+
+    baselineRef.current.form = JSON.parse(JSON.stringify(nextForm));
+    baselineRef.current.navTabs = JSON.parse(JSON.stringify(nextNavTabs));
   }, [course]);
 
   useEffect(() => {
-    if (courseId) {
-      api.getCourseHomeButtons(courseId).then(r => setButtons(r.data || [])).catch(() => {});
-      api.getTodaysLessonOverrides(courseId).then(r => setOverrides(r.data || [])).catch(() => {});
-      api.getLatePolicy(courseId).then(data => {
-        if (data && data.late_policy) {
-          setLatePolicy(data.late_policy);
-          setLatePolicyExists(true);
-        } else if (data && data.id) {
-          setLatePolicy(data);
-          setLatePolicyExists(true);
+    if (!courseId) return;
+    api.getCourseHomeButtons(courseId).then((r) => setButtons(r.data || [])).catch(() => {});
+    api.getTodaysLessonOverrides(courseId).then((r) => setOverrides(r.data || [])).catch(() => {});
+    api.getLatePolicy(courseId).then((data) => {
+      let lp = null;
+      if (data && data.late_policy) lp = data.late_policy;
+      else if (data && data.id) lp = data;
+      if (lp) {
+        setLatePolicy(lp);
+        setLatePolicyExists(true);
+        baselineRef.current.latePolicy = JSON.parse(JSON.stringify(lp));
+      } else {
+        baselineRef.current.latePolicy = JSON.parse(JSON.stringify(DEFAULT_LATE_POLICY));
+      }
+    }).catch(() => {
+      baselineRef.current.latePolicy = JSON.parse(JSON.stringify(DEFAULT_LATE_POLICY));
+    });
+    api.getGradingStandards(courseId).then((standards) => {
+      if (Array.isArray(standards) && standards.length > 0) {
+        const latest = standards[standards.length - 1];
+        setGradingStandardId(latest.id);
+        if (Array.isArray(latest.data)) {
+          setGradingScale(latest.data);
+          baselineRef.current.gradingScale = JSON.parse(JSON.stringify(latest.data));
+          return;
         }
-      }).catch(() => {});
-      api.getGradingStandards(courseId).then(standards => {
-        if (Array.isArray(standards) && standards.length > 0) {
-          const latest = standards[standards.length - 1];
-          setGradingStandardId(latest.id);
-          if (Array.isArray(latest.data)) {
-            setGradingScale(latest.data);
-          }
-        }
-      }).catch(() => {});
-    }
+      }
+      baselineRef.current.gradingScale = JSON.parse(JSON.stringify(DEFAULT_GRADING_SCALE));
+    }).catch(() => {
+      baselineRef.current.gradingScale = JSON.parse(JSON.stringify(DEFAULT_GRADING_SCALE));
+    });
   }, [courseId]);
+
+  // Per-tab dirty detection
+  const dirtyByTab = useMemo(() => {
+    const base = baselineRef.current;
+    const generalKeys = ['name', 'course_code', 'default_view', 'ui_mode', 'license',
+      'is_public', 'start_at', 'end_at'];
+    const generalChanged = base.form
+      ? generalKeys.some((k) => form[k] !== base.form[k])
+      : false;
+    const navigationChanged = base.navTabs && navTabs ? !eq(navTabs, base.navTabs) : false;
+    const gradingChanged =
+      (base.gradingScale ? !eq(gradingScale, base.gradingScale) : false) ||
+      (base.latePolicy ? !eq(latePolicy, base.latePolicy) : false) ||
+      (base.form ? form.apply_assignment_group_weights !== base.form.apply_assignment_group_weights : false);
+    return {
+      general: generalChanged,
+      navigation: navigationChanged,
+      grading: gradingChanged,
+    };
+  }, [form, navTabs, latePolicy, gradingScale]);
+
+  const unsavedCount =
+    (dirtyByTab.general ? 1 : 0) +
+    (dirtyByTab.navigation ? 1 : 0) +
+    (dirtyByTab.grading ? 1 : 0);
+  const isDirty = unsavedCount > 0;
+  useUnsavedChanges(isDirty);
+
+  const updateForm = (patch) => setForm((f) => ({ ...f, ...patch }));
+  const updateLatePolicy = (patch) => setLatePolicy((p) => ({ ...p, ...patch }));
+
+  const handleDiscard = () => {
+    const base = baselineRef.current;
+    if (base.form) setForm(JSON.parse(JSON.stringify(base.form)));
+    if (base.navTabs) setNavTabs(JSON.parse(JSON.stringify(base.navTabs)));
+    if (base.latePolicy) setLatePolicy(JSON.parse(JSON.stringify(base.latePolicy)));
+    if (base.gradingScale) setGradingScale(JSON.parse(JSON.stringify(base.gradingScale)));
+    setMessage('');
+    announce('Changes discarded.');
+  };
 
   const handleSave = async () => {
     setSaving(true);
     setMessage('');
     try {
       const payload = { ...form };
-      if (payload.start_at) payload.start_at = new Date(payload.start_at).toISOString();
-      else payload.start_at = null;
-      if (payload.end_at) payload.end_at = new Date(payload.end_at).toISOString();
-      else payload.end_at = null;
-      // Include navigation tab ordering
-      if (navTabs) {
-        payload.navigation_tabs = navTabs.map((t, i) => ({ ...t, position: i }));
-      }
+      payload.start_at = payload.start_at ? new Date(payload.start_at).toISOString() : null;
+      payload.end_at = payload.end_at ? new Date(payload.end_at).toISOString() : null;
+      if (navTabs) payload.navigation_tabs = navTabs.map((t, i) => ({ ...t, position: i }));
       const updated = await api.updateCourse(courseId, payload);
       setCourse(updated);
+
       const saveErrors = [];
-      // Save late policy
       try {
         if (latePolicyExists) {
           await api.updateLatePolicy(courseId, latePolicy);
@@ -160,7 +360,7 @@ const CourseSettingsPage = () => {
           await api.createLatePolicy(courseId, latePolicy);
           setLatePolicyExists(true);
         }
-      } catch (lpErr) {
+      } catch {
         try {
           if (!latePolicyExists) {
             await api.createLatePolicy(courseId, latePolicy);
@@ -172,7 +372,6 @@ const CourseSettingsPage = () => {
           saveErrors.push('late policy');
         }
       }
-      // Save grading scale
       try {
         if (gradingStandardId) {
           await api.updateGradingStandard(courseId, gradingStandardId, 'Course Grading Scale', gradingScale);
@@ -183,14 +382,20 @@ const CourseSettingsPage = () => {
       } catch {
         saveErrors.push('grading scale');
       }
-      setIsDirty(false);
+
+      captureBaseline();
+
       if (saveErrors.length > 0) {
-        setMessage(`Settings saved, but failed to save: ${saveErrors.join(', ')}. Please try again.`);
+        const msg = `Settings saved, but failed to save: ${saveErrors.join(', ')}. Please try again.`;
+        setMessage(msg);
+        announce(msg, 'assertive');
       } else {
         setMessage('Settings saved.');
+        announce('Course settings saved.');
       }
     } catch (err) {
       setMessage('Error: ' + err.message);
+      announce(`Error saving course settings: ${err.message}`, 'assertive');
     } finally {
       setSaving(false);
     }
@@ -203,358 +408,513 @@ const CourseSettingsPage = () => {
     { value: 'announcements', label: 'Announcements' },
     { value: 'home_engine', label: 'Home Engine' },
   ];
-
   const modeOptions = [
     { value: 'standard', label: 'Standard', desc: 'Full LMS experience' },
     { value: 'k2', label: 'K-2', desc: 'Icons only, large touch targets, no text labels' },
     { value: '3-5', label: '3-5', desc: 'Icons + text, larger UI, simplified navigation' },
   ];
 
-  // Block non-teachers from accessing settings
-  if (isTeacher === false) {
-    return <Navigate to={`/courses/${courseId}`} replace />;
-  }
-  if (isTeacher === null) {
-    return <Layout><div className="flex items-center justify-center py-12 gap-2 text-gray-500">
-  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
-  Loading...
-</div></Layout>;
-  }
+  if (isTeacher === false) return <Navigate to={`/courses/${courseId}`} replace />;
+  if (isTeacher === null || navTabs === null) return <SettingsLoadingSkeleton />;
 
   return (
-    <Layout>
-      <div className="mb-4">
-        <h2 className="text-2xl font-bold">Course Settings</h2>
-      </div>
-      <CourseNav />
-
-      <div className="space-y-6">
-        {/* General */}
-        <section className="bg-white rounded-lg shadow p-6">
-          <h3 className="font-semibold text-lg mb-4">General</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Course Name</label>
-              <input type="text" className="w-full border rounded px-3 py-2" value={form.name}
-                onChange={e => { setForm(f => ({ ...f, name: e.target.value })); setIsDirty(true); }} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Course Code</label>
-              <input type="text" className="w-full border rounded px-3 py-2" value={form.course_code}
-                onChange={e => { setForm(f => ({ ...f, course_code: e.target.value })); setIsDirty(true); }} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">License</label>
-              <select className="w-full border rounded px-3 py-2" value={form.license}
-                onChange={e => { setForm(f => ({ ...f, license: e.target.value })); setIsDirty(true); }}>
-                <option value="private">Private</option>
-                <option value="cc_by">CC BY</option>
-                <option value="cc_by_sa">CC BY-SA</option>
-                <option value="public_domain">Public Domain</option>
-              </select>
-            </div>
-            <div className="flex items-center gap-2 pt-6">
-              <input type="checkbox" checked={form.is_public}
-                onChange={e => { setForm(f => ({ ...f, is_public: e.target.checked })); setIsDirty(true); }} />
-              <label className="text-sm text-gray-700">Public Course</label>
-            </div>
-            <div className="flex items-center gap-2 pt-6">
-              <input type="checkbox" checked={form.apply_assignment_group_weights}
-                onChange={e => { setForm(f => ({ ...f, apply_assignment_group_weights: e.target.checked })); setIsDirty(true); }} />
-              <label className="text-sm text-gray-700">Weight final grade based on assignment groups</label>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-              <input type="date" className="w-full border rounded px-3 py-2" value={form.start_at}
-                onChange={e => { setForm(f => ({ ...f, start_at: e.target.value })); setIsDirty(true); }} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-              <input type="date" className="w-full border rounded px-3 py-2" value={form.end_at}
-                onChange={e => { setForm(f => ({ ...f, end_at: e.target.value })); setIsDirty(true); }} />
-            </div>
-          </div>
-        </section>
-
-        {/* Home Page */}
-        <section className="bg-white rounded-lg shadow p-6">
-          <h3 className="font-semibold text-lg mb-4">Home Page</h3>
-          <div className="space-y-2">
-            {viewOptions.map(opt => (
-              <label key={opt.value} className="flex items-center gap-2">
-                <input type="radio" name="default_view" value={opt.value}
-                  checked={form.default_view === opt.value}
-                  onChange={e => { setForm(f => ({ ...f, default_view: e.target.value })); setIsDirty(true); }} />
-                <span className="text-sm">{opt.label}</span>
-              </label>
-            ))}
-          </div>
-        </section>
-
-        {/* Navigation */}
-        {navTabs && (
-          <section className="bg-white rounded-lg shadow p-6">
-            <h3 className="font-semibold text-lg mb-2">Navigation</h3>
-            <p className="text-sm text-gray-500 mb-4">
-              Drag tabs up or down to reorder. Toggle visibility to show or hide tabs from students. The first 6 visible tabs appear in the primary navigation bar; the rest appear under "More".
-            </p>
-            <div className="space-y-1">
-              {navTabs.map((tab, idx) => {
-                const def = DEFAULT_NAV_TABS.find(d => d.id === tab.id);
-                const label = def ? def.label : tab.id;
-                return (
-                  <div
-                    key={tab.id}
-                    className={`flex items-center gap-3 px-3 py-2 rounded border ${tab.hidden ? 'bg-gray-50 border-gray-200 opacity-60' : 'bg-white border-gray-300'}`}
-                  >
-                    {/* Position number */}
-                    <span className="text-xs text-gray-400 w-5 text-right">{idx + 1}</span>
-
-                    {/* Up/Down arrows */}
-                    <div className="flex flex-col gap-0.5">
-                      <button
-                        type="button"
-                        disabled={idx === 0}
-                        className="text-gray-400 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed p-0.5"
-                        aria-label={`Move ${label} up`}
-                        onClick={() => {
-                          const updated = [...navTabs];
-                          [updated[idx - 1], updated[idx]] = [updated[idx], updated[idx - 1]];
-                          setNavTabs(updated);
-                          setIsDirty(true);
-                        }}
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        disabled={idx === navTabs.length - 1}
-                        className="text-gray-400 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed p-0.5"
-                        aria-label={`Move ${label} down`}
-                        onClick={() => {
-                          const updated = [...navTabs];
-                          [updated[idx], updated[idx + 1]] = [updated[idx + 1], updated[idx]];
-                          setNavTabs(updated);
-                          setIsDirty(true);
-                        }}
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
-                    </div>
-
-                    {/* Tab label */}
-                    <span className={`flex-1 text-sm font-medium ${tab.hidden ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
-                      {label}
-                    </span>
-
-                    {/* Visibility toggle */}
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="sr-only peer"
-                        checked={!tab.hidden}
-                        onChange={() => {
-                          const updated = navTabs.map((t, i) =>
-                            i === idx ? { ...t, hidden: !t.hidden } : t
-                          );
-                          setNavTabs(updated);
-                          setIsDirty(true);
-                        }}
-                      />
-                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                      <span className="ml-2 text-xs text-gray-500">{tab.hidden ? 'Hidden' : 'Visible'}</span>
-                    </label>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        )}
-
-        {/* UI Mode */}
-        <section className="bg-white rounded-lg shadow p-6">
-          <h3 className="font-semibold text-lg mb-4">UI Mode</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {modeOptions.map(opt => (
-              <label key={opt.value}
-                className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${form.ui_mode === opt.value ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
-                <input type="radio" name="ui_mode" value={opt.value} className="sr-only"
-                  checked={form.ui_mode === opt.value}
-                  onChange={e => { setForm(f => ({ ...f, ui_mode: e.target.value })); setIsDirty(true); }} />
-                <div className="font-semibold">{opt.label}</div>
-                <div className="text-xs text-gray-500 mt-1">{opt.desc}</div>
-              </label>
-            ))}
-          </div>
-        </section>
-
-        {/* Late Policies */}
-        <section className="bg-white rounded-lg shadow p-6">
-          <h3 className="font-semibold text-lg mb-4">Late Policies</h3>
-          <div className="space-y-4">
-            {/* Late submission deduction */}
-            <div className="border rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <input type="checkbox" id="late-deduction-enabled"
-                  checked={latePolicy.late_submission_deduction_enabled}
-                  onChange={e => { setLatePolicy(p => ({ ...p, late_submission_deduction_enabled: e.target.checked })); setIsDirty(true); }} />
-                <label htmlFor="late-deduction-enabled" className="text-sm font-medium text-gray-700">
-                  Automatically deduct from late submissions
-                </label>
-              </div>
-              {latePolicy.late_submission_deduction_enabled && (
-                <div className="ml-6 flex flex-wrap items-center gap-2 text-sm text-gray-600">
-                  <span>Deduct</span>
-                  <input type="number" min="0" max="100" step="1" className="w-20 border rounded px-2 py-1"
-                    value={latePolicy.late_submission_deduction}
-                    onChange={e => { setLatePolicy(p => ({ ...p, late_submission_deduction: parseFloat(e.target.value) || 0 })); setIsDirty(true); }} />
-                  <span>% for each late</span>
-                  <select className="border rounded px-2 py-1"
-                    value={latePolicy.late_submission_interval}
-                    onChange={e => { setLatePolicy(p => ({ ...p, late_submission_interval: e.target.value })); setIsDirty(true); }}>
-                    <option value="day">day</option>
-                    <option value="hour">hour</option>
-                  </select>
-                </div>
-              )}
-            </div>
-
-            {/* Minimum percentage for late submissions */}
-            <div className="border rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <input type="checkbox" id="min-percent-enabled"
-                  checked={latePolicy.late_submission_minimum_percent_enabled}
-                  onChange={e => { setLatePolicy(p => ({ ...p, late_submission_minimum_percent_enabled: e.target.checked })); setIsDirty(true); }} />
-                <label htmlFor="min-percent-enabled" className="text-sm font-medium text-gray-700">
-                  Set a minimum grade for late submissions
-                </label>
-              </div>
-              {latePolicy.late_submission_minimum_percent_enabled && (
-                <div className="ml-6 flex items-center gap-2 text-sm text-gray-600">
-                  <span>Lowest possible grade:</span>
-                  <input type="number" min="0" max="100" step="1" className="w-20 border rounded px-2 py-1"
-                    value={latePolicy.late_submission_minimum_percent}
-                    onChange={e => { setLatePolicy(p => ({ ...p, late_submission_minimum_percent: parseFloat(e.target.value) || 0 })); setIsDirty(true); }} />
-                  <span>%</span>
-                </div>
-              )}
-            </div>
-
-            {/* Missing submission deduction */}
-            <div className="border rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <input type="checkbox" id="missing-deduction-enabled"
-                  checked={latePolicy.missing_submission_deduction_enabled}
-                  onChange={e => { setLatePolicy(p => ({ ...p, missing_submission_deduction_enabled: e.target.checked })); setIsDirty(true); }} />
-                <label htmlFor="missing-deduction-enabled" className="text-sm font-medium text-gray-700">
-                  Automatically apply a grade for missing submissions
-                </label>
-              </div>
-              {latePolicy.missing_submission_deduction_enabled && (
-                <div className="ml-6 flex items-center gap-2 text-sm text-gray-600">
-                  <span>Grade missing submissions as</span>
-                  <input type="number" min="0" max="100" step="1" className="w-20 border rounded px-2 py-1"
-                    value={100 - (latePolicy.missing_submission_deduction || 0)}
-                    onChange={e => { setLatePolicy(p => ({ ...p, missing_submission_deduction: 100 - (parseFloat(e.target.value) || 0) })); setIsDirty(true); }} />
-                  <span>% of possible points</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* Grading Scale */}
-        <section className="bg-white rounded-lg shadow p-6">
-          <h3 className="font-semibold text-lg mb-4">Grading Scale</h3>
-          <p className="text-sm text-gray-500 mb-4">
-            Customize the letter grade boundaries for this course. Percentages are minimum thresholds (e.g., 93% means scores of 93% and above earn that grade).
-          </p>
-          <div className="space-y-2">
-            {gradingScale.map(([name, value], idx) => (
-              <div key={idx} className="flex items-center gap-3">
-                <input
-                  type="text"
-                  className="w-16 border rounded px-2 py-1 text-sm text-center font-medium"
-                  value={name}
-                  onChange={e => {
-                    const updated = [...gradingScale];
-                    updated[idx] = [e.target.value, value];
-                    setGradingScale(updated);
-                    setIsDirty(true);
-                  }}
-                />
-                <span className="text-sm text-gray-500">&ge;</span>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="1"
-                  className="w-20 border rounded px-2 py-1 text-sm text-center"
-                  value={Math.round(value * 100)}
-                  onChange={e => {
-                    const updated = [...gradingScale];
-                    updated[idx] = [name, (parseFloat(e.target.value) || 0) / 100];
-                    setGradingScale(updated);
-                    setIsDirty(true);
-                  }}
-                />
-                <span className="text-sm text-gray-500">%</span>
-                {gradingScale.length > 2 && (
-                  <button
-                    type="button"
-                    className="text-red-400 hover:text-red-600 text-xs"
-                    onClick={() => { setGradingScale(gradingScale.filter((_, i) => i !== idx)); setIsDirty(true); }}
-                  >
-                    Remove
-                  </button>
-                )}
-              </div>
-            ))}
-            <button
-              type="button"
-              className="text-sm text-blue-600 hover:underline mt-2"
-              onClick={() => {
-                const last = gradingScale[gradingScale.length - 1];
-                const newValue = last ? Math.max((last[1] - 0.05), 0) : 0;
-                setGradingScale([...gradingScale.slice(0, -1), ['New', newValue], gradingScale[gradingScale.length - 1]]);
-                setIsDirty(true);
-              }}
-            >
-              + Add grade level
-            </button>
-          </div>
-        </section>
-
-        {/* Home Buttons (visible when home_engine selected) */}
-        {form.default_view === 'home_engine' && (
-          <section className="bg-white rounded-lg shadow p-6">
-            <h3 className="font-semibold text-lg mb-4">Home Buttons</h3>
-            <ButtonEditor courseId={courseId} buttons={buttons} setButtons={setButtons} />
-          </section>
-        )}
-
-        {/* Today's Lesson Overrides (visible when home_engine selected) */}
-        {form.default_view === 'home_engine' && (
-          <section className="bg-white rounded-lg shadow p-6">
-            <h3 className="font-semibold text-lg mb-4">Today's Lesson Overrides</h3>
-            <OverrideEditor courseId={courseId} overrides={overrides} setOverrides={setOverrides} />
-          </section>
-        )}
-
-        {/* Save */}
-        <div className="flex items-center gap-4">
-          <button onClick={handleSave} disabled={saving}
-            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:opacity-50">
-            {saving ? 'Saving...' : 'Save Settings'}
-          </button>
-          {message && <span className={`text-sm ${message.startsWith('Error') ? 'text-red-600' : message.includes('failed') ? 'text-yellow-700' : 'text-green-600'}`}>{message}</span>}
+    <TooltipProvider delayDuration={200}>
+      <Layout>
+        <div className="mb-4">
+          <h2 className="text-2xl font-bold">Course Settings</h2>
         </div>
-      </div>
-    </Layout>
+        <CourseNav />
+
+        {/* Sticky tab strip */}
+        <div className="sticky top-0 z-10 bg-surface-0/95 backdrop-blur border-b border-border-default mb-6 -mx-2 px-2">
+          <div
+            role="tablist"
+            aria-label="Settings sections"
+            className="flex gap-1 overflow-x-auto py-2"
+          >
+            {TABS.map((tab) => (
+              <SettingsTab
+                key={tab.id}
+                tab={tab}
+                isActive={activeTab === tab.id}
+                hasUnsaved={dirtyByTab[tab.id]}
+                onSelect={setActiveTab}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className={cn(isDirty && 'pb-20')}>
+          {/* General */}
+          {activeTab === 'general' && (
+            <div
+              role="tabpanel"
+              id="settings-panel-general"
+              aria-labelledby="settings-tab-general"
+              className="space-y-6"
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Course Details</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="course-name">Course Name</Label>
+                      <Input
+                        id="course-name"
+                        value={form.name}
+                        onChange={(e) => updateForm({ name: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="course-code">Course Code</Label>
+                      <Input
+                        id="course-code"
+                        value={form.course_code}
+                        onChange={(e) => updateForm({ course_code: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="course-start">Start Date</Label>
+                      <Input
+                        id="course-start"
+                        type="date"
+                        value={form.start_at}
+                        onChange={(e) => updateForm({ start_at: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="course-end">End Date</Label>
+                      <Input
+                        id="course-end"
+                        type="date"
+                        value={form.end_at}
+                        onChange={(e) => updateForm({ end_at: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="course-license">License</Label>
+                      <select
+                        id="course-license"
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        value={form.license}
+                        onChange={(e) => updateForm({ license: e.target.value })}
+                      >
+                        <option value="private">Private</option>
+                        <option value="cc_by">CC BY</option>
+                        <option value="cc_by_sa">CC BY-SA</option>
+                        <option value="public_domain">Public Domain</option>
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-2 pt-7">
+                      <input
+                        id="course-public"
+                        type="checkbox"
+                        checked={form.is_public}
+                        onChange={(e) => updateForm({ is_public: e.target.checked })}
+                      />
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Label htmlFor="course-public" className="cursor-pointer">
+                            Public Course
+                          </Label>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          Anyone with the link can view this course.
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Home Page</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {viewOptions.map((opt) => (
+                      <label key={opt.value} className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="default_view"
+                          value={opt.value}
+                          checked={form.default_view === opt.value}
+                          onChange={(e) => updateForm({ default_view: e.target.value })}
+                        />
+                        <span className="text-sm">{opt.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  {form.default_view === 'home_engine' && (
+                    <div className="mt-6 space-y-6">
+                      <Separator />
+                      <div>
+                        <h4 className="font-medium text-sm text-text-secondary mb-3">Home Buttons</h4>
+                        <ButtonEditor courseId={courseId} buttons={buttons} setButtons={setButtons} />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm text-text-secondary mb-3">Today&apos;s Lesson Overrides</h4>
+                        <OverrideEditor courseId={courseId} overrides={overrides} setOverrides={setOverrides} />
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">UI Mode</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {modeOptions.map((opt) => (
+                      <label
+                        key={opt.value}
+                        className={cn(
+                          'border-2 rounded-lg p-4 cursor-pointer transition-colors duration-fast ease-emphatic',
+                          form.ui_mode === opt.value
+                            ? 'border-brand-500 bg-brand-50'
+                            : 'border-border-default hover:border-border-strong'
+                        )}
+                      >
+                        <input
+                          type="radio"
+                          name="ui_mode"
+                          value={opt.value}
+                          className="sr-only"
+                          checked={form.ui_mode === opt.value}
+                          onChange={(e) => updateForm({ ui_mode: e.target.value })}
+                        />
+                        <div className="font-semibold">{opt.label}</div>
+                        <div className="text-xs text-text-tertiary mt-1">{opt.desc}</div>
+                      </label>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Navigation */}
+          {activeTab === 'navigation' && navTabs && (
+            <div
+              role="tabpanel"
+              id="settings-panel-navigation"
+              aria-labelledby="settings-tab-navigation"
+              className="space-y-6"
+            >
+              <Card>
+                <CardContent className="pt-6">
+                  <p className="text-sm text-text-secondary mb-4">
+                    Reorder tabs using the arrows. Toggle visibility to show or hide tabs from students. The first 6 visible tabs appear in the primary navigation bar; the rest appear under &quot;More&quot;.
+                  </p>
+                  <div className="space-y-1">
+                    {navTabs.map((tab, idx) => {
+                      const def = DEFAULT_NAV_TABS.find((d) => d.id === tab.id);
+                      const label = def ? def.label : tab.id;
+                      return (
+                        <div
+                          key={tab.id}
+                          className={cn(
+                            'flex items-center gap-3 px-3 py-2 rounded-md border',
+                            tab.hidden
+                              ? 'bg-surface-1 border-border-subtle opacity-60'
+                              : 'bg-surface-0 border-border-default'
+                          )}
+                        >
+                          <span className="text-xs text-text-tertiary w-5 text-right">{idx + 1}</span>
+                          <div className="flex flex-col gap-0.5">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  disabled={idx === 0}
+                                  className="text-text-secondary hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed p-0.5"
+                                  aria-label={`Move ${label} up`}
+                                  onClick={() => {
+                                    const updated = [...navTabs];
+                                    [updated[idx - 1], updated[idx]] = [updated[idx], updated[idx - 1]];
+                                    setNavTabs(updated);
+                                  }}
+                                >
+                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+                                  </svg>
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>Move up</TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  disabled={idx === navTabs.length - 1}
+                                  className="text-text-secondary hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed p-0.5"
+                                  aria-label={`Move ${label} down`}
+                                  onClick={() => {
+                                    const updated = [...navTabs];
+                                    [updated[idx], updated[idx + 1]] = [updated[idx + 1], updated[idx]];
+                                    setNavTabs(updated);
+                                  }}
+                                >
+                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                  </svg>
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>Move down</TooltipContent>
+                            </Tooltip>
+                          </div>
+                          <span className={cn(
+                            'flex-1 text-sm font-medium',
+                            tab.hidden ? 'text-text-tertiary line-through' : 'text-text-primary'
+                          )}>
+                            {label}
+                          </span>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="sr-only peer"
+                              checked={!tab.hidden}
+                              aria-label={`${tab.hidden ? 'Show' : 'Hide'} ${label}`}
+                              onChange={() => {
+                                setNavTabs(navTabs.map((t, i) =>
+                                  i === idx ? { ...t, hidden: !t.hidden } : t
+                                ));
+                              }}
+                            />
+                            <div className="w-9 h-5 bg-surface-2 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border-default after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-600"></div>
+                            <span className="ml-2 text-xs text-text-tertiary">{tab.hidden ? 'Hidden' : 'Visible'}</span>
+                          </label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Grading */}
+          {activeTab === 'grading' && (
+            <div
+              role="tabpanel"
+              id="settings-panel-grading"
+              aria-labelledby="settings-tab-grading"
+              className="space-y-6"
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Grading Scale</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-text-secondary mb-4">
+                    Customize the letter grade boundaries for this course. Percentages are minimum thresholds (e.g., 93% means scores of 93% and above earn that grade).
+                  </p>
+                  <div className="space-y-2">
+                    {gradingScale.map(([name, value], idx) => (
+                      <div key={idx} className="flex items-center gap-3">
+                        <Input
+                          className="w-16 text-center font-medium"
+                          value={name}
+                          aria-label={`Grade ${idx + 1} letter`}
+                          onChange={(e) => {
+                            const updated = [...gradingScale];
+                            updated[idx] = [e.target.value, value];
+                            setGradingScale(updated);
+                          }}
+                        />
+                        <span className="text-sm text-text-tertiary">&ge;</span>
+                        <Input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="1"
+                          className="w-20 text-center"
+                          value={Math.round(value * 100)}
+                          aria-label={`Grade ${idx + 1} minimum percent`}
+                          onChange={(e) => {
+                            const updated = [...gradingScale];
+                            updated[idx] = [name, (parseFloat(e.target.value) || 0) / 100];
+                            setGradingScale(updated);
+                          }}
+                        />
+                        <span className="text-sm text-text-tertiary">%</span>
+                        {gradingScale.length > 2 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="text-accent-danger hover:text-accent-danger hover:bg-accent-danger/10"
+                            onClick={() => setGradingScale(gradingScale.filter((_, i) => i !== idx))}
+                          >
+                            Remove
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="link"
+                      size="sm"
+                      className="mt-2 px-0"
+                      onClick={() => {
+                        const last = gradingScale[gradingScale.length - 1];
+                        const newValue = last ? Math.max(last[1] - 0.05, 0) : 0;
+                        setGradingScale([
+                          ...gradingScale.slice(0, -1),
+                          ['New', newValue],
+                          gradingScale[gradingScale.length - 1],
+                        ]);
+                      }}
+                    >
+                      + Add grade level
+                    </Button>
+                  </div>
+                  <Separator className="my-4" />
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="weight-groups"
+                      type="checkbox"
+                      checked={form.apply_assignment_group_weights}
+                      onChange={(e) => updateForm({ apply_assignment_group_weights: e.target.checked })}
+                    />
+                    <Label htmlFor="weight-groups" className="cursor-pointer">
+                      Weight final grade based on assignment groups
+                    </Label>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="pt-6">
+                  <fieldset>
+                    <legend className="font-semibold text-lg mb-4">Grading Rules: Late &amp; Missing Work</legend>
+                    <div className="divide-y divide-border-subtle">
+                      <div className="py-4 first:pt-0">
+                        <div className="flex items-center gap-2 mb-3">
+                          <input
+                            type="checkbox"
+                            id="missing-deduction-enabled"
+                            checked={latePolicy.missing_submission_deduction_enabled}
+                            onChange={(e) => updateLatePolicy({ missing_submission_deduction_enabled: e.target.checked })}
+                          />
+                          <Label htmlFor="missing-deduction-enabled" className="cursor-pointer">
+                            Automatically apply a grade for missing submissions
+                          </Label>
+                        </div>
+                        {latePolicy.missing_submission_deduction_enabled && (
+                          <div className="ml-6 flex items-center gap-2 text-sm text-text-secondary">
+                            <span>Grade missing submissions as</span>
+                            <Input
+                              type="number"
+                              min="0"
+                              max="100"
+                              step="1"
+                              className="w-20"
+                              value={100 - (latePolicy.missing_submission_deduction || 0)}
+                              aria-label="Missing submission grade percent"
+                              onChange={(e) => updateLatePolicy({
+                                missing_submission_deduction: 100 - (parseFloat(e.target.value) || 0),
+                              })}
+                            />
+                            <span>% of possible points</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="py-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <input
+                            type="checkbox"
+                            id="late-deduction-enabled"
+                            checked={latePolicy.late_submission_deduction_enabled}
+                            onChange={(e) => updateLatePolicy({ late_submission_deduction_enabled: e.target.checked })}
+                          />
+                          <Label htmlFor="late-deduction-enabled" className="cursor-pointer">
+                            Automatically deduct from late submissions
+                          </Label>
+                        </div>
+                        {latePolicy.late_submission_deduction_enabled && (
+                          <div className="ml-6 flex flex-wrap items-center gap-2 text-sm text-text-secondary">
+                            <span>Deduct</span>
+                            <Input
+                              type="number"
+                              min="0"
+                              max="100"
+                              step="1"
+                              className="w-20"
+                              value={latePolicy.late_submission_deduction}
+                              aria-label="Late deduction percent"
+                              onChange={(e) => updateLatePolicy({
+                                late_submission_deduction: parseFloat(e.target.value) || 0,
+                              })}
+                            />
+                            <span>% for each late</span>
+                            <select
+                              className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              value={latePolicy.late_submission_interval}
+                              aria-label="Late deduction interval"
+                              onChange={(e) => updateLatePolicy({ late_submission_interval: e.target.value })}
+                            >
+                              <option value="day">day</option>
+                              <option value="hour">hour</option>
+                            </select>
+                          </div>
+                        )}
+                      </div>
+                      <div className="py-4 last:pb-0">
+                        <div className="flex items-center gap-2 mb-3">
+                          <input
+                            type="checkbox"
+                            id="min-percent-enabled"
+                            checked={latePolicy.late_submission_minimum_percent_enabled}
+                            onChange={(e) => updateLatePolicy({ late_submission_minimum_percent_enabled: e.target.checked })}
+                          />
+                          <Label htmlFor="min-percent-enabled" className="cursor-pointer">
+                            Set a minimum grade for late submissions
+                          </Label>
+                        </div>
+                        {latePolicy.late_submission_minimum_percent_enabled && (
+                          <div className="ml-6 flex items-center gap-2 text-sm text-text-secondary">
+                            <span>Minimum grade allowed:</span>
+                            <Input
+                              type="number"
+                              min="0"
+                              max="100"
+                              step="1"
+                              className="w-20"
+                              value={latePolicy.late_submission_minimum_percent}
+                              aria-label="Minimum grade percent"
+                              onChange={(e) => updateLatePolicy({
+                                late_submission_minimum_percent: parseFloat(e.target.value) || 0,
+                              })}
+                            />
+                            <span>%</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </fieldset>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
+
+        {isDirty && (
+          <SaveBar
+            unsavedCount={unsavedCount}
+            saving={saving}
+            onSave={handleSave}
+            onDiscard={handleDiscard}
+            message={message}
+          />
+        )}
+      </Layout>
+    </TooltipProvider>
   );
 };
 

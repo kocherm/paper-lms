@@ -28,8 +28,10 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import useIsTeacher from '../hooks/useIsTeacher';
 import Layout from '../components/Layout';
 import RichContentViewer, { sanitizeHTML } from '../components/RichContentViewer';
+import DiscussionCheckpointsPanel from '../components/DiscussionCheckpointsPanel';
 
 // ---------------------------------------------------------------------------
 // Utilities
@@ -739,6 +741,18 @@ const EntryItem = ({
 const DiscussionTopicPageV2 = () => {
   const { courseId, topicId } = useParams();
   const { user } = useAuth();
+  const isTeacher = useIsTeacher(courseId);
+
+  // Phase 5 Wave 1: api adapter for the DiscussionCheckpointsPanel.
+  // The panel uses a slim shape ({list, replace, update, remove, progress})
+  // so it can stay decoupled from any specific HTTP client.
+  const checkpointsApi = React.useMemo(() => ({
+    list: (tId) => api.getDiscussionCheckpoints(courseId, tId),
+    replace: (tId, payload) => api.createDiscussionCheckpoints(courseId, tId, payload),
+    update: (tId, id, body) => api.updateDiscussionCheckpoint(courseId, tId, id, body),
+    remove: (tId, id) => api.deleteDiscussionCheckpoint(courseId, tId, id),
+    progress: (tId, uId) => api.getDiscussionCheckpointProgress(courseId, tId, uId),
+  }), [courseId]);
 
   const [topic, setTopic] = useState(null);
   const [entries, setEntries] = useState([]);
@@ -986,6 +1000,19 @@ const DiscussionTopicPageV2 = () => {
             {/* Topic body */}
             {topic.message && (
               <RichContentViewer content={highlightMentions(topic.message)} className="mt-4 text-sm text-gray-800" />
+            )}
+
+            {/* Phase 5 Wave 1: Discussion checkpoints (only render once role
+                is known so teacher/student UIs don't flicker). */}
+            {isTeacher !== null && (
+              <div className="mt-4">
+                <DiscussionCheckpointsPanel
+                  api={checkpointsApi}
+                  topicId={Number(topicId)}
+                  isTeacher={!!isTeacher}
+                  userId={user?.id}
+                />
+              </div>
             )}
           </div>
 

@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const GradeInput = ({ value, pointsPossible, onSave }) => {
+const GradeInput = ({ value, pointsPossible, onSave, studentName }) => {
   const [editing, setEditing] = useState(false);
   const [inputValue, setInputValue] = useState(value ?? '');
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState(null); // 'success' | 'error'
   const inputRef = useRef(null);
+  const triggerRef = useRef(null);
+  const wasEditingRef = useRef(false);
 
   useEffect(() => {
     setInputValue(value ?? '');
@@ -15,6 +17,10 @@ const GradeInput = ({ value, pointsPossible, onSave }) => {
     if (editing && inputRef.current) {
       inputRef.current.focus();
       inputRef.current.select();
+      wasEditingRef.current = true;
+    } else if (wasEditingRef.current && triggerRef.current) {
+      triggerRef.current.focus();
+      wasEditingRef.current = false;
     }
   }, [editing]);
 
@@ -80,19 +86,25 @@ const GradeInput = ({ value, pointsPossible, onSave }) => {
     );
   }
 
+  const triggerLabel = studentName ? `Edit grade for ${studentName}` : 'Edit grade';
+
   return (
-    <div
-      className={`flex items-center space-x-1 cursor-pointer rounded px-1.5 py-0.5 transition-all duration-300 ${
+    <button
+      ref={triggerRef}
+      type="button"
+      disabled={saving}
+      aria-label={triggerLabel}
+      title={triggerLabel}
+      className={`appearance-none border-0 bg-transparent text-left w-full flex items-center space-x-1 cursor-pointer rounded px-1.5 py-0.5 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
         feedback ? feedbackClasses[feedback] : 'hover:bg-gray-100'
       }`}
       onClick={() => !saving && setEditing(true)}
-      title="Click to edit grade"
     >
       <span className={`text-sm ${value !== null && value !== undefined ? 'font-medium' : 'text-gray-400'}`}>
         {saving ? '...' : (value !== null && value !== undefined ? value : '-')}
       </span>
       <span className="text-xs text-gray-400">/{pointsPossible}</span>
-    </div>
+    </button>
   );
 };
 

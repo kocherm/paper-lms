@@ -36,6 +36,8 @@ type Config struct {
 	SMTPPassword string
 	SMTPFrom     string
 	SMTPEnabled  bool
+	// AI Assist (RCE V2 — Anthropic Messages API proxy)
+	AnthropicAPIKey string
 }
 
 func Load() *Config {
@@ -63,6 +65,7 @@ func Load() *Config {
 		S3Endpoint:      getEnv("S3_ENDPOINT", ""),
 		S3AccessKey:     getEnv("S3_ACCESS_KEY", ""),
 		S3SecretKey:     getEnv("S3_SECRET_KEY", ""),
+		AnthropicAPIKey: getEnv("ANTHROPIC_API_KEY", ""),
 	}
 }
 

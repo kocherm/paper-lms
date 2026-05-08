@@ -5,9 +5,10 @@ import { api } from '../services/api';
 import useIsTeacher from '../hooks/useIsTeacher';
 import Layout from '../components/Layout';
 import CourseNav from '../components/CourseNav';
-import RichContentEditor from '../components/RichContentEditor';
+import RichContentEditorV2 from '../components/rce/RichContentEditorV2';
 import useCrossCourseCheck from '../hooks/useCrossCourseCheck';
 import CrossCourseWarningDialog from '../components/CrossCourseWarningDialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const PagesPage = () => {
   const { courseId } = useParams();
@@ -68,10 +69,18 @@ const PagesPage = () => {
   };
 
   if (loading) {
-    return <Layout><div className="flex items-center justify-center py-12 gap-2 text-gray-500">
-  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
-  Loading pages...
-</div></Layout>;
+    return (
+      <Layout>
+        <CourseNav />
+        <div className="space-y-3 p-6">
+          <Skeleton className="h-9 w-48" />
+          <Skeleton className="h-12 w-full" />
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-16 w-full" />
+          ))}
+        </div>
+      </Layout>
+    );
   }
   if (error) {
     return <Layout><div className="text-center py-12">
@@ -116,12 +125,13 @@ const PagesPage = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
-            <RichContentEditor
+            <RichContentEditorV2
               value={newPage.body}
               onChange={(html) => setNewPage((prev) => ({ ...prev, body: html }))}
               placeholder="Page content..."
               minHeight="200px"
               courseId={courseId}
+              autoSaveKey={`page-${courseId}-new-body`}
             />
           </div>
           <div className="flex items-center gap-2">

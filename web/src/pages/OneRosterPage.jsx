@@ -592,7 +592,7 @@ const OneRosterPage = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 ml-4 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center gap-2 ms-4 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={() => handleTestConnection(conn.id)}
                     disabled={testingId === conn.id || syncingId === conn.id}
@@ -651,16 +651,16 @@ const OneRosterPage = () => {
                     <div className="overflow-x-auto">
                       <table className="min-w-full text-sm">
                         <thead>
-                          <tr className="text-left text-xs text-gray-500 uppercase tracking-wider">
-                            <th className="pb-2 pr-4">Type</th>
-                            <th className="pb-2 pr-4">Status</th>
-                            <th className="pb-2 pr-4">Orgs</th>
-                            <th className="pb-2 pr-4">Users</th>
-                            <th className="pb-2 pr-4">Classes</th>
-                            <th className="pb-2 pr-4">Enrollments</th>
-                            <th className="pb-2 pr-4">Errors</th>
-                            <th className="pb-2 pr-4">Started</th>
-                            <th className="pb-2 pr-4">Duration</th>
+                          <tr className="text-start text-xs text-gray-500 uppercase tracking-wider">
+                            <th className="pb-2 pe-4">Type</th>
+                            <th className="pb-2 pe-4">Status</th>
+                            <th className="pb-2 pe-4">Orgs</th>
+                            <th className="pb-2 pe-4">Users</th>
+                            <th className="pb-2 pe-4">Classes</th>
+                            <th className="pb-2 pe-4">Enrollments</th>
+                            <th className="pb-2 pe-4">Errors</th>
+                            <th className="pb-2 pe-4">Started</th>
+                            <th className="pb-2 pe-4">Duration</th>
                             <th className="pb-2"></th>
                           </tr>
                         </thead>
@@ -670,49 +670,49 @@ const OneRosterPage = () => {
                             return (
                               <React.Fragment key={log.id}>
                                 <tr className="hover:bg-white">
-                                  <td className="py-2 pr-4">
+                                  <td className="py-2 pe-4">
                                     <span className={`text-xs px-2 py-0.5 rounded font-medium ${
                                       log.sync_type === 'full' ? 'bg-blue-50 text-blue-700' : 'bg-emerald-50 text-emerald-700'
                                     }`}>
                                       {log.sync_type === 'full' ? 'Full' : 'Incremental'}
                                     </span>
                                   </td>
-                                  <td className="py-2 pr-4">{getStatusBadge(log.status, SYNC_LOG_STATUS)}</td>
-                                  <td className="py-2 pr-4 text-gray-600">
+                                  <td className="py-2 pe-4">{getStatusBadge(log.status, SYNC_LOG_STATUS)}</td>
+                                  <td className="py-2 pe-4 text-gray-600">
                                     {log.orgs_created > 0 && <span className="text-green-600">+{log.orgs_created}</span>}
                                     {log.orgs_created > 0 && log.orgs_updated > 0 && ' / '}
                                     {log.orgs_updated > 0 && <span className="text-blue-600">{log.orgs_updated} upd</span>}
                                     {log.orgs_created === 0 && log.orgs_updated === 0 && '-'}
                                   </td>
-                                  <td className="py-2 pr-4 text-gray-600">
+                                  <td className="py-2 pe-4 text-gray-600">
                                     {log.users_created > 0 && <span className="text-green-600">+{log.users_created}</span>}
                                     {log.users_created > 0 && log.users_updated > 0 && ' / '}
                                     {log.users_updated > 0 && <span className="text-blue-600">{log.users_updated} upd</span>}
                                     {log.users_created === 0 && log.users_updated === 0 && '-'}
                                   </td>
-                                  <td className="py-2 pr-4 text-gray-600">
+                                  <td className="py-2 pe-4 text-gray-600">
                                     {log.classes_created > 0 && <span className="text-green-600">+{log.classes_created}</span>}
                                     {log.classes_created > 0 && log.classes_updated > 0 && ' / '}
                                     {log.classes_updated > 0 && <span className="text-blue-600">{log.classes_updated} upd</span>}
                                     {log.classes_created === 0 && log.classes_updated === 0 && '-'}
                                   </td>
-                                  <td className="py-2 pr-4 text-gray-600">
+                                  <td className="py-2 pe-4 text-gray-600">
                                     {log.enrollments_created > 0 && <span className="text-green-600">+{log.enrollments_created}</span>}
                                     {log.enrollments_created > 0 && log.enrollments_updated > 0 && ' / '}
                                     {log.enrollments_updated > 0 && <span className="text-blue-600">{log.enrollments_updated} upd</span>}
                                     {log.enrollments_created === 0 && log.enrollments_updated === 0 && '-'}
                                   </td>
-                                  <td className="py-2 pr-4">
+                                  <td className="py-2 pe-4">
                                     {log.errors > 0 ? (
                                       <span className="text-red-600 font-medium">{log.errors}</span>
                                     ) : (
                                       <span className="text-gray-400">0</span>
                                     )}
                                   </td>
-                                  <td className="py-2 pr-4 text-gray-500 text-xs whitespace-nowrap">
+                                  <td className="py-2 pe-4 text-gray-500 text-xs whitespace-nowrap">
                                     {formatDate(log.started_at)}
                                   </td>
-                                  <td className="py-2 pr-4 text-gray-500 text-xs whitespace-nowrap">
+                                  <td className="py-2 pe-4 text-gray-500 text-xs whitespace-nowrap">
                                     {formatDuration(log.started_at, log.completed_at)}
                                   </td>
                                   <td className="py-2">

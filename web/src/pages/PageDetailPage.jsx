@@ -7,7 +7,7 @@ import useUnsavedChanges from '../hooks/useUnsavedChanges';
 import Layout from '../components/Layout';
 import CourseNav from '../components/CourseNav';
 import RichContentViewer, { sanitizeHTML } from '../components/RichContentViewer';
-import RichContentEditor from '../components/RichContentEditor';
+import RichContentEditorV2 from '../components/rce/RichContentEditorV2';
 import useCrossCourseCheck from '../hooks/useCrossCourseCheck';
 import CrossCourseWarningDialog from '../components/CrossCourseWarningDialog';
 
@@ -119,12 +119,13 @@ const PageDetailPage = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
-              <RichContentEditor
+              <RichContentEditorV2
                 value={editForm.body}
                 onChange={(html) => { setEditForm((prev) => ({ ...prev, body: html })); setIsDirty(true); }}
                 placeholder="Page content..."
                 minHeight="300px"
                 courseId={courseId}
+                autoSaveKey={`page-${courseId}-${slug || 'new'}-body`}
               />
             </div>
           </div>

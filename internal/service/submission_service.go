@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"math"
 	"strconv"
 	"time"
@@ -11,6 +12,22 @@ import (
 	"github.com/kocherm/paper-lms/internal/domain/models"
 	"github.com/kocherm/paper-lms/internal/repository"
 )
+
+// SubmissionGradedCallback is invoked asynchronously after a submission is
+// successfully graded. Callbacks receive a detached context and the graded
+// submission's ID. Implementations MUST NOT block grading and MUST NOT panic;
+// panics are recovered and logged but never propagated.
+type SubmissionGradedCallback func(ctx context.Context, submissionID uint)
+
+// recoverFromPanic recovers from a panic in an OnGraded callback, logging the
+// panic value with the originating callback name. Used as `defer
+// recoverFromPanic("...")` inside the goroutine that fires each callback so a
+// crashing callback never crashes the grading flow.
+func recoverFromPanic(label string) {
+	if r := recover(); r != nil {
+		slog.Error("panic recovered in callback", "label", label, "panic", r)
+	}
+}
 
 type SubmissionService struct {
 	submissionRepo         repository.SubmissionRepository
@@ -21,6 +38,30 @@ type SubmissionService struct {
 	gradingPeriodGroupRepo repository.GradingPeriodGroupRepository
 	gradingPeriodRepo      repository.GradingPeriodRepository
 	groupMembershipRepo    repository.GroupMembershipRepository
+
+	// onGradedCallbacks fire (in goroutines) after a successful Grade(...).
+	// Registered via OnGraded; never invoked in tests unless explicitly wired.
+	onGradedCallbacks []SubmissionGradedCallback
+}
+
+// OnGraded registers a callback to fire after a successful grade write. The
+// callback runs in a fresh goroutine with a detached context.Background(), so
+// it MUST be self-contained (don't rely on the request's context.Cancel).
+// Multiple registrations stack; order is registration order.
+func (s *SubmissionService) OnGraded(cb SubmissionGradedCallback) {
+	s.onGradedCallbacks = append(s.onGradedCallbacks, cb)
+}
+
+// fireOnGraded runs all registered callbacks in goroutines with a detached
+// context. Panics are recovered. Errors from callbacks (if any) are the
+// callback's responsibility to log — the signature returns no error.
+func (s *SubmissionService) fireOnGraded(submissionID uint) {
+	for _, cb := range s.onGradedCallbacks {
+		go func(cb SubmissionGradedCallback) {
+			defer recoverFromPanic("submission OnGraded callback")
+			cb(context.Background(), submissionID)
+		}(cb)
+	}
 }
 
 func NewSubmissionService(
@@ -161,6 +202,10 @@ func (s *SubmissionService) Grade(ctx context.Context, assignmentID, userID, gra
 	if aErr == nil && assignment.GroupCategoryID != nil && *assignment.GroupCategoryID > 0 {
 		s.gradeGroupMembers(ctx, assignment, userID, graderID, score, gradeStr, &now)
 	}
+
+	// Fire post-grade callbacks (mastery paths, etc.) asynchronously. Failures
+	// in callbacks must never block grading or surface as errors here.
+	s.fireOnGraded(submission.ID)
 
 	return submission, nil
 }

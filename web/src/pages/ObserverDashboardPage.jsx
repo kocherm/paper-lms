@@ -1,187 +1,317 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Users,
-  Eye,
+  Heart,
   UserPlus,
   UserMinus,
   BookOpen,
-  ChevronDown,
-  ChevronRight,
   GraduationCap,
-  Calendar,
+  CalendarClock,
   Bell,
+  Sparkles,
   X,
-  Plus,
   AlertCircle,
   RefreshCw,
+  FileText,
+  PenLine,
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
+import RedeemCodeForm from '../components/pairing/RedeemCodeForm';
+import useDocumentTitle from '../hooks/useDocumentTitle';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
 
-const ENROLLMENT_STATUS_STYLES = {
-  active: 'bg-green-100 text-green-800',
-  invited: 'bg-yellow-100 text-yellow-800',
-  completed: 'bg-blue-100 text-blue-800',
-  inactive: 'bg-gray-100 text-gray-700',
-  deleted: 'bg-red-100 text-red-800',
+const formatDueDate = (iso) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const now = new Date();
+  const diffMs = d - now;
+  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+  if (diffDays < 0) return 'Overdue';
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Tomorrow';
+  if (diffDays < 7) return `${diffDays} days`;
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 };
 
+const formatRelative = (iso) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const diffMs = Date.now() - d.getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 60) return `${Math.max(mins, 1)}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+};
+
+const gradeBadgeStyle = (pct) => {
+  if (pct == null) return 'bg-gray-100 text-gray-700';
+  if (pct >= 90) return 'bg-green-100 text-green-800';
+  if (pct >= 80) return 'bg-blue-100 text-blue-800';
+  if (pct >= 70) return 'bg-yellow-100 text-yellow-800';
+  return 'bg-red-100 text-red-800';
+};
+
+const scoreColor = (score, possible) => {
+  if (score == null || !possible) return 'text-gray-700';
+  const pct = (score / possible) * 100;
+  if (pct >= 90) return 'text-green-700';
+  if (pct >= 80) return 'text-blue-700';
+  if (pct >= 70) return 'text-yellow-700';
+  return 'text-red-700';
+};
+
+// Pill-style child switcher for <= 5 kids; native select for more.
+const ChildSwitcher = ({ kids, selectedId, onSelect }) => {
+  if (!kids || kids.length === 0) return null;
+
+  if (kids.length > 5) {
+    return (
+      <div className="mb-6">
+        <label htmlFor="kid-select" className="block text-sm font-medium text-gray-700 mb-1">
+          Viewing
+        </label>
+        <select
+          id="kid-select"
+          value={selectedId ?? ''}
+          onChange={(e) => onSelect(Number(e.target.value))}
+          className="w-full sm:w-72 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          {kids.map((k) => (
+            <option key={k.id} value={k.id}>
+              {k.name || `Student #${k.id}`}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-6 flex flex-wrap gap-2" role="tablist" aria-label="Switch child">
+      {kids.map((k) => {
+        const active = k.id === selectedId;
+        const initials = (k.name || `S${k.id}`)
+          .split(' ')
+          .map((s) => s[0])
+          .filter(Boolean)
+          .slice(0, 2)
+          .join('')
+          .toUpperCase();
+        return (
+          <button
+            key={k.id}
+            role="tab"
+            aria-selected={active}
+            onClick={() => onSelect(k.id)}
+            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors border ${
+              active
+                ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50'
+            }`}
+          >
+            <span
+              className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold ${
+                active ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700'
+              }`}
+            >
+              {initials}
+            </span>
+            {k.name || `Student #${k.id}`}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+const SkeletonCard = ({ rows = 3 }) => (
+  <Card>
+    <CardHeader>
+      <Skeleton className="h-5 w-32" />
+    </CardHeader>
+    <CardContent className="space-y-3">
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="flex items-center justify-between">
+          <Skeleton className="h-4 w-2/3" />
+          <Skeleton className="h-4 w-12" />
+        </div>
+      ))}
+    </CardContent>
+  </Card>
+);
+
+const EmptyState = ({ icon: Icon, title, body }) => (
+  <div className="text-center py-6">
+    <Icon className="w-10 h-10 text-gray-200 mx-auto mb-2" />
+    <p className="text-gray-600 text-sm font-medium">{title}</p>
+    {body && <p className="text-gray-400 text-xs mt-1">{body}</p>}
+  </div>
+);
+
 const ObserverDashboardPage = () => {
+  useDocumentTitle('My Kids · Paper LMS');
   const { user } = useAuth();
 
-  // Core data
-  const [observees, setObservees] = useState([]);
-  const [coursesByObservee, setCoursesByObservee] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // Linked kids
+  const [kids, setKids] = useState([]);
+  const [kidsLoading, setKidsLoading] = useState(true);
+  const [kidsError, setKidsError] = useState(null);
 
-  // Expanded student cards
-  const [expandedStudents, setExpandedStudents] = useState({});
-  const [coursesLoading, setCoursesLoading] = useState({});
+  // Selected child + per-child overview
+  const [selectedChildId, setSelectedChildId] = useState(null);
+  const [overviewByChild, setOverviewByChild] = useState({});
+  const [overviewLoadingByChild, setOverviewLoadingByChild] = useState({});
+  const [overviewErrorByChild, setOverviewErrorByChild] = useState({});
 
-  // Link student form
+  // Link form state — RedeemCodeForm owns its own input/loading/error state.
   const [showLinkForm, setShowLinkForm] = useState(false);
-  const [linkInput, setLinkInput] = useState('');
-  const [linkLoading, setLinkLoading] = useState(false);
-  const [linkError, setLinkError] = useState(null);
 
-  // Unlink confirmation
+  // Unlink confirmation modal (preserved)
   const [unlinkTarget, setUnlinkTarget] = useState(null);
   const [unlinkLoading, setUnlinkLoading] = useState(false);
 
-  // Fetch observees
-  const fetchObservees = useCallback(async () => {
+  // ---- Data fetching ----
+  const fetchKids = useCallback(async () => {
     if (!user?.id) return;
     try {
       const data = await api.getObservees(user.id);
       const list = Array.isArray(data) ? data : data?.data || [];
-      setObservees(list);
+      setKids(list);
+      if (list.length > 0) {
+        setSelectedChildId((prev) => (prev && list.some((k) => k.id === prev) ? prev : list[0].id));
+      } else {
+        setSelectedChildId(null);
+      }
     } catch (err) {
-      setError(err.message);
+      setKidsError(err.message);
     } finally {
-      setLoading(false);
+      setKidsLoading(false);
     }
   }, [user?.id]);
 
   useEffect(() => {
-    fetchObservees();
-  }, [fetchObservees]);
+    fetchKids();
+  }, [fetchKids]);
 
-  // Fetch courses for a specific student
-  const fetchCoursesForStudent = useCallback(async (observeeId) => {
-    if (!user?.id) return;
-    setCoursesLoading((prev) => ({ ...prev, [observeeId]: true }));
-    try {
-      const data = await api.getObserveeCourses(user.id, observeeId);
-      const courses = Array.isArray(data) ? data : data?.data || [];
-      setCoursesByObservee((prev) => ({ ...prev, [observeeId]: courses }));
-    } catch {
-      setCoursesByObservee((prev) => ({ ...prev, [observeeId]: [] }));
-    } finally {
-      setCoursesLoading((prev) => ({ ...prev, [observeeId]: false }));
-    }
-  }, [user?.id]);
-
-  // Toggle student expand/collapse
-  const toggleStudent = (observeeId) => {
-    setExpandedStudents((prev) => {
-      const isExpanding = !prev[observeeId];
-      if (isExpanding && !coursesByObservee[observeeId]) {
-        fetchCoursesForStudent(observeeId);
+  const fetchOverview = useCallback(
+    async (childId) => {
+      if (!user?.id || !childId) return;
+      setOverviewLoadingByChild((p) => ({ ...p, [childId]: true }));
+      setOverviewErrorByChild((p) => ({ ...p, [childId]: null }));
+      try {
+        // The api.js method `getChildOverview` is documented in
+        // OBSERVER_OVERVIEW_PATCH.md — fall back to the raw endpoint if it
+        // hasn't been added yet so this page degrades gracefully.
+        let data;
+        if (typeof api.getChildOverview === 'function') {
+          data = await api.getChildOverview(user.id, childId);
+        } else if (typeof api.request === 'function') {
+          data = await api.request(`/users/${user.id}/observees/${childId}/overview`);
+        } else {
+          throw new Error('Overview endpoint not available yet');
+        }
+        setOverviewByChild((p) => ({ ...p, [childId]: data || {} }));
+      } catch (err) {
+        setOverviewErrorByChild((p) => ({ ...p, [childId]: err.message }));
+      } finally {
+        setOverviewLoadingByChild((p) => ({ ...p, [childId]: false }));
       }
-      return { ...prev, [observeeId]: isExpanding };
-    });
-  };
+    },
+    [user?.id]
+  );
 
-  // Link a new student
-  const handleLinkStudent = async (e) => {
-    e.preventDefault();
-    if (!linkInput.trim() || !user?.id) return;
-    setLinkLoading(true);
-    setLinkError(null);
-    try {
-      await api.linkObservee(user.id, linkInput.trim());
-      setLinkInput('');
-      setShowLinkForm(false);
-      setLoading(true);
-      await fetchObservees();
-    } catch (err) {
-      setLinkError(err.message);
-    } finally {
-      setLinkLoading(false);
+  useEffect(() => {
+    if (selectedChildId && !overviewByChild[selectedChildId]) {
+      fetchOverview(selectedChildId);
     }
-  };
+  }, [selectedChildId, overviewByChild, fetchOverview]);
 
-  // Unlink a student
+  // ---- Mutations ----
   const handleUnlinkStudent = async () => {
     if (!unlinkTarget || !user?.id) return;
     setUnlinkLoading(true);
     try {
       await api.unlinkObservee(user.id, unlinkTarget.id);
+      const target = unlinkTarget;
       setUnlinkTarget(null);
-      setCoursesByObservee((prev) => {
-        const next = { ...prev };
-        delete next[unlinkTarget.id];
-        return next;
+      setOverviewByChild((p) => {
+        const n = { ...p };
+        delete n[target.id];
+        return n;
       });
-      setExpandedStudents((prev) => {
-        const next = { ...prev };
-        delete next[unlinkTarget.id];
-        return next;
-      });
-      setLoading(true);
-      await fetchObservees();
+      setKidsLoading(true);
+      await fetchKids();
     } catch (err) {
-      setError(err.message);
+      setKidsError(err.message);
       setUnlinkTarget(null);
     } finally {
       setUnlinkLoading(false);
     }
   };
 
-  // Computed stats
-  const totalStudents = observees.length;
-  const totalCourses = Object.values(coursesByObservee).reduce(
-    (sum, courses) => sum + (courses?.length || 0),
-    0
+  // ---- Derived ----
+  const selectedKid = useMemo(
+    () => kids.find((k) => k.id === selectedChildId),
+    [kids, selectedChildId]
   );
+  const overview = selectedChildId ? overviewByChild[selectedChildId] : null;
+  const overviewLoading = selectedChildId ? overviewLoadingByChild[selectedChildId] : false;
+  const overviewError = selectedChildId ? overviewErrorByChild[selectedChildId] : null;
 
-  // Enrollment status label
-  const getEnrollmentStatus = (course) => {
-    const state = course.enrollment_state || course.workflow_state || 'active';
-    return state;
-  };
-
-  const getStatusStyle = (status) => {
-    return ENROLLMENT_STATUS_STYLES[status] || ENROLLMENT_STATUS_STYLES.active;
-  };
-
-  if (loading) {
+  // ---- Render: loading shell ----
+  if (kidsLoading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
-  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
-  Loading your students...
-</div>
+        <div className="mb-6">
+          <Skeleton className="h-8 w-48 mb-2" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+        <div className="flex gap-2 mb-6">
+          <Skeleton className="h-10 w-32 rounded-full" />
+          <Skeleton className="h-10 w-32 rounded-full" />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
       </Layout>
     );
   }
 
-  if (error && observees.length === 0) {
+  // ---- Render: hard error & no data ----
+  if (kidsError && kids.length === 0) {
     return (
       <Layout>
         <div className="text-center py-12">
           <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-          <p className="text-red-600 mb-4">{error}</p>
-          <button
-            onClick={() => { setError(null); setLoading(true); fetchObservees(); }}
-            className="inline-flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium"
+          <p className="text-red-600 mb-4">{kidsError}</p>
+          <Button
+            onClick={() => {
+              setKidsError(null);
+              setKidsLoading(true);
+              fetchKids();
+            }}
           >
-            <RefreshCw className="w-4 h-4" />
-            <span>Try Again</span>
-          </button>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Try Again
+          </Button>
         </div>
       </Layout>
     );
@@ -192,274 +322,366 @@ const ObserverDashboardPage = () => {
       {/* Page Header */}
       <div className="mb-6">
         <div className="flex items-center space-x-3 mb-1">
-          <Eye className="w-7 h-7 text-blue-600" />
-          <h2 className="text-2xl font-bold text-gray-900">Parent / Observer Dashboard</h2>
+          <Heart className="w-7 h-7 text-pink-500" />
+          <h2 className="text-2xl font-bold text-gray-900">My Kids</h2>
         </div>
-        <p className="text-gray-600 mt-1">Monitor your linked students and their courses</p>
+        <p className="text-gray-600 mt-1">
+          Keep an eye on your kids&rsquo; classes, grades, and what&rsquo;s due this week.
+        </p>
       </div>
 
-      {/* Error banner (non-fatal) */}
-      {error && (
-        <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between" role="alert">
+      {/* Non-fatal error banner */}
+      {kidsError && (
+        <div
+          className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between"
+          role="alert"
+        >
           <div className="flex items-center space-x-2">
             <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
-            <span className="text-red-700 text-sm">{error}</span>
+            <span className="text-red-700 text-sm">{kidsError}</span>
           </div>
-          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600">
+          <button onClick={() => setKidsError(null)} className="text-red-400 hover:text-red-600">
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      {/* Section 3: Quick Overview Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white rounded-lg shadow-sm p-5 flex items-center space-x-4">
-          <div className="bg-blue-100 p-3 rounded-lg">
-            <Users className="w-6 h-6 text-blue-600" />
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Linked Students</p>
-            <p className="text-2xl font-bold text-gray-900">{totalStudents}</p>
-          </div>
+      {/* Header row: switcher + actions */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-2">
+        <div className="flex-1 min-w-0">
+          <ChildSwitcher
+            kids={kids}
+            selectedId={selectedChildId}
+            onSelect={setSelectedChildId}
+          />
         </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-5 flex items-center space-x-4">
-          <div className="bg-green-100 p-3 rounded-lg">
-            <BookOpen className="w-6 h-6 text-green-600" />
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Courses Observed</p>
-            <p className="text-2xl font-bold text-gray-900">{totalCourses}</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-5 flex items-center space-x-4">
-          <div className="bg-yellow-100 p-3 rounded-lg">
-            <Calendar className="w-6 h-6 text-yellow-600" />
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Upcoming Events</p>
-            <p className="text-2xl font-bold text-gray-900">&mdash;</p>
-            <p className="text-xs text-gray-400">Coming soon</p>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm p-5 flex items-center space-x-4">
-          <div className="bg-purple-100 p-3 rounded-lg">
-            <Bell className="w-6 h-6 text-purple-600" />
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Announcements</p>
-            <p className="text-2xl font-bold text-gray-900">&mdash;</p>
-            <p className="text-xs text-gray-400">Coming soon</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Section 1: My Students */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
-            <Users className="w-5 h-5 text-gray-500" />
-            <span>My Students</span>
-          </h3>
-          <button
-            onClick={() => { setShowLinkForm(!showLinkForm); setLinkError(null); setLinkInput(''); }}
-            className="inline-flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium"
+        <div className="flex flex-wrap gap-2 mb-6 sm:mb-6">
+          <Button
+            variant="outline"
+            onClick={() => setShowLinkForm((s) => !s)}
           >
-            <UserPlus className="w-4 h-4" />
-            <span>Link Student</span>
-          </button>
+            <UserPlus className="w-4 h-4 mr-2" />
+            Link a child
+          </Button>
+          {selectedKid && (
+            <Button
+              variant="outline"
+              onClick={() => setUnlinkTarget(selectedKid)}
+              className="text-red-600 hover:text-red-700"
+            >
+              <UserMinus className="w-4 h-4 mr-2" />
+              Unlink
+            </Button>
+          )}
         </div>
+      </div>
 
-        {/* Link Student Form */}
-        {showLinkForm && (
-          <div className="bg-white rounded-lg shadow-sm border border-blue-200 p-4 mb-4">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-semibold text-gray-800">Link a New Student</h4>
-              <button onClick={() => { setShowLinkForm(false); setLinkError(null); }} className="text-gray-400 hover:text-gray-600">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <form onSubmit={handleLinkStudent} className="flex items-end space-x-3">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="link-student-input">
-                  Student User ID or Pairing Code
-                </label>
-                <input
-                  id="link-student-input"
-                  type="text"
-                  value={linkInput}
-                  onChange={(e) => setLinkInput(e.target.value)}
-                  placeholder="Enter user ID or pairing code"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={linkLoading || !linkInput.trim()}
-                className="inline-flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Plus className="w-4 h-4" />
-                <span>{linkLoading ? 'Linking...' : 'Link'}</span>
-              </button>
-            </form>
-            {linkError && (
-              <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm flex items-center space-x-2" role="alert">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{linkError}</span>
-              </div>
-            )}
-          </div>
-        )}
+      {/* Link a child form */}
+      {showLinkForm && (
+        <Card className="mb-6 border-blue-200">
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle className="text-base">Link a child</CardTitle>
+            <button
+              onClick={() => setShowLinkForm(false)}
+              className="text-gray-400 hover:text-gray-600"
+              aria-label="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </CardHeader>
+          <CardContent>
+            <RedeemCodeForm
+              onSuccess={() => {
+                setShowLinkForm(false);
+                setKidsLoading(true);
+                fetchKids();
+              }}
+            />
+          </CardContent>
+        </Card>
+      )}
 
-        {/* Student List */}
-        {observees.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+      {/* No kids linked yet */}
+      {kids.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center">
             <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 mb-2">No students linked yet.</p>
-            <p className="text-gray-400 text-sm">
-              Use the &ldquo;Link Student&rdquo; button above to start monitoring a student&apos;s courses.
+            <p className="text-gray-700 font-medium mb-1">No kids linked yet</p>
+            <p className="text-gray-500 text-sm mb-4">
+              Use &ldquo;Link a child&rdquo; above to start following your kid&rsquo;s classes.
             </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {observees.map((student) => {
-              const isExpanded = expandedStudents[student.id];
-              const courses = coursesByObservee[student.id] || [];
-              const isCoursesLoading = coursesLoading[student.id];
+            <Button onClick={() => setShowLinkForm(true)}>
+              <UserPlus className="w-4 h-4 mr-2" />
+              Link a child
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          {/* Per-child overview error */}
+          {overviewError && (
+            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span className="text-amber-800 text-sm">
+                  Couldn&rsquo;t load latest data: {overviewError}
+                </span>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => fetchOverview(selectedChildId)}
+              >
+                <RefreshCw className="w-4 h-4 mr-1" />
+                Retry
+              </Button>
+            </div>
+          )}
 
-              return (
-                <div key={student.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
-                  {/* Student Header (clickable to expand) */}
-                  <div
-                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                    onClick={() => toggleStudent(student.id)}
-                    role="button"
-                    tabIndex={0}
-                    aria-expanded={isExpanded}
-                    aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${student.name || 'Student'}`}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleStudent(student.id); } }}
-                  >
-                    <div className="flex items-center space-x-3">
-                      {isExpanded ? (
-                        <ChevronDown className="w-5 h-5 text-gray-400" />
-                      ) : (
-                        <ChevronRight className="w-5 h-5 text-gray-400" />
-                      )}
-                      <div className="bg-blue-100 p-2 rounded-full">
-                        <GraduationCap className="w-5 h-5 text-blue-600" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Classes */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <BookOpen className="w-5 h-5 text-blue-600" />
+                  Classes
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {overviewLoading ? (
+                  <div className="space-y-3">
+                    {[0, 1, 2].map((i) => (
+                      <div key={i} className="flex items-center justify-between">
+                        <Skeleton className="h-4 w-2/3" />
+                        <Skeleton className="h-5 w-12" />
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {student.name || student.short_name || `Student #${student.id}`}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {student.email || student.login_id || `ID: ${student.id}`}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      {coursesByObservee[student.id] && (
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                          {courses.length} {courses.length === 1 ? 'course' : 'courses'}
-                        </span>
-                      )}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setUnlinkTarget(student); }}
-                        className="text-gray-400 hover:text-red-600 p-1 rounded transition-colors"
-                        title={`Unlink ${student.name || 'student'}`}
-                        aria-label={`Unlink ${student.name || 'student'}`}
-                      >
-                        <UserMinus className="w-4 h-4" />
-                      </button>
-                    </div>
+                    ))}
                   </div>
+                ) : !overview?.courses?.length ? (
+                  <EmptyState
+                    icon={GraduationCap}
+                    title="No classes yet"
+                    body="When your child gets enrolled, classes show up here."
+                  />
+                ) : (
+                  <ul className="divide-y divide-gray-100">
+                    {overview.courses.map((c, idx) => (
+                      <li key={c.course_id} className={idx === 0 ? 'pb-3' : 'py-3'}>
+                        <Link
+                          to={`/courses/${c.course_id}?as_child=${selectedChildId}`}
+                          className="flex items-center justify-between hover:bg-gray-50 rounded-md -mx-2 px-2 py-1 transition"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-gray-900 truncate">{c.name}</p>
+                            <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-500">
+                              {c.course_code && <span>{c.course_code}</span>}
+                              {c.pending_count > 0 && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {c.pending_count} pending
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          <span
+                            className={`shrink-0 ml-3 text-sm font-semibold px-2.5 py-1 rounded-full ${gradeBadgeStyle(
+                              c.current_grade
+                            )}`}
+                          >
+                            {c.current_grade != null ? `${c.current_grade.toFixed(1)}%` : '—'}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
 
-                  {/* Section 2: Student Course View (expanded) */}
-                  {isExpanded && (
-                    <div className="border-t border-gray-100 px-4 pb-4 pt-3 bg-gray-50">
-                      {isCoursesLoading ? (
-                        <div className="text-center py-6 text-gray-500 text-sm">Loading courses...</div>
-                      ) : courses.length === 0 ? (
-                        <div className="text-center py-6">
-                          <BookOpen className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                          <p className="text-gray-500 text-sm">No courses found for this student.</p>
+            {/* Due This Week */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <CalendarClock className="w-5 h-5 text-yellow-600" />
+                  Due this week
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {overviewLoading ? (
+                  <div className="space-y-3">
+                    {[0, 1, 2].map((i) => (
+                      <div key={i} className="flex items-center justify-between">
+                        <Skeleton className="h-4 w-2/3" />
+                        <Skeleton className="h-5 w-16" />
+                      </div>
+                    ))}
+                  </div>
+                ) : !overview?.upcoming_this_week?.length ? (
+                  <EmptyState
+                    icon={Sparkles}
+                    title="Nothing due this week"
+                    body="Enjoy the breather!"
+                  />
+                ) : (
+                  <ul className="space-y-2">
+                    {overview.upcoming_this_week.map((u) => (
+                      <li
+                        key={`${u.type}-${u.id}`}
+                        className="flex items-center justify-between gap-3"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          {u.type === 'quiz' ? (
+                            <PenLine className="w-4 h-4 text-purple-500 shrink-0" />
+                          ) : (
+                            <FileText className="w-4 h-4 text-blue-500 shrink-0" />
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {u.title}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">{u.course_name}</p>
+                          </div>
                         </div>
-                      ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-1">
-                          {courses.map((course) => {
-                            const status = getEnrollmentStatus(course);
-                            return (
-                              <Link
-                                key={course.id}
-                                to={`/courses/${course.id}`}
-                                className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md hover:border-blue-300 transition-all"
-                              >
-                                <div className="flex items-start justify-between mb-2">
-                                  <BookOpen className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
-                                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${getStatusStyle(status)}`}>
-                                    {status}
-                                  </span>
-                                </div>
-                                <h4 className="font-medium text-gray-900 text-sm mb-1 line-clamp-2">
-                                  {course.name}
-                                </h4>
-                                {course.course_code && (
-                                  <p className="text-xs text-gray-500">{course.course_code}</p>
-                                )}
-                              </Link>
-                            );
-                          })}
+                        <Badge variant="outline" className="shrink-0">
+                          {formatDueDate(u.due_at)}
+                        </Badge>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Recent Grades */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <GraduationCap className="w-5 h-5 text-green-600" />
+                  Recent grades
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {overviewLoading ? (
+                  <div className="space-y-3">
+                    {[0, 1, 2].map((i) => (
+                      <div key={i} className="flex items-center justify-between">
+                        <Skeleton className="h-4 w-2/3" />
+                        <Skeleton className="h-5 w-14" />
+                      </div>
+                    ))}
+                  </div>
+                ) : !overview?.recent_grades?.length ? (
+                  <EmptyState
+                    icon={GraduationCap}
+                    title="No grades posted yet"
+                    body="Grades will show up here once teachers post them."
+                  />
+                ) : (
+                  <ul className="space-y-3">
+                    {overview.recent_grades.map((g) => (
+                      <li key={g.submission_id} className="flex items-center justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {g.assignment_name}
+                          </p>
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <span className="truncate">{g.course_name}</span>
+                            <span>·</span>
+                            <span>{formatRelative(g.graded_at)}</span>
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                        <div
+                          className={`shrink-0 text-sm font-semibold ${scoreColor(
+                            g.score,
+                            g.points_possible
+                          )}`}
+                        >
+                          {g.score != null ? g.score : '—'}
+                          {g.points_possible != null && (
+                            <span className="text-gray-400 font-normal">
+                              {' '}
+                              / {g.points_possible}
+                            </span>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
 
-      {/* Placeholder: Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center space-x-2 mb-4">
-            <Bell className="w-5 h-5 text-purple-500" />
-            <h3 className="text-lg font-semibold text-gray-900">Recent Announcements</h3>
+            {/* Recent Activity */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Bell className="w-5 h-5 text-purple-600" />
+                  Recent activity
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {overviewLoading ? (
+                  <div className="space-y-3">
+                    {[0, 1, 2].map((i) => (
+                      <div key={i} className="flex items-center justify-between">
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-3 w-12" />
+                      </div>
+                    ))}
+                  </div>
+                ) : !overview?.recent_activity?.length ? (
+                  <EmptyState
+                    icon={Bell}
+                    title="Quiet around here"
+                    body="Announcements and class updates will land here."
+                  />
+                ) : (
+                  <ul className="space-y-3">
+                    {overview.recent_activity.map((a, idx) => (
+                      <li key={`${a.type}-${a.id}-${idx}`} className="flex items-start gap-3">
+                        {a.type === 'announcement' ? (
+                          <Bell className="w-4 h-4 text-purple-500 mt-0.5 shrink-0" />
+                        ) : (
+                          <FileText className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm text-gray-900 truncate">
+                            <span className="font-medium">{a.title}</span>
+                          </p>
+                          <p className="text-xs text-gray-500 truncate">
+                            {a.course_name} · {formatRelative(a.occurred_at)}
+                          </p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
           </div>
-          <div className="text-center py-8">
-            <Bell className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">
-              Announcements from your students&apos; courses will appear here.
-            </p>
-            <p className="text-gray-300 text-xs mt-1">Coming soon</p>
-          </div>
-        </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center space-x-2 mb-4">
-            <Calendar className="w-5 h-5 text-yellow-500" />
-            <h3 className="text-lg font-semibold text-gray-900">Upcoming Assignments</h3>
-          </div>
-          <div className="text-center py-8">
-            <Calendar className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">
-              Upcoming due dates for your students will appear here.
-            </p>
-            <p className="text-gray-300 text-xs mt-1">Coming soon</p>
-          </div>
-        </div>
-      </div>
+          <Separator className="my-8" />
 
-      {/* Unlink Confirmation Modal */}
+          {/* Footer: full kid roster + manage link */}
+          <div className="text-sm text-gray-500 flex items-center justify-between">
+            <span>
+              Following {kids.length} {kids.length === 1 ? 'child' : 'children'}
+            </span>
+            <button
+              onClick={() => setShowLinkForm(true)}
+              className="text-blue-600 hover:text-blue-700 font-medium inline-flex items-center gap-1"
+            >
+              <UserPlus className="w-4 h-4" /> Link another
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Unlink Confirmation Modal — preserved structure from original page */}
       {unlinkTarget && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Unlink Student</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Unlink Child</h3>
               <button
                 onClick={() => setUnlinkTarget(null)}
                 className="text-gray-400 hover:text-gray-600"
@@ -481,26 +703,26 @@ const ObserverDashboardPage = () => {
                 </div>
               </div>
               <p className="text-sm text-gray-600">
-                Are you sure you want to unlink this student? You will no longer be able to view
-                their courses or monitor their progress. You can re-link them later if needed.
+                Are you sure you want to unlink this child? You will no longer be able to view
+                their classes or monitor their progress. You can re-link them later if needed.
               </p>
             </div>
             <div className="flex justify-end space-x-2">
-              <button
+              <Button
+                variant="outline"
                 onClick={() => setUnlinkTarget(null)}
                 disabled={unlinkLoading}
-                className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleUnlinkStudent}
                 disabled={unlinkLoading}
-                className="inline-flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 text-sm font-medium disabled:opacity-50"
+                className="bg-red-600 hover:bg-red-700 text-white"
               >
-                <UserMinus className="w-4 h-4" />
-                <span>{unlinkLoading ? 'Unlinking...' : 'Unlink Student'}</span>
-              </button>
+                <UserMinus className="w-4 h-4 mr-2" />
+                {unlinkLoading ? 'Unlinking…' : 'Unlink Child'}
+              </Button>
             </div>
           </div>
         </div>

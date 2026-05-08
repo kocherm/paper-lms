@@ -6,7 +6,7 @@ import useIsTeacher from '../hooks/useIsTeacher';
 import useUnsavedChanges from '../hooks/useUnsavedChanges';
 import Layout from '../components/Layout';
 import CourseNav from '../components/CourseNav';
-import RichContentEditor from '../components/RichContentEditor';
+import RichContentEditorV2 from '../components/rce/RichContentEditorV2';
 import useCrossCourseCheck from '../hooks/useCrossCourseCheck';
 import CrossCourseWarningDialog from '../components/CrossCourseWarningDialog';
 
@@ -192,12 +192,13 @@ const QuestionEditor = ({ question, index, onUpdate, onDelete, groups, courseId 
           {/* Question Text */}
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Question Text</label>
-            <RichContentEditor
+            <RichContentEditorV2
               value={question.question_text || ''}
               onChange={(html) => updateField('question_text', html)}
               placeholder="Enter the question..."
               minHeight="100px"
               courseId={courseId}
+              autoSaveKey={`quiz-question-${courseId}-${question.id || `new-${index}`}-text`}
             />
           </div>
 
@@ -615,12 +616,13 @@ const QuizEditorPage = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Description / Instructions</label>
-            <RichContentEditor
+            <RichContentEditorV2
               value={quizForm.description}
               onChange={(html) => { setQuizForm(f => ({ ...f, description: html })); setIsDirty(true); }}
               placeholder="Quiz instructions..."
               minHeight="120px"
               courseId={courseId}
+              autoSaveKey={`quiz-${courseId}-${quizId || 'new'}-description`}
             />
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

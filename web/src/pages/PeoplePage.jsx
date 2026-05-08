@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import useIsTeacher from '../hooks/useIsTeacher';
 import Layout from '../components/Layout';
 import CourseNav from '../components/CourseNav';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const ROLE_LABELS = {
   TeacherEnrollment: 'Teacher',
@@ -150,9 +151,12 @@ const PeoplePage = () => {
     return (
       <Layout>
         <CourseNav />
-        <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
-          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
-          Loading people...
+        <div className="space-y-3 p-6">
+          <Skeleton className="h-9 w-48" />
+          <Skeleton className="h-12 w-full" />
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-16 w-full" />
+          ))}
         </div>
       </Layout>
     );
@@ -197,7 +201,7 @@ const PeoplePage = () => {
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 rounded-md p-3 mb-4 text-sm">
           {error}
-          <button onClick={() => setError(null)} className="ml-2 text-red-500 hover:text-red-700 font-bold">&times;</button>
+          <button onClick={() => setError(null)} className="ms-2 text-red-500 hover:text-red-700 font-bold">&times;</button>
         </div>
       )}
 
@@ -221,7 +225,7 @@ const PeoplePage = () => {
               ) : (
                 <>
                   <div className="relative">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                       id="add-person-search"
                       type="text"
@@ -230,11 +234,11 @@ const PeoplePage = () => {
                       onFocus={() => userResults.length > 0 && setShowUserDropdown(true)}
                       onBlur={() => setTimeout(() => setShowUserDropdown(false), 200)}
                       placeholder="Search by name or email..."
-                      className="w-full pl-9 pr-3 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full ps-9 pe-3 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   {showUserDropdown && (
-                    <div className="absolute z-20 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                    <div className="absolute z-20 top-full start-0 end-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
                       {userSearching ? (
                         <div className="px-3 py-2 text-sm text-gray-500">Searching...</div>
                       ) : userResults.length === 0 ? (
@@ -245,7 +249,7 @@ const PeoplePage = () => {
                             key={u.id}
                             type="button"
                             onMouseDown={(e) => { e.preventDefault(); selectUser(u); }}
-                            className="w-full flex items-center gap-2 px-3 py-2 hover:bg-blue-50 text-left"
+                            className="w-full flex items-center gap-2 px-3 py-2 hover:bg-blue-50 text-start"
                           >
                             <div className="w-7 h-7 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium text-gray-600 flex-shrink-0">
                               {(u.name || '?')[0].toUpperCase()}
@@ -290,14 +294,14 @@ const PeoplePage = () => {
       {/* Search and Filter */}
       <div className="flex items-center gap-3 mb-4">
         <div className="relative flex-1 max-w-xs">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search people..."
             aria-label="Search people"
-            className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full ps-9 pe-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -330,11 +334,11 @@ const PeoplePage = () => {
             <table className="w-full">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Name</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Login ID</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Role</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Section</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
+                  <th className="text-start px-4 py-3 text-xs font-medium text-gray-500 uppercase">Name</th>
+                  <th className="text-start px-4 py-3 text-xs font-medium text-gray-500 uppercase">Login ID</th>
+                  <th className="text-start px-4 py-3 text-xs font-medium text-gray-500 uppercase">Role</th>
+                  <th className="text-start px-4 py-3 text-xs font-medium text-gray-500 uppercase">Section</th>
+                  <th className="text-start px-4 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y">

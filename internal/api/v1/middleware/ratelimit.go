@@ -130,6 +130,38 @@ func RateLimitMiddleware(maxRequests int, window time.Duration) fiber.Handler {
 	}
 }
 
+// RateLimitMiddlewareByUser is like RateLimitMiddleware but keys by the
+// authenticated user_id from c.Locals (set by RequireAuth). Falls back to IP
+// for unauthenticated requests so the limit still applies. Use this for
+// expensive per-account operations like AI Assist where shared NAT IPs at
+// schools would unfairly aggregate students into one bucket.
+func RateLimitMiddlewareByUser(maxRequests int, window time.Duration) fiber.Handler {
+	rl := newRateLimiter(maxRequests, window)
+
+	return func(c *fiber.Ctx) error {
+		key := "ip:" + c.IP()
+		if uid, ok := c.Locals("user_id").(uint); ok && uid != 0 {
+			key = "user:" + strconv.FormatUint(uint64(uid), 10)
+		}
+
+		allowed, _, retryAfter := rl.allow(key)
+		if !allowed {
+			seconds := int(retryAfter.Seconds()) + 1
+			c.Set("Retry-After", strconv.Itoa(seconds))
+
+			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
+				"errors": []fiber.Map{
+					{
+						"message": "Rate limit exceeded. Try again later.",
+					},
+				},
+			})
+		}
+
+		return c.Next()
+	}
+}
+
 // AuthRateLimit returns a rate-limiting handler preconfigured for
 // authentication endpoints: 10 requests per minute per IP address.
 func AuthRateLimit() fiber.Handler {
@@ -146,4 +178,11 @@ func UploadRateLimit() fiber.Handler {
 // expensive operations (batch ops, migrations, cloning): 5 requests per minute per IP address.
 func ExpensiveOpRateLimit() fiber.Handler {
 	return RateLimitMiddleware(5, 1*time.Minute)
+}
+
+// AIAssistRateLimit returns a rate-limiting handler preconfigured for AI
+// Assist endpoints: 30 requests per 5 minutes per authenticated user. Per-user
+// keying so shared school NATs don't penalize the whole class.
+func AIAssistRateLimit() fiber.Handler {
+	return RateLimitMiddlewareByUser(30, 5*time.Minute)
 }

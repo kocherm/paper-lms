@@ -1,11 +1,14 @@
 package handlers
 
 import (
+	"encoding/json"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/kocherm/paper-lms/internal/api/v1/middleware"
 	"github.com/kocherm/paper-lms/internal/api/v1/responses"
 	"github.com/kocherm/paper-lms/internal/domain/models"
 	"github.com/kocherm/paper-lms/internal/service"
+	"gorm.io/datatypes"
 )
 
 type ContentMigrationHandler struct {
@@ -25,7 +28,7 @@ func contentMigrationToJSON(m *models.ContentMigration) fiber.Map {
 		"source_course_id":   m.SourceCourseID,
 		"workflow_state":     m.WorkflowState,
 		"progress":           m.Progress,
-		"migration_settings": m.MigrationSettings,
+		"migration_settings": m.MigrationSettings.Data(),
 		"started_at":         m.StartedAt,
 		"finished_at":        m.FinishedAt,
 		"error_message":      m.ErrorMessage,
@@ -33,6 +36,33 @@ func contentMigrationToJSON(m *models.ContentMigration) fiber.Map {
 		"created_at":         m.CreatedAt,
 		"updated_at":         m.UpdatedAt,
 	}
+}
+
+// parseSettings decodes a raw migration_settings payload from the API.
+// Accepts either a JSON object (preferred) or a legacy JSON-encoded string;
+// any malformed input is preserved on LegacyString so the row is never lost.
+func parseSettings(raw json.RawMessage) models.MigrationSettings {
+	var s models.MigrationSettings
+	if len(raw) == 0 || string(raw) == "null" {
+		return s
+	}
+	if err := json.Unmarshal(raw, &s); err == nil {
+		return s
+	}
+	// Try unwrapping a JSON-encoded string ("{\"foo\":1}" or arbitrary text).
+	var asString string
+	if err := json.Unmarshal(raw, &asString); err == nil {
+		if asString == "" {
+			return s
+		}
+		if err := json.Unmarshal([]byte(asString), &s); err == nil {
+			return s
+		}
+		s.LegacyString = asString
+		return s
+	}
+	s.LegacyString = string(raw)
+	return s
 }
 
 func (h *ContentMigrationHandler) ListMigrations(c *fiber.Ctx) error {
@@ -66,10 +96,10 @@ func (h *ContentMigrationHandler) CreateMigration(c *fiber.Ctx) error {
 
 	var input struct {
 		ContentMigration struct {
-			MigrationType     string `json:"migration_type"`
-			SourceCourseID    *uint  `json:"source_course_id"`
-			Settings          string `json:"settings"`
-			MigrationSettings string `json:"migration_settings"`
+			MigrationType     string          `json:"migration_type"`
+			SourceCourseID    *uint           `json:"source_course_id"`
+			Settings          json.RawMessage `json:"settings"`
+			MigrationSettings json.RawMessage `json:"migration_settings"`
 		} `json:"content_migration"`
 	}
 
@@ -77,10 +107,11 @@ func (h *ContentMigrationHandler) CreateMigration(c *fiber.Ctx) error {
 		return responses.BadRequest(c, "Invalid input")
 	}
 
-	settings := input.ContentMigration.Settings
-	if settings == "" {
-		settings = input.ContentMigration.MigrationSettings
+	rawSettings := input.ContentMigration.Settings
+	if len(rawSettings) == 0 {
+		rawSettings = input.ContentMigration.MigrationSettings
 	}
+	settings := parseSettings(rawSettings)
 
 	// Check for multipart file upload
 	attachment := ""
@@ -100,7 +131,7 @@ func (h *ContentMigrationHandler) CreateMigration(c *fiber.Ctx) error {
 		UserID:            userID,
 		MigrationType:     input.ContentMigration.MigrationType,
 		SourceCourseID:    input.ContentMigration.SourceCourseID,
-		MigrationSettings: settings,
+		MigrationSettings: datatypes.NewJSONType(settings),
 		Attachment:        attachment,
 	}
 
@@ -138,9 +169,9 @@ func (h *ContentMigrationHandler) UpdateMigration(c *fiber.Ctx) error {
 
 	var input struct {
 		ContentMigration struct {
-			WorkflowState     *string `json:"workflow_state"`
-			MigrationSettings *string `json:"migration_settings"`
-			Settings          *string `json:"settings"`
+			WorkflowState     *string         `json:"workflow_state"`
+			MigrationSettings json.RawMessage `json:"migration_settings"`
+			Settings          json.RawMessage `json:"settings"`
 		} `json:"content_migration"`
 	}
 
@@ -151,11 +182,12 @@ func (h *ContentMigrationHandler) UpdateMigration(c *fiber.Ctx) error {
 	if input.ContentMigration.WorkflowState != nil {
 		migration.WorkflowState = *input.ContentMigration.WorkflowState
 	}
-	if input.ContentMigration.MigrationSettings != nil {
-		migration.MigrationSettings = *input.ContentMigration.MigrationSettings
+	raw := input.ContentMigration.MigrationSettings
+	if len(raw) == 0 {
+		raw = input.ContentMigration.Settings
 	}
-	if input.ContentMigration.Settings != nil {
-		migration.MigrationSettings = *input.ContentMigration.Settings
+	if len(raw) > 0 {
+		migration.MigrationSettings = datatypes.NewJSONType(parseSettings(raw))
 	}
 
 	if err := h.migrationService.UpdateMigration(c.Context(), migration); err != nil {

@@ -374,86 +374,148 @@ const LearningOutcomesPage = () => {
           {rollupLoading ? (
             <div className="p-8 text-center text-gray-500">Loading rollup data...</div>
           ) : rollupData ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full border-collapse">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-b border-r min-w-[200px]">
-                      Student
-                    </th>
-                    {(rollupData.outcomes || []).map((outcome) => (
-                      <th
-                        key={outcome.id}
-                        className="px-3 py-3 text-center text-xs font-medium text-gray-500 border-b border-r min-w-[120px]"
-                      >
-                        <span className="block truncate" title={outcome.title}>
-                          {outcome.title}
-                        </span>
-                        <span className="text-gray-400 font-normal">
-                          {outcome.mastery_points || 3} pts
-                        </span>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {(rollupData.students || []).length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={(rollupData.outcomes?.length || 0) + 1}
-                        className="px-4 py-8 text-center text-gray-500"
-                      >
-                        No rollup data available yet.
-                      </td>
-                    </tr>
-                  ) : (
-                    (rollupData.students || []).map((student) => (
-                      <tr key={student.user_id} className="hover:bg-gray-50">
-                        <td className="px-4 py-2 text-sm font-medium text-gray-900 border-r whitespace-nowrap">
-                          {student.user_name || `User ${student.user_id}`}
-                        </td>
+            <>
+              {/* Desktop: wide table */}
+              <div className="hidden md:block">
+                <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+                  <table className="min-w-full border-collapse" role="grid">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-b border-r min-w-[200px]">
+                          Student
+                        </th>
+                        {(rollupData.outcomes || []).map((outcome) => (
+                          <th
+                            key={outcome.id}
+                            className="px-3 py-3 text-center text-xs font-medium text-gray-500 border-b border-r min-w-[120px]"
+                          >
+                            <span className="block truncate" title={outcome.title}>
+                              {outcome.title}
+                            </span>
+                            <span className="text-gray-400 font-normal">
+                              {outcome.mastery_points || 3} pts
+                            </span>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {(rollupData.students || []).length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={(rollupData.outcomes?.length || 0) + 1}
+                            className="px-4 py-8 text-center text-gray-500"
+                          >
+                            No rollup data available yet.
+                          </td>
+                        </tr>
+                      ) : (
+                        (rollupData.students || []).map((student) => (
+                          <tr key={student.user_id} className="hover:bg-gray-50">
+                            <td className="px-4 py-2 text-sm font-medium text-gray-900 border-r whitespace-nowrap">
+                              {student.user_name || `User ${student.user_id}`}
+                            </td>
+                            {(rollupData.outcomes || []).map((outcome) => {
+                              const score = student.scores?.[outcome.id];
+                              const mastery = outcome.mastery_points || 3;
+                              const isMastered = score !== null && score !== undefined && score >= mastery;
+                              return (
+                                <td
+                                  key={`${student.user_id}-${outcome.id}`}
+                                  className={`px-3 py-2 text-center text-sm border-r ${
+                                    score === null || score === undefined
+                                      ? ''
+                                      : isMastered
+                                      ? 'bg-green-50'
+                                      : 'bg-red-50'
+                                  }`}
+                                >
+                                  {score !== null && score !== undefined ? (
+                                    <div className="flex items-center justify-center space-x-1">
+                                      {isMastered ? (
+                                        <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+                                      ) : (
+                                        <XCircle className="w-3.5 h-3.5 text-red-500" />
+                                      )}
+                                      <span
+                                        className={`font-medium ${
+                                          isMastered ? 'text-green-700' : 'text-red-700'
+                                        }`}
+                                      >
+                                        {score}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <span className="text-gray-400">-</span>
+                                  )}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Mobile: stacked card layout (one card per student) */}
+              <div className="md:hidden divide-y">
+                {(rollupData.students || []).length === 0 ? (
+                  <div className="px-4 py-8 text-center text-gray-500">
+                    No rollup data available yet.
+                  </div>
+                ) : (
+                  (rollupData.students || []).map((student) => (
+                    <div key={student.user_id} className="p-4">
+                      <p className="text-sm font-semibold text-gray-900 mb-2">
+                        {student.user_name || `User ${student.user_id}`}
+                      </p>
+                      <div className="space-y-1">
                         {(rollupData.outcomes || []).map((outcome) => {
                           const score = student.scores?.[outcome.id];
                           const mastery = outcome.mastery_points || 3;
-                          const isMastered = score !== null && score !== undefined && score >= mastery;
+                          const hasScore = score !== null && score !== undefined;
+                          const isMastered = hasScore && score >= mastery;
                           return (
-                            <td
+                            <div
                               key={`${student.user_id}-${outcome.id}`}
-                              className={`px-3 py-2 text-center text-sm border-r ${
-                                score === null || score === undefined
-                                  ? ''
-                                  : isMastered
-                                  ? 'bg-green-50'
-                                  : 'bg-red-50'
+                              className={`flex items-center justify-between px-2 py-1.5 rounded text-sm ${
+                                !hasScore ? 'bg-gray-50' : isMastered ? 'bg-green-50' : 'bg-red-50'
                               }`}
                             >
-                              {score !== null && score !== undefined ? (
-                                <div className="flex items-center justify-center space-x-1">
-                                  {isMastered ? (
-                                    <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
-                                  ) : (
-                                    <XCircle className="w-3.5 h-3.5 text-red-500" />
-                                  )}
-                                  <span
-                                    className={`font-medium ${
-                                      isMastered ? 'text-green-700' : 'text-red-700'
-                                    }`}
-                                  >
-                                    {score}
-                                  </span>
-                                </div>
-                              ) : (
-                                <span className="text-gray-400">-</span>
-                              )}
-                            </td>
+                              <span className="text-xs text-gray-700 truncate pr-2 flex-1" title={outcome.title}>
+                                {outcome.title}
+                              </span>
+                              <div className="flex items-center space-x-1 flex-shrink-0">
+                                {!hasScore ? (
+                                  <span className="text-gray-400 text-xs">No data</span>
+                                ) : (
+                                  <>
+                                    {isMastered ? (
+                                      <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+                                    ) : (
+                                      <XCircle className="w-3.5 h-3.5 text-red-500" />
+                                    )}
+                                    <span
+                                      className={`font-medium text-xs ${
+                                        isMastered ? 'text-green-700' : 'text-red-700'
+                                      }`}
+                                    >
+                                      {score}/{mastery}
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
                           );
                         })}
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
           ) : (
             <div className="p-8 text-center text-gray-500">
               No rollup data available. Outcomes must be assessed to view results.

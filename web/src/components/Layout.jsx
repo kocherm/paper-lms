@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, BookOpen, Calendar, Mail, User, LogOut,
-  Briefcase, Eye, Settings, Home, Inbox, Menu, X, AlertTriangle
+  Briefcase, Eye, Settings, Home, Inbox, Menu, X, AlertTriangle, Library
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCourseUI } from '../contexts/CourseUIContext';
@@ -12,6 +12,7 @@ import InstallPrompt from './InstallPrompt';
 import OfflineIndicator from './OfflineIndicator';
 import AdminNav from './AdminNav';
 import NotificationBell from './NotificationBell';
+import MobileBottomNav from './MobileBottomNav';
 
 const baseNav = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -19,6 +20,7 @@ const baseNav = [
   { to: '/calendar', icon: Calendar, label: 'Calendar' },
   { to: '/inbox', icon: Mail, label: 'Inbox' },
   { to: '/portfolios', icon: Briefcase, label: 'Portfolios' },
+  { to: '/commons', icon: Library, label: 'Commons' },
 ];
 
 const adminNav = [
@@ -143,10 +145,11 @@ const Layout = ({ children }) => {
         <OfflineIndicator />
         <SkipToContent />
         <div className="flex-1">
-          <main id="main-content" className="max-w-7xl mx-auto px-6 py-8" role="main">
+          <main id="main-content" className="max-w-7xl mx-auto px-6 py-8 pb-16 md:pb-0" role="main">
             {children}
           </main>
         </div>
+        <MobileBottomNav />
         <InstallPrompt />
       </div>
     );
@@ -199,11 +202,12 @@ const Layout = ({ children }) => {
         {showAdminNav && <AdminNav />}
 
         <div className={`flex-1 ${showAdminNav ? 'ml-[284px]' : 'ml-20'}`}>
-          <main id="main-content" className="max-w-7xl mx-auto px-6 py-8" role="main">
+          <main id="main-content" className="max-w-7xl mx-auto px-6 py-8 pb-16 md:pb-0" role="main">
             {children}
           </main>
         </div>
 
+        <MobileBottomNav />
         <InstallPrompt />
       </div>
     );
@@ -328,11 +332,12 @@ const Layout = ({ children }) => {
 
       {/* Main content area */}
       <div className={`flex-1 ${showAdminNav ? 'md:ml-[280px] ml-0' : 'md:ml-16 ml-0'}`}>
-        <main id="main-content" className={`max-w-7xl mx-auto px-6 py-8 ${isMasquerading ? 'pt-6' : 'pt-14'} md:pt-8`} role="main">
+        <main id="main-content" className={`max-w-7xl mx-auto px-6 py-8 pb-16 md:pb-0 ${isMasquerading ? 'pt-6' : 'pt-14'} md:pt-8`} role="main">
           {children}
         </main>
       </div>
 
+      <MobileBottomNav />
       <InstallPrompt />
     </div>
   );

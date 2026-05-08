@@ -5,9 +5,10 @@ import { api } from '../services/api';
 import Layout from '../components/Layout';
 import CourseNav from '../components/CourseNav';
 import { useAuth } from '../contexts/AuthContext';
-import RichContentEditor from '../components/RichContentEditor';
+import RichContentEditorV2 from '../components/rce/RichContentEditorV2';
 import useCrossCourseCheck from '../hooks/useCrossCourseCheck';
 import CrossCourseWarningDialog from '../components/CrossCourseWarningDialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const AnnouncementsPage = () => {
   const { courseId } = useParams();
@@ -226,8 +227,13 @@ const AnnouncementsPage = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="text-center py-12 text-gray-500" role="status" aria-label="Loading announcements">
-          Loading announcements...
+        <CourseNav />
+        <div className="space-y-3 p-6" role="status" aria-label="Loading announcements">
+          <Skeleton className="h-9 w-48" />
+          <Skeleton className="h-12 w-full" />
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-16 w-full" />
+          ))}
         </div>
       </Layout>
     );
@@ -293,13 +299,12 @@ const AnnouncementsPage = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
-              <RichContentEditor
+              <RichContentEditorV2
                 value={formData.message}
                 onChange={(html) => setFormData((prev) => ({ ...prev, message: html }))}
                 placeholder="Announcement message..."
-                minHeight="160px"
-                ariaLabel="Announcement message"
                 courseId={courseId}
+                autoSaveKey={editingId ? `announcement-${editingId}` : 'new-announcement'}
               />
             </div>
 

@@ -1,3 +1,135 @@
+@import './styles/reading-prefs.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* =========================================================
+   Design tokens — semantic palette as RGB channels.
+   Use as: rgb(var(--token) / <alpha>)  via Tailwind colors.
+   ========================================================= */
+:root {
+  /* Surfaces (light) */
+  --color-surface-0: 255 255 255;
+  --color-surface-1: 249 250 251;
+  --color-surface-2: 243 244 246;
+  --color-surface-raised: 255 255 255;
+
+  /* Borders */
+  --color-border-subtle:  243 244 246;
+  --color-border-default: 229 231 235;
+  --color-border-strong:  209 213 219;
+
+  /* Text */
+  --color-text-primary:   17 24 39;
+  --color-text-secondary: 55 65 81;
+  --color-text-tertiary:  107 114 128;
+  --color-text-disabled:  156 163 175;
+
+  /* Brand (Tailwind blue) */
+  --color-brand-50:  239 246 255;
+  --color-brand-100: 219 234 254;
+  --color-brand-200: 191 219 254;
+  --color-brand-300: 147 197 253;
+  --color-brand-400: 96 165 250;
+  --color-brand-500: 59 130 246;
+  --color-brand-600: 37 99 235;
+  --color-brand-700: 29 78 216;
+  --color-brand-800: 30 64 175;
+  --color-brand-900: 30 58 138;
+
+  /* Accents */
+  --color-accent-info:    59 130 246;
+  --color-accent-success: 22 163 74;
+  --color-accent-warning: 217 119 6;
+  --color-accent-danger:  220 38 38;
+
+  /* shadcn/ui (slate) — HSL channels */
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 222.2 47.4% 11.2%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 222.2 84% 4.9%;
+  --radius: 0.5rem;
+}
+
+.dark {
+  /* Surfaces (dark) — deep slate base, layered upward */
+  --color-surface-0:      9 14 25;
+  --color-surface-1:      15 23 42;
+  --color-surface-2:      30 41 59;
+  --color-surface-raised: 30 41 59;
+
+  /* Borders */
+  --color-border-subtle:  30 41 59;
+  --color-border-default: 51 65 85;
+  --color-border-strong:  71 85 105;
+
+  /* Text */
+  --color-text-primary:   248 250 252;
+  --color-text-secondary: 203 213 225;
+  --color-text-tertiary:  148 163 184;
+  --color-text-disabled:  100 116 139;
+
+  /* Brand — inverted scale: 50 reads as deepest, 900 as lightest on dark */
+  --color-brand-50:  23 37 84;
+  --color-brand-100: 30 58 138;
+  --color-brand-200: 30 64 175;
+  --color-brand-300: 29 78 216;
+  --color-brand-400: 37 99 235;
+  --color-brand-500: 59 130 246;
+  --color-brand-600: 96 165 250;
+  --color-brand-700: 147 197 253;
+  --color-brand-800: 191 219 254;
+  --color-brand-900: 219 234 254;
+
+  /* Accents — slightly desaturated for dark surfaces */
+  --color-accent-info:    96 165 250;
+  --color-accent-success: 74 222 128;
+  --color-accent-warning: 251 191 36;
+  --color-accent-danger:  248 113 113;
+
+  /* shadcn/ui dark (slate) — HSL channels */
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 210 40% 98%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 212.7 26.8% 83.9%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

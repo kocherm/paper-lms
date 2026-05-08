@@ -222,7 +222,7 @@ const CourseNav = () => {
               </button>
 
               {moreOpen && (
-                <div className="absolute left-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-40">
+                <div className="absolute start-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-40">
                   {moreTabs.map((tab) => (
                     <Link
                       key={tab.path}

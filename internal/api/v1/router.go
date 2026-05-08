@@ -93,6 +93,19 @@ type Router struct {
 	quizStatisticsHandler      *handlers.QuizStatisticsHandler
 	// Setup
 	setupHandler               *handlers.SetupHandler
+	// P3 Features
+	featureFlagHandler           *handlers.FeatureFlagHandler
+	customGradebookColumnHandler *handlers.CustomGradebookColumnHandler
+	masteryPathHandler           *handlers.MasteryPathHandler
+	appointmentGroupHandler      *handlers.AppointmentGroupHandler
+	outcomeProficiencyHandler    *handlers.OutcomeProficiencyHandler
+	// Pairing codes
+	pairingCodeHandler         *handlers.PairingCodeHandler
+	// Phase 5 Wave 1: Discussion Checkpoints, Smart Search, Commons, AI Assist
+	discussionCheckpointHandler *handlers.DiscussionCheckpointHandler
+	smartSearchHandler          *handlers.SmartSearchHandler
+	commonsHandler              *handlers.CommonsHandler
+	aiAssistHandler             *handlers.AIAssistHandler
 	authMiddleware             *middleware.AuthMiddleware
 	permMiddleware             *middleware.PermissionMiddleware
 }
@@ -183,6 +196,19 @@ func NewRouter(
 	quizStatisticsHandler *handlers.QuizStatisticsHandler,
 	// Setup
 	setupHandler *handlers.SetupHandler,
+	// P3 Features
+	featureFlagHandler *handlers.FeatureFlagHandler,
+	customGradebookColumnHandler *handlers.CustomGradebookColumnHandler,
+	masteryPathHandler *handlers.MasteryPathHandler,
+	appointmentGroupHandler *handlers.AppointmentGroupHandler,
+	outcomeProficiencyHandler *handlers.OutcomeProficiencyHandler,
+	// Pairing codes
+	pairingCodeHandler *handlers.PairingCodeHandler,
+	// Phase 5 Wave 1: Discussion Checkpoints, Smart Search, Commons, AI Assist
+	discussionCheckpointHandler *handlers.DiscussionCheckpointHandler,
+	smartSearchHandler *handlers.SmartSearchHandler,
+	commonsHandler *handlers.CommonsHandler,
+	aiAssistHandler *handlers.AIAssistHandler,
 	authMiddleware *middleware.AuthMiddleware,
 	permMiddleware *middleware.PermissionMiddleware,
 ) *Router {
@@ -256,6 +282,16 @@ func NewRouter(
 		quizQuestionGroupHandler:   quizQuestionGroupHandler,
 		quizStatisticsHandler:      quizStatisticsHandler,
 		setupHandler:               setupHandler,
+		featureFlagHandler:           featureFlagHandler,
+		customGradebookColumnHandler: customGradebookColumnHandler,
+		masteryPathHandler:           masteryPathHandler,
+		appointmentGroupHandler:      appointmentGroupHandler,
+		outcomeProficiencyHandler:    outcomeProficiencyHandler,
+		pairingCodeHandler:           pairingCodeHandler,
+		discussionCheckpointHandler: discussionCheckpointHandler,
+		smartSearchHandler:          smartSearchHandler,
+		commonsHandler:              commonsHandler,
+		aiAssistHandler:             aiAssistHandler,
 		authMiddleware:              authMiddleware,
 		permMiddleware:              permMiddleware,
 	}
@@ -697,6 +733,13 @@ func (r *Router) Register(app *fiber.App) {
 	protected.Delete("/users/:user_id/observees/:observee_id", selfOrAdmin, r.observerHandler.UnlinkObservee)
 	protected.Get("/users/:user_id/observees", selfOrAdmin, r.observerHandler.ListObservees)
 	protected.Get("/users/:user_id/observees/:observee_id/courses", selfOrAdmin, r.observerHandler.GetObserveeCourses)
+	protected.Get("/users/:user_id/observees/:child_id/overview", selfOrAdmin, r.observerHandler.GetChildOverview)
+
+	// Parent/observer pairing codes (every authenticated user can manage their own).
+	protected.Post("/users/self/pairing_codes", r.pairingCodeHandler.Generate)
+	protected.Post("/users/self/pairing_codes/redeem", r.pairingCodeHandler.Redeem)
+	protected.Get("/users/self/pairing_codes", r.pairingCodeHandler.List)
+	protected.Delete("/users/self/pairing_codes/:id", r.pairingCodeHandler.Revoke)
 
 	// Phase 8C: GraphQL (any authenticated user)
 	protected.Post("/graphql", r.graphqlHandler.HandleQuery)
@@ -886,4 +929,91 @@ func (r *Router) Register(app *fiber.App) {
 
 	// Public portfolio view (no auth required)
 	api.Get("/portfolios/public/:slug", r.portfolioHandler.GetPublicPortfolio)
+
+	// =====================================================================
+	// P3 Features
+	// =====================================================================
+
+	// Feature Flags — Canvas-compatible API
+	// Account-scoped (admin only)
+	protected.Get("/accounts/:id/features", admin, r.featureFlagHandler.ListAccountFeatures)
+	protected.Get("/accounts/:id/features/:feature", admin, r.featureFlagHandler.GetAccountFeature)
+	protected.Put("/accounts/:id/features/:feature", admin, r.featureFlagHandler.SetAccountFeature)
+	protected.Delete("/accounts/:id/features/:feature", admin, r.featureFlagHandler.DeleteAccountFeature)
+	// Course-scoped (any enrolled user can read; teacher/admin can write)
+	protected.Get("/courses/:id/features", enrolled, r.featureFlagHandler.ListCourseFeatures)
+	protected.Get("/courses/:id/features/:feature", enrolled, r.featureFlagHandler.GetCourseFeature)
+	protected.Put("/courses/:id/features/:feature", instructor, r.featureFlagHandler.SetCourseFeature)
+	protected.Delete("/courses/:id/features/:feature", instructor, r.featureFlagHandler.DeleteCourseFeature)
+	// Per-user (always self)
+	protected.Get("/users/self/features", r.featureFlagHandler.ListUserFeatures)
+	protected.Get("/users/self/features/:feature", r.featureFlagHandler.GetUserFeature)
+	protected.Put("/users/self/features/:feature", r.featureFlagHandler.SetUserFeature)
+	protected.Delete("/users/self/features/:feature", r.featureFlagHandler.DeleteUserFeature)
+
+	// Custom Gradebook Columns (instructor-only)
+	protected.Get("/courses/:id/custom_gradebook_columns", instructor, r.customGradebookColumnHandler.List)
+	protected.Post("/courses/:id/custom_gradebook_columns", instructor, r.customGradebookColumnHandler.Create)
+	protected.Put("/courses/:id/custom_gradebook_columns/:column_id", instructor, r.customGradebookColumnHandler.Update)
+	protected.Delete("/courses/:id/custom_gradebook_columns/:column_id", instructor, r.customGradebookColumnHandler.Delete)
+	protected.Post("/courses/:id/custom_gradebook_columns/reorder", instructor, r.customGradebookColumnHandler.Reorder)
+	protected.Get("/courses/:id/custom_gradebook_columns/:column_id/data", instructor, r.customGradebookColumnHandler.ListData)
+	protected.Put("/courses/:id/custom_gradebook_columns/:column_id/data/:user_id", instructor, r.customGradebookColumnHandler.SetCell)
+	protected.Put("/courses/:id/custom_gradebook_columns/data", instructor, r.customGradebookColumnHandler.BulkUpdate)
+
+	// Mastery Paths (Conditional Release) — instructor-only management
+	protected.Get("/courses/:course_id/mastery_paths/rules", instructor, r.masteryPathHandler.ListRules)
+	protected.Get("/courses/:course_id/mastery_paths/rules/:assignment_id", instructor, r.masteryPathHandler.GetRuleForAssignment)
+	protected.Post("/courses/:course_id/mastery_paths/rules", instructor, r.masteryPathHandler.CreateRule)
+	protected.Put("/courses/:course_id/mastery_paths/rules/:rule_id", instructor, r.masteryPathHandler.ReplaceRule)
+	protected.Delete("/courses/:course_id/mastery_paths/rules/:rule_id", instructor, r.masteryPathHandler.DeleteRule)
+
+	// Appointment Groups (Scheduler) — Canvas-compatible
+	protected.Get("/courses/:course_id/appointment_groups", enrolled, r.appointmentGroupHandler.List)
+	protected.Post("/courses/:course_id/appointment_groups", enrolled, r.appointmentGroupHandler.Create)
+	protected.Get("/appointment_groups", r.appointmentGroupHandler.List) // accepts ?course_id=
+	protected.Get("/appointment_groups/:id", r.appointmentGroupHandler.Get)
+	protected.Put("/appointment_groups/:id", r.appointmentGroupHandler.Update)
+	protected.Delete("/appointment_groups/:id", r.appointmentGroupHandler.Delete)
+	protected.Get("/appointment_groups/:id/appointments", r.appointmentGroupHandler.ListSlots)
+	protected.Get("/appointment_groups/:id/appointments/:slot_id/reservations", r.appointmentGroupHandler.ListReservations)
+	protected.Post("/appointment_groups/:id/appointments/:slot_id/reservations", r.appointmentGroupHandler.Reserve)
+	protected.Delete("/appointment_groups/:id/appointments/:slot_id/reservations/:reservation_id", r.appointmentGroupHandler.CancelReservation)
+
+	// Outcome Proficiency — Account scope
+	protected.Get("/accounts/:id/outcome_proficiency", admin, r.outcomeProficiencyHandler.GetForAccount)
+	protected.Post("/accounts/:id/outcome_proficiency", admin, r.outcomeProficiencyHandler.SetForAccount)
+	protected.Delete("/accounts/:id/outcome_proficiency", admin, r.outcomeProficiencyHandler.DeleteForAccount)
+	// Outcome Proficiency — Course scope
+	protected.Get("/courses/:id/outcome_proficiency", enrolled, r.outcomeProficiencyHandler.GetForCourse)
+	protected.Post("/courses/:id/outcome_proficiency", instructor, r.outcomeProficiencyHandler.SetForCourse)
+	protected.Delete("/courses/:id/outcome_proficiency", instructor, r.outcomeProficiencyHandler.DeleteForCourse)
+	// Learning Mastery Gradebook
+	protected.Get("/courses/:id/learning_mastery_gradebook", instructor, r.outcomeProficiencyHandler.LearningMasteryGradebook)
+
+	// Phase 5 Wave 1: Discussion Checkpoints (Canvas-compatible multi-deadline thread participation)
+	protected.Get("/courses/:course_id/discussion_topics/:topic_id/checkpoints", enrolled, r.discussionCheckpointHandler.ListCheckpoints)
+	protected.Post("/courses/:course_id/discussion_topics/:topic_id/checkpoints", instructor, r.discussionCheckpointHandler.CreateCheckpoints)
+	protected.Get("/courses/:course_id/discussion_topics/:topic_id/checkpoints/progress", enrolled, r.discussionCheckpointHandler.GetUserProgress)
+	protected.Put("/courses/:course_id/discussion_topics/:topic_id/checkpoints/:id", instructor, r.discussionCheckpointHandler.UpdateCheckpoint)
+	protected.Delete("/courses/:course_id/discussion_topics/:topic_id/checkpoints/:id", instructor, r.discussionCheckpointHandler.DeleteCheckpoint)
+
+	// Phase 5 Wave 1: Smart Search (pgvector cosine similarity)
+	protected.Get("/courses/:course_id/smart_search", enrolled, r.smartSearchHandler.Search)
+	protected.Post("/courses/:course_id/smart_search/reindex", instructor, r.smartSearchHandler.Reindex)
+
+	// Phase 5 Wave 1: Commons content library (district-scoped sharing).
+	// IMPORTANT: register /commons/favorites BEFORE /commons/:id so the literal
+	// path wins over the wildcard.
+	protected.Get("/commons/favorites", r.commonsHandler.ListFavorites)
+	protected.Get("/commons", r.commonsHandler.Browse)
+	protected.Get("/commons/:id", r.commonsHandler.Get)
+	protected.Post("/commons/:id/favorite", r.commonsHandler.Favorite)
+	protected.Post("/commons/:id/import", r.commonsHandler.Import)
+	protected.Post("/courses/:course_id/commons/publish", instructor, r.commonsHandler.Publish)
+
+	// Phase 5 Wave 1: AI Assist proxy for RCE V2 toolbar (Anthropic Messages API).
+	// Per-user rate limit (30 / 5 min) is the cost gate — any authenticated user
+	// can call it, but no single account can drain the API budget.
+	protected.Post("/ai_assist/:action", middleware.AIAssistRateLimit(), r.aiAssistHandler.Dispatch)
 }

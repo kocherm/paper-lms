@@ -37,6 +37,34 @@ func (r *submissionRepo) FindByAssignmentAndUser(ctx context.Context, assignment
 	return &submission, nil
 }
 
+func (r *submissionRepo) FindByIDs(ctx context.Context, ids []uint) ([]models.Submission, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	var submissions []models.Submission
+	if err := r.db.WithContext(ctx).Where("id IN ?", ids).Find(&submissions).Error; err != nil {
+		return nil, err
+	}
+	return submissions, nil
+}
+
+func (r *submissionRepo) FindByAssignmentAndUserIDs(ctx context.Context, assignmentID uint, userIDs []uint) ([]models.Submission, error) {
+	if len(userIDs) == 0 {
+		return nil, nil
+	}
+	var submissions []models.Submission
+	if err := r.db.WithContext(ctx).Where("assignment_id = ? AND user_id IN ?", assignmentID, userIDs).Find(&submissions).Error; err != nil {
+		return nil, err
+	}
+	return submissions, nil
+}
+
+func (r *submissionRepo) RunInTransaction(ctx context.Context, fn func(txRepo repository.SubmissionRepository) error) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return fn(&submissionRepo{db: tx})
+	})
+}
+
 func (r *submissionRepo) Update(ctx context.Context, submission *models.Submission) error {
 	return r.db.WithContext(ctx).Save(submission).Error
 }

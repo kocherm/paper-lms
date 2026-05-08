@@ -151,6 +151,32 @@ func AutoMigrate(db *gorm.DB) error {
 		&models.ModulePrerequisite{},
 		// Quiz Question Groups (random selection anti-cheating)
 		&models.QuizQuestionGroup{},
+		// P3 Features: Feature Flags
+		&models.FeatureFlag{},
+		// P3 Features: Custom Gradebook Columns
+		&models.CustomGradebookColumn{},
+		&models.CustomColumnDatum{},
+		// P3 Features: Mastery Paths (Conditional Release)
+		&models.ConditionalReleaseRule{},
+		&models.ConditionalReleaseScoringRange{},
+		&models.ConditionalReleaseAssignmentSet{},
+		&models.ConditionalReleaseAssignmentSetAssociation{},
+		&models.ConditionalReleaseAssignmentSetAction{},
+		// P3 Features: Appointment Groups (Scheduler)
+		&models.AppointmentGroup{},
+		&models.AppointmentSlot{},
+		&models.AppointmentReservation{},
+		// P3 Features: Outcome Proficiency
+		&models.OutcomeProficiency{},
+		&models.OutcomeProficiencyRating{},
+		// Parent/observer pairing codes
+		&models.PairingCode{},
+		// Phase 5 Wave 1: Discussion Checkpoints, Smart Search, Commons
+		&models.DiscussionCheckpoint{},
+		&models.DiscussionCheckpointSubmission{},
+		&models.ContentEmbedding{},
+		&models.SharedContent{},
+		&models.SharedContentFavorite{},
 	)
 }
 

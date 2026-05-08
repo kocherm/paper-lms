@@ -1,27 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import DashboardPage from './pages/DashboardPage';
-import CoursePage from './pages/CoursePage';
-import CoursesPage from './pages/CoursesPage';
-import AssignmentPage from './pages/AssignmentPage';
-import AssignmentsPage from './pages/AssignmentsPage';
+const DashboardPage = React.lazy(() => import('./pages/DashboardPage'));
+const CoursePage = React.lazy(() => import('./pages/CoursePage'));
+const CoursesPage = React.lazy(() => import('./pages/CoursesPage'));
+const AssignmentPage = React.lazy(() => import('./pages/AssignmentPage'));
+const AssignmentsPage = React.lazy(() => import('./pages/AssignmentsPage'));
 const GradebookPage = React.lazy(() => import('./pages/GradebookPage'));
-import StudentGradesPage from './pages/StudentGradesPage';
+const StudentGradesPage = React.lazy(() => import('./pages/StudentGradesPage'));
 const ContentImportPage = React.lazy(() => import('./pages/ContentImportPage'));
-import ModulesPage from './pages/ModulesPage';
-import PeoplePage from './pages/PeoplePage';
+const ModulesPage = React.lazy(() => import('./pages/ModulesPage'));
+const PeoplePage = React.lazy(() => import('./pages/PeoplePage'));
 const AccessTokensPage = React.lazy(() => import('./pages/AccessTokensPage'));
 const DeveloperKeysPage = React.lazy(() => import('./pages/DeveloperKeysPage'));
 const ExternalToolsPage = React.lazy(() => import('./pages/ExternalToolsPage'));
-import DiscussionsPage from './pages/DiscussionsPage';
+const DiscussionsPage = React.lazy(() => import('./pages/DiscussionsPage'));
 const DiscussionTopicPage = React.lazy(() => import('./pages/DiscussionTopicPageV2'));
-import FilesPage from './pages/FilesPage';
+const FilesPage = React.lazy(() => import('./pages/FilesPage'));
 const SISImportPage = React.lazy(() => import('./pages/SISImportPage'));
-import PagesPage from './pages/PagesPage';
-import PageDetailPage from './pages/PageDetailPage';
-import QuizzesPage from './pages/QuizzesPage';
-import QuizTakePage from './pages/QuizTakePage';
-import QuizReviewPage from './pages/QuizReviewPage';
+const PagesPage = React.lazy(() => import('./pages/PagesPage'));
+const PageDetailPage = React.lazy(() => import('./pages/PageDetailPage'));
+const QuizzesPage = React.lazy(() => import('./pages/QuizzesPage'));
+const QuizTakePage = React.lazy(() => import('./pages/QuizTakePage'));
+const QuizReviewPage = React.lazy(() => import('./pages/QuizReviewPage'));
 const QuizEditorPage = React.lazy(() => import('./pages/QuizEditorPage'));
 const QuizSubmissionsPage = React.lazy(() => import('./pages/QuizSubmissionsPage'));
 const QuizStatisticsPage = React.lazy(() => import('./pages/QuizStatisticsPage'));
@@ -44,13 +44,13 @@ const GraphiQLPage = React.lazy(() => import('./pages/GraphiQLPage'));
 const AuthProvidersPage = React.lazy(() => import('./pages/AuthProvidersPage'));
 const AnnouncementsPage = React.lazy(() => import('./pages/AnnouncementsPage'));
 const EnrollmentTermsPage = React.lazy(() => import('./pages/EnrollmentTermsPage'));
-import SyllabusPage from './pages/SyllabusPage';
+const SyllabusPage = React.lazy(() => import('./pages/SyllabusPage'));
 const NotificationDeliveryPage = React.lazy(() => import('./pages/NotificationDeliveryPage'));
 const AuditLogPage = React.lazy(() => import('./pages/AuditLogPage'));
 const CustomRolesPage = React.lazy(() => import('./pages/CustomRolesPage'));
 const OneRosterPage = React.lazy(() => import('./pages/OneRosterPage'));
 const DocViewerPage = React.lazy(() => import('./pages/DocViewerPage'));
-import LoginPageSSO from './pages/LoginPageSSO';
+const LoginPageSSO = React.lazy(() => import('./pages/LoginPageSSO'));
 const QuestionBanksPage = React.lazy(() => import('./pages/QuestionBanksPage'));
 const AccommodationsPage = React.lazy(() => import('./pages/AccommodationsPage'));
 const AttendancePage = React.lazy(() => import('./pages/AttendancePage'));
@@ -68,6 +68,18 @@ import { CourseUIProvider } from './contexts/CourseUIContext';
 import { useAuth } from './contexts/AuthContext';
 import { api } from './services/api';
 const SetupWizardPage = React.lazy(() => import('./pages/SetupWizardPage'));
+// P3 Features
+const FeatureFlagsPage = React.lazy(() => import('./pages/FeatureFlagsPage'));
+const MasteryPathsEditorPage = React.lazy(() => import('./pages/MasteryPathsEditorPage'));
+const AppointmentGroupsPage = React.lazy(() => import('./pages/AppointmentGroupsPage'));
+const AppointmentGroupEditorPage = React.lazy(() => import('./pages/AppointmentGroupEditorPage'));
+const OutcomeProficiencyPage = React.lazy(() => import('./pages/OutcomeProficiencyPage'));
+const MasteryGradebookPage = React.lazy(() => import('./pages/MasteryGradebookPage'));
+const ReadingPreferencesPage = React.lazy(() => import('./pages/ReadingPreferencesPage'));
+// Phase 5 Wave 1: Smart Search, Commons
+const SmartSearchPage = React.lazy(() => import('./pages/SmartSearchPage'));
+const CommonsPage = React.lazy(() => import('./pages/CommonsPage'));
+const CommonsPublishPage = React.lazy(() => import('./pages/CommonsPublishPage'));
 
 const App = () => {
   const { user, loading } = useAuth();
@@ -173,7 +185,25 @@ const App = () => {
           <Route path="attendance" element={<AttendancePage />} />
           <Route path="question_banks" element={<QuestionBanksPage />} />
           <Route path="content_import" element={<ContentImportPage />} />
+          {/* P3 Features */}
+          <Route path="assignments/:assignmentId/mastery_paths" element={<MasteryPathsEditorPage />} />
+          <Route path="appointment_groups" element={<AppointmentGroupsPage />} />
+          <Route path="appointment_groups/new" element={<AppointmentGroupEditorPage />} />
+          <Route path="appointment_groups/:groupId/edit" element={<AppointmentGroupEditorPage />} />
+          <Route path="outcomes/proficiency" element={<OutcomeProficiencyPage />} />
+          <Route path="mastery_gradebook" element={<MasteryGradebookPage />} />
+          {/* Phase 5 Wave 1 */}
+          <Route path="smart_search" element={<SmartSearchPage />} />
+          <Route path="commons/publish" element={<CommonsPublishPage />} />
         </Route>
+        <Route
+          path="/commons"
+          element={
+            <ProtectedRoute>
+              <CommonsPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/settings/tokens"
           element={
@@ -315,6 +345,31 @@ const App = () => {
           element={
             <ProtectedRoute>
               <ObserverDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile/reading-preferences"
+          element={
+            <ProtectedRoute>
+              <ReadingPreferencesPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* P3 Features — admin scope */}
+        <Route
+          path="/admin/feature_flags"
+          element={
+            <ProtectedRoute>
+              <FeatureFlagsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/outcome_proficiency"
+          element={
+            <ProtectedRoute>
+              <OutcomeProficiencyPage />
             </ProtectedRoute>
           }
         />

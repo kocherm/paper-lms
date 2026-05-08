@@ -124,6 +124,17 @@ func (r *portfolioSectionRepo) FindByID(ctx context.Context, id uint) (*models.P
 	return &section, nil
 }
 
+func (r *portfolioSectionRepo) FindByIDs(ctx context.Context, ids []uint) ([]models.PortfolioSection, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	var sections []models.PortfolioSection
+	if err := r.db.WithContext(ctx).Where("id IN ?", ids).Find(&sections).Error; err != nil {
+		return nil, err
+	}
+	return sections, nil
+}
+
 func (r *portfolioSectionRepo) Update(ctx context.Context, section *models.PortfolioSection) error {
 	return r.db.WithContext(ctx).Save(section).Error
 }

@@ -1471,6 +1471,21 @@ export const api = {
     const { data } = await request(`/users/${userId}/observees/${observeeId}/courses`);
     return data;
   },
+  getChildOverview: (parentId, childId) =>
+    request(`/users/${parentId}/observees/${childId}/overview`),
+
+  // Parent/observer pairing codes
+  generatePairingCode: () =>
+    request('/users/self/pairing_codes', { method: 'POST' }),
+  redeemPairingCode: (code) =>
+    request('/users/self/pairing_codes/redeem', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    }),
+  listPairingCodes: () =>
+    request('/users/self/pairing_codes'),
+  revokePairingCode: (id) =>
+    request(`/users/self/pairing_codes/${id}`, { method: 'DELETE' }),
 
   // Phase 8C: GraphQL
   graphql: async (query, variables = {}) => {
@@ -2240,4 +2255,173 @@ export const api = {
     });
     return data;
   },
+
+  // ==========================================================================
+  // P3 Features: Feature Flags
+  // ==========================================================================
+  listAccountFeatureFlags: (accountId) =>
+    request(`/accounts/${accountId}/features`),
+  setAccountFeatureFlag: (accountId, feature, state) =>
+    request(`/accounts/${accountId}/features/${feature}`, {
+      method: 'PUT',
+      body: JSON.stringify({ state }),
+    }),
+  resetAccountFeatureFlag: (accountId, feature) =>
+    request(`/accounts/${accountId}/features/${feature}`, { method: 'DELETE' }),
+  listCourseFeatureFlags: (courseId) =>
+    request(`/courses/${courseId}/features`),
+  setCourseFeatureFlag: (courseId, feature, state) =>
+    request(`/courses/${courseId}/features/${feature}`, {
+      method: 'PUT',
+      body: JSON.stringify({ state }),
+    }),
+  listUserFeatureFlags: () => request(`/users/self/features`),
+
+  // ==========================================================================
+  // P3 Features: Custom Gradebook Columns
+  // ==========================================================================
+  listCustomGradebookColumns: (courseId, includeHidden = false) =>
+    request(`/courses/${courseId}/custom_gradebook_columns?include_hidden=${includeHidden}`),
+  createCustomGradebookColumn: (courseId, data) =>
+    request(`/courses/${courseId}/custom_gradebook_columns`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  updateCustomGradebookColumn: (courseId, columnId, data) =>
+    request(`/courses/${courseId}/custom_gradebook_columns/${columnId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  deleteCustomGradebookColumn: (courseId, columnId) =>
+    request(`/courses/${courseId}/custom_gradebook_columns/${columnId}`, {
+      method: 'DELETE',
+    }),
+  reorderCustomGradebookColumns: (courseId, order) =>
+    request(`/courses/${courseId}/custom_gradebook_columns/reorder`, {
+      method: 'POST',
+      body: JSON.stringify({ order }),
+    }),
+  getCustomColumnData: (courseId, columnId) =>
+    request(`/courses/${courseId}/custom_gradebook_columns/${columnId}/data`),
+  setCustomColumnCell: (courseId, columnId, userId, content) =>
+    request(`/courses/${courseId}/custom_gradebook_columns/${columnId}/data/${userId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ content }),
+    }),
+  bulkUpdateCustomColumns: (courseId, entries) =>
+    request(`/courses/${courseId}/custom_gradebook_columns/data`, {
+      method: 'PUT',
+      body: JSON.stringify({ entries }),
+    }),
+
+  // ==========================================================================
+  // P3 Features: Mastery Paths (Conditional Release)
+  // ==========================================================================
+  listMasteryPathRules: (courseId) =>
+    request(`/courses/${courseId}/mastery_paths/rules`),
+  getMasteryPathRule: (courseId, assignmentId) =>
+    request(`/courses/${courseId}/mastery_paths/rules/${assignmentId}`),
+  createMasteryPathRule: (courseId, payload) =>
+    request(`/courses/${courseId}/mastery_paths/rules`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  updateMasteryPathRule: (courseId, ruleId, payload) =>
+    request(`/courses/${courseId}/mastery_paths/rules/${ruleId}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
+  deleteMasteryPathRule: (courseId, ruleId) =>
+    request(`/courses/${courseId}/mastery_paths/rules/${ruleId}`, {
+      method: 'DELETE',
+    }),
+
+  // ==========================================================================
+  // P3 Features: Appointment Groups (Scheduler)
+  // ==========================================================================
+  listAppointmentGroups: (courseId) =>
+    request(`/courses/${courseId}/appointment_groups`),
+  getAppointmentGroup: (id) =>
+    request(`/appointment_groups/${id}`),
+  createAppointmentGroup: (courseId, data) =>
+    request(`/courses/${courseId}/appointment_groups`, { method: 'POST', body: JSON.stringify(data) }),
+  updateAppointmentGroup: (id, data) =>
+    request(`/appointment_groups/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteAppointmentGroup: (id) =>
+    request(`/appointment_groups/${id}`, { method: 'DELETE' }),
+  listAppointmentSlots: (id, includeFull = false) =>
+    request(`/appointment_groups/${id}/appointments${includeFull ? '?include_full=true' : ''}`),
+  listAppointmentReservations: (id, slotId) =>
+    request(`/appointment_groups/${id}/appointments/${slotId}/reservations`),
+  reserveAppointmentSlot: (id, slotId) =>
+    request(`/appointment_groups/${id}/appointments/${slotId}/reservations`, { method: 'POST', body: '{}' }),
+  cancelAppointmentReservation: (id, slotId, reservationId) =>
+    request(`/appointment_groups/${id}/appointments/${slotId}/reservations/${reservationId}`, { method: 'DELETE' }),
+  listMyAppointmentReservations: () =>
+    request(`/users/self/appointments`).catch(() => ({ data: [] })),
+
+  // ==========================================================================
+  // P3 Features: Outcome Proficiency + Learning Mastery Gradebook
+  // ==========================================================================
+  getAccountOutcomeProficiency: (accountId) =>
+    request(`/accounts/${accountId}/outcome_proficiency`),
+  setAccountOutcomeProficiency: (accountId, data) =>
+    request(`/accounts/${accountId}/outcome_proficiency`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  deleteAccountOutcomeProficiency: (accountId) =>
+    request(`/accounts/${accountId}/outcome_proficiency`, { method: 'DELETE' }),
+  getCourseOutcomeProficiency: (courseId) =>
+    request(`/courses/${courseId}/outcome_proficiency`),
+  setCourseOutcomeProficiency: (courseId, data) =>
+    request(`/courses/${courseId}/outcome_proficiency`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  deleteCourseOutcomeProficiency: (courseId) =>
+    request(`/courses/${courseId}/outcome_proficiency`, { method: 'DELETE' }),
+  getLearningMasteryGradebook: (courseId) =>
+    request(`/courses/${courseId}/learning_mastery_gradebook`),
+
+  // Phase 5 Wave 1: Discussion Checkpoints
+  getDiscussionCheckpoints: (courseId, topicId) =>
+    request(`/courses/${courseId}/discussion_topics/${topicId}/checkpoints`),
+  createDiscussionCheckpoints: (courseId, topicId, body) =>
+    request(`/courses/${courseId}/discussion_topics/${topicId}/checkpoints`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  updateDiscussionCheckpoint: (courseId, topicId, id, body) =>
+    request(`/courses/${courseId}/discussion_topics/${topicId}/checkpoints/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+  deleteDiscussionCheckpoint: (courseId, topicId, id) =>
+    request(`/courses/${courseId}/discussion_topics/${topicId}/checkpoints/${id}`, {
+      method: 'DELETE',
+    }),
+  getDiscussionCheckpointProgress: (courseId, topicId, userId) =>
+    request(`/courses/${courseId}/discussion_topics/${topicId}/checkpoints/progress?user_id=${userId}`),
+
+  // Phase 5 Wave 1: Smart Search (pgvector cosine similarity)
+  smartSearch: (courseId, q, limit = 10) =>
+    request(`/courses/${courseId}/smart_search?q=${encodeURIComponent(q)}&limit=${limit}`),
+  reindexSmartSearch: (courseId) =>
+    request(`/courses/${courseId}/smart_search/reindex`, { method: 'POST' }),
+
+  // Phase 5 Wave 1: Commons content library
+  browseCommons: (params = {}) =>
+    request(`/commons?${new URLSearchParams(params).toString()}`),
+  getCommonsItem: (id) => request(`/commons/${id}`),
+  listCommonsFavorites: () => request('/commons/favorites'),
+  toggleCommonsFavorite: (id) =>
+    request(`/commons/${id}/favorite`, { method: 'POST' }),
+  importCommons: (id, courseId) =>
+    request(`/commons/${id}/import?course_id=${courseId}`, { method: 'POST' }),
+  publishCommons: (courseId, body) =>
+    request(`/courses/${courseId}/commons/publish`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
 };

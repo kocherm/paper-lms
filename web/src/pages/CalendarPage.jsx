@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import useIsTeacher from '../hooks/useIsTeacher';
 import Layout from '../components/Layout';
 import CourseNav from '../components/CourseNav';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -51,13 +52,13 @@ const CalendarGrid = ({ events, currentDate, onEventClick, onDayClick }) => {
       <div className="grid grid-cols-7 auto-rows-fr">
         {cells.map((cell) => {
           if (cell.type === 'blank') {
-            return <div key={cell.key} className="border-b border-r border-gray-100 bg-gray-50 min-h-[5rem]" />;
+            return <div key={cell.key} className="border-b border-e border-gray-100 bg-gray-50 min-h-[5rem]" />;
           }
           const isToday = isCurrentMonth && today.getDate() === cell.day;
           return (
             <div
               key={cell.key}
-              className="border-b border-r border-gray-100 min-h-[5rem] p-1 hover:bg-blue-50 cursor-pointer transition-colors"
+              className="border-b border-e border-gray-100 min-h-[5rem] p-1 hover:bg-blue-50 cursor-pointer transition-colors"
               onClick={() => onDayClick && onDayClick(cell.day)}
             >
               <div className="flex items-center justify-between mb-0.5">
@@ -80,7 +81,7 @@ const CalendarGrid = ({ events, currentDate, onEventClick, onDayClick }) => {
                       e.stopPropagation();
                       onEventClick(event);
                     }}
-                    className="w-full text-left px-1 py-0.5 text-xs rounded bg-blue-100 text-blue-800 truncate hover:bg-blue-200 transition-colors"
+                    className="w-full text-start px-1 py-0.5 text-xs rounded bg-blue-100 text-blue-800 truncate hover:bg-blue-200 transition-colors"
                     title={event.title}
                   >
                     {event.title}
@@ -310,10 +311,20 @@ const CalendarPage = () => {
   };
 
   if (loading) {
-    return <Layout><div className="flex items-center justify-center py-12 gap-2 text-gray-500">
-  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
-  Loading calendar events...
-</div></Layout>;
+    return (
+      <Layout>
+        {courseId && <CourseNav />}
+        <div className="p-6 space-y-3">
+          <Skeleton className="h-9 w-48" />
+          <Skeleton className="h-10 w-full" />
+          <div className="grid grid-cols-7 gap-2">
+            {Array.from({ length: 42 }).map((_, i) => (
+              <Skeleton key={i} className="h-16 rounded-md" />
+            ))}
+          </div>
+        </div>
+      </Layout>
+    );
   }
 
   return (
@@ -342,7 +353,7 @@ const CalendarPage = () => {
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-2 border-l border-gray-300 ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                className={`p-2 border-s border-gray-300 ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
                 title="List view"
               >
                 <List className="w-4 h-4" />
@@ -371,7 +382,7 @@ const CalendarPage = () => {
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 rounded-md p-3 mb-4 text-sm">
           {error}
-          <button onClick={() => setError(null)} className="ml-2 text-red-500 hover:text-red-700 font-bold">&times;</button>
+          <button onClick={() => setError(null)} className="ms-2 text-red-500 hover:text-red-700 font-bold">&times;</button>
         </div>
       )}
 
@@ -480,7 +491,7 @@ const CalendarPage = () => {
               <p className="text-sm text-gray-500 mt-1">
                 {formatDate(selectedEvent.start_at)}
                 {!selectedEvent.all_day && (
-                  <span className="ml-1">
+                  <span className="ms-1">
                     at {formatTime(selectedEvent.start_at, false)}
                     {selectedEvent.end_at && ` - ${formatTime(selectedEvent.end_at, false)}`}
                   </span>
@@ -531,7 +542,7 @@ const CalendarPage = () => {
           >
             <ChevronLeft className="w-5 h-5 text-gray-600" />
           </button>
-          <h3 className="text-lg font-semibold text-gray-900 min-w-[12rem] text-center">{monthName}</h3>
+          <h3 className="text-lg font-semibold text-gray-900 md:min-w-[12rem] text-center">{monthName}</h3>
           <button
             onClick={goToNextMonth}
             className="p-2 hover:bg-gray-100 rounded-md"
@@ -547,14 +558,60 @@ const CalendarPage = () => {
         </button>
       </div>
 
-      {/* Grid view */}
+      {/* Grid view: month grid on md+, agenda list on mobile */}
       {viewMode === 'grid' && (
-        <CalendarGrid
-          events={events}
-          currentDate={currentDate}
-          onEventClick={(event) => setSelectedEvent(event)}
-          onDayClick={handleDayClick}
-        />
+        <>
+          <div className="hidden md:block">
+            <CalendarGrid
+              events={events}
+              currentDate={currentDate}
+              onEventClick={(event) => setSelectedEvent(event)}
+              onDayClick={handleDayClick}
+            />
+          </div>
+          <div className="md:hidden bg-white rounded-lg shadow">
+            <div className="px-4 py-2 border-b bg-blue-50 text-xs text-blue-700 flex items-center justify-between">
+              <span>Agenda for {monthName}</span>
+              <span className="text-blue-500">{eventsForMonth.length} event{eventsForMonth.length === 1 ? '' : 's'}</span>
+            </div>
+            {sortedDateKeys.length === 0 ? (
+              <div className="p-6 text-center text-gray-500 text-sm">No events this month.</div>
+            ) : (
+              <div className="divide-y">
+                {sortedDateKeys.map((dateKey) => (
+                  <div key={dateKey}>
+                    <div className="px-4 py-2 bg-gray-50">
+                      <span className="text-sm font-medium text-gray-600">{dateKey}</span>
+                    </div>
+                    <div className="divide-y divide-gray-100">
+                      {eventsGroupedByDate[dateKey].map((event) => (
+                        <button
+                          key={event.id}
+                          onClick={() => setSelectedEvent(event)}
+                          className="w-full text-start flex items-start gap-3 px-4 py-3 hover:bg-gray-50"
+                        >
+                          <Calendar className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                          <div className="min-w-0 flex-1">
+                            <div className="font-medium text-gray-900 text-sm truncate">{event.title}</div>
+                            <div className="text-xs text-gray-500">
+                              {formatTime(event.start_at, event.all_day)}
+                              {event.end_at && !event.all_day && (
+                                <span> - {formatTime(event.end_at, false)}</span>
+                              )}
+                            </div>
+                            {event.location_name && (
+                              <div className="text-xs text-gray-400 mt-0.5 truncate">{event.location_name}</div>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
       )}
 
       {/* List view */}
@@ -582,7 +639,7 @@ const CalendarPage = () => {
                                 <span> - {formatTime(event.end_at, false)}</span>
                               )}
                               {event.location_name && (
-                                <span className="ml-2 text-gray-400">| {event.location_name}</span>
+                                <span className="ms-2 text-gray-400">| {event.location_name}</span>
                               )}
                             </div>
                             {event.description && (
@@ -591,7 +648,7 @@ const CalendarPage = () => {
                           </div>
                         </div>
                         {(!courseId || isTeacher) && (
-                          <div className="flex items-center space-x-1 flex-shrink-0 ml-4">
+                          <div className="flex items-center space-x-1 flex-shrink-0 ms-4">
                             <button
                               onClick={() => handleEdit(event)}
                               className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"

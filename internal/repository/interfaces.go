@@ -25,6 +25,7 @@ type UserRepository interface {
 	FindByLoginID(ctx context.Context, loginID string) (*models.User, error)
 	FindByEmail(ctx context.Context, email string) (*models.User, error)
 	FindBySISUserID(ctx context.Context, sisUserID string) (*models.User, error)
+	FindByIDs(ctx context.Context, ids []uint) ([]models.User, error)
 	Update(ctx context.Context, user *models.User) error
 	List(ctx context.Context, params PaginationParams) (*PaginatedResult[models.User], error)
 	FindByResetToken(ctx context.Context, token string) (*models.User, error)
@@ -98,6 +99,7 @@ type PageRepository interface {
 type AssignmentRepository interface {
 	Create(ctx context.Context, assignment *models.Assignment) error
 	FindByID(ctx context.Context, id uint) (*models.Assignment, error)
+	FindByIDs(ctx context.Context, ids []uint) ([]models.Assignment, error)
 	Update(ctx context.Context, assignment *models.Assignment) error
 	Delete(ctx context.Context, id uint) error
 	ListByCourseID(ctx context.Context, courseID uint, params PaginationParams) (*PaginatedResult[models.Assignment], error)
@@ -114,12 +116,15 @@ type AssignmentGroupRepository interface {
 type SubmissionRepository interface {
 	Create(ctx context.Context, submission *models.Submission) error
 	FindByID(ctx context.Context, id uint) (*models.Submission, error)
+	FindByIDs(ctx context.Context, ids []uint) ([]models.Submission, error)
 	FindByAssignmentAndUser(ctx context.Context, assignmentID, userID uint) (*models.Submission, error)
+	FindByAssignmentAndUserIDs(ctx context.Context, assignmentID uint, userIDs []uint) ([]models.Submission, error)
 	Update(ctx context.Context, submission *models.Submission) error
 	ListByAssignmentID(ctx context.Context, assignmentID uint, params PaginationParams) (*PaginatedResult[models.Submission], error)
 	ListByUserAndCourse(ctx context.Context, userID, courseID uint) ([]models.Submission, error)
 	BulkListByCourse(ctx context.Context, courseID uint, params PaginationParams) (*PaginatedResult[models.Submission], error)
 	PostGradesByAssignment(ctx context.Context, assignmentID uint, postedAt *time.Time) error
+	RunInTransaction(ctx context.Context, fn func(txRepo SubmissionRepository) error) error
 }
 
 type SubmissionCommentRepository interface {
@@ -273,6 +278,7 @@ type QuizRepository interface {
 type QuizQuestionRepository interface {
 	Create(ctx context.Context, question *models.QuizQuestion) error
 	FindByID(ctx context.Context, id uint) (*models.QuizQuestion, error)
+	FindByIDs(ctx context.Context, ids []uint) ([]models.QuizQuestion, error)
 	Update(ctx context.Context, question *models.QuizQuestion) error
 	Delete(ctx context.Context, id uint) error
 	ListByQuizID(ctx context.Context, quizID uint, params PaginationParams) (*PaginatedResult[models.QuizQuestion], error)
@@ -554,6 +560,7 @@ type PortfolioRepository interface {
 type PortfolioSectionRepository interface {
 	Create(ctx context.Context, section *models.PortfolioSection) error
 	FindByID(ctx context.Context, id uint) (*models.PortfolioSection, error)
+	FindByIDs(ctx context.Context, ids []uint) ([]models.PortfolioSection, error)
 	Update(ctx context.Context, section *models.PortfolioSection) error
 	Delete(ctx context.Context, id uint) error
 	ListByPortfolioID(ctx context.Context, portfolioID uint) ([]models.PortfolioSection, error)
