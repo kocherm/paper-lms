@@ -6,6 +6,7 @@ import (
 	"encoding/asn1"
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -197,7 +198,7 @@ func (a *LDAPAuthenticator) TestConnection(ctx context.Context, provider *models
 
 // connect establishes a TCP or TLS connection to the LDAP server.
 func (a *LDAPAuthenticator) connect(provider *models.AuthenticationProvider) (net.Conn, error) {
-	addr := fmt.Sprintf("%s:%d", provider.LDAPHost, provider.LDAPPort)
+	addr := net.JoinHostPort(provider.LDAPHost, strconv.Itoa(provider.LDAPPort))
 	dialer := net.Dialer{Timeout: 10 * time.Second}
 
 	if provider.LDAPUseTLS {
