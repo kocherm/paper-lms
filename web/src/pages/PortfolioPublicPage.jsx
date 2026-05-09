@@ -37,6 +37,7 @@ import { api } from '../services/api';
    THEME DEFINITIONS
    Each theme provides full class sets for the public page.
    ═══════════════════════════════════════════════════════ */
+// User-facing portfolio theme presets — palette classes are intentional design tokens for the public-facing portfolio variants. Do not refactor to semantic tokens.
 const THEMES = {
   clean_modern: {
     page: 'bg-white text-gray-900 font-sans',
@@ -402,9 +403,9 @@ const PortfolioPublicPage = () => {
         <div className="text-center">
           <div className="relative w-16 h-16 mx-auto mb-6">
             <div className="absolute inset-0 rounded-full border-4 border-gray-800" />
-            <div className="absolute inset-0 rounded-full border-4 border-blue-500 border-t-transparent animate-spin" />
+            <div className="absolute inset-0 rounded-full border-4 border-brand-500 border-t-transparent animate-spin" />
           </div>
-          <p className="text-gray-500 text-sm font-medium">Loading portfolio...</p>
+          <p className="text-text-tertiary text-sm font-medium">Loading portfolio...</p>
         </div>
       </div>
     );
@@ -413,16 +414,16 @@ const PortfolioPublicPage = () => {
   /* Error */
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-surface-1 flex items-center justify-center p-6">
         <div className="text-center max-w-md">
-          <div className="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-6 rotate-3">
+          <div className="w-20 h-20 bg-surface-2 rounded-3xl flex items-center justify-center mx-auto mb-6 rotate-3">
             <FileText className="w-10 h-10 text-gray-300" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Portfolio Not Found</h1>
-          <p className="text-gray-500 mb-6">
+          <h1 className="text-2xl font-bold text-text-primary mb-2">Portfolio Not Found</h1>
+          <p className="text-text-tertiary mb-6">
             This portfolio may have been unpublished, moved, or the link may be incorrect.
           </p>
-          <a href="/" className="text-blue-600 hover:underline font-medium text-sm">Go to Paper LMS</a>
+          <a href="/" className="text-brand-600 hover:underline font-medium text-sm">Go to Paper LMS</a>
         </div>
       </div>
     );
@@ -715,12 +716,12 @@ const PortfolioPublicPage = () => {
 
         <div className="relative max-w-5xl mx-auto px-6 py-20 md:py-28 text-center">
           {/* Avatar */}
-          <div className={`w-28 h-28 rounded-full ring-4 ${t.avatarRing} shadow-2xl mx-auto mb-6 overflow-hidden bg-gray-200`}>
+          <div className={`w-28 h-28 rounded-full ring-4 ${t.avatarRing} shadow-2xl mx-auto mb-6 overflow-hidden bg-border-default`}>
             {portfolio.avatar_url ? (
               <img src={portfolio.avatar_url} alt={portfolio.user_name || 'Portfolio author'} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <User className="w-14 h-14 text-gray-400" aria-hidden="true" />
+                <User className="w-14 h-14 text-text-disabled" aria-hidden="true" />
               </div>
             )}
           </div>
@@ -740,7 +741,7 @@ const PortfolioPublicPage = () => {
             {portfolio.contact_email && (
               <a
                 href={`mailto:${portfolio.contact_email}`}
-                className={`p-3 rounded-full ${portfolio.cover_image_url ? 'bg-white/10 text-white hover:bg-white/20' : `${t.accentBgLight} ${t.accent}`} transition-all hover:scale-110`}
+                className={`p-3 rounded-full ${portfolio.cover_image_url ? 'bg-surface-0/10 text-white hover:bg-surface-0/20' : `${t.accentBgLight} ${t.accent}`} transition-all hover:scale-110`}
                 aria-label="Send email"
               >
                 <Mail className="w-5 h-5" />
@@ -751,7 +752,7 @@ const PortfolioPublicPage = () => {
                 href={portfolio.linkedin_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`p-3 rounded-full ${portfolio.cover_image_url ? 'bg-white/10 text-white hover:bg-white/20' : `${t.accentBgLight} ${t.accent}`} transition-all hover:scale-110`}
+                className={`p-3 rounded-full ${portfolio.cover_image_url ? 'bg-surface-0/10 text-white hover:bg-surface-0/20' : `${t.accentBgLight} ${t.accent}`} transition-all hover:scale-110`}
                 aria-label="LinkedIn profile"
               >
                 <Linkedin className="w-5 h-5" />
@@ -762,7 +763,7 @@ const PortfolioPublicPage = () => {
                 href={portfolio.website_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`p-3 rounded-full ${portfolio.cover_image_url ? 'bg-white/10 text-white hover:bg-white/20' : `${t.accentBgLight} ${t.accent}`} transition-all hover:scale-110`}
+                className={`p-3 rounded-full ${portfolio.cover_image_url ? 'bg-surface-0/10 text-white hover:bg-surface-0/20' : `${t.accentBgLight} ${t.accent}`} transition-all hover:scale-110`}
                 aria-label="Personal website"
               >
                 <Globe className="w-5 h-5" />
@@ -896,27 +897,27 @@ const PortfolioPublicPage = () => {
       {showShare && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Share portfolio">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowShare(false)} aria-hidden="true" />
-          <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6">
+          <div className="relative w-full max-w-sm bg-surface-0 rounded-2xl shadow-2xl p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-900">Share Portfolio</h3>
-              <button onClick={() => setShowShare(false)} className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 focus:outline-none" aria-label="Close">
+              <h3 className="text-lg font-bold text-text-primary">Share Portfolio</h3>
+              <button onClick={() => setShowShare(false)} className="p-2 rounded-lg text-text-disabled hover:text-text-secondary hover:bg-surface-2 focus:outline-none" aria-label="Close">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="space-y-3">
               {/* Copy link */}
-              <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl">
+              <div className="flex items-center gap-2 p-3 bg-surface-1 rounded-xl">
                 <input
                   type="text"
                   value={window.location.href}
                   readOnly
-                  className="flex-1 bg-transparent text-sm text-gray-700 outline-none"
+                  className="flex-1 bg-transparent text-sm text-text-secondary outline-none"
                   aria-label="Portfolio URL"
                 />
                 <button
                   onClick={handleCopyLink}
-                  className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-1.5 bg-brand-600 text-white rounded-lg text-xs font-medium hover:bg-brand-700 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500"
                 >
                   {copied ? 'Copied!' : 'Copy'}
                 </button>
@@ -926,7 +927,7 @@ const PortfolioPublicPage = () => {
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={handleShareLinkedIn}
-                  className="flex items-center justify-center gap-2 p-3 bg-[#0077B5] text-white rounded-xl text-sm font-medium hover:bg-[#006397] transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex items-center justify-center gap-2 p-3 bg-[#0077B5] text-white rounded-xl text-sm font-medium hover:bg-[#006397] transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500"
                 >
                   <Linkedin className="w-4 h-4" /> LinkedIn
                 </button>
@@ -990,7 +991,7 @@ const PortfolioPublicPage = () => {
                   key={i}
                   onClick={() => setLightboxIndex(i)}
                   className={`w-2 h-2 rounded-full transition-all ${
-                    i === lightboxIndex ? 'bg-white scale-125' : 'bg-white/40 hover:bg-white/60'
+                    i === lightboxIndex ? 'bg-surface-0 scale-125' : 'bg-surface-0/40 hover:bg-surface-0/60'
                   }`}
                   aria-label={`Go to image ${i + 1}`}
                 />

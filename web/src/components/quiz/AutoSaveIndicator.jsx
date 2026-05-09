@@ -22,7 +22,7 @@ const AutoSaveIndicator = ({ status, lastSavedAt, onRetry }) => {
 
   if (status === 'saving') {
     return (
-      <span className="inline-flex items-center gap-1.5 text-xs text-gray-600">
+      <span className="inline-flex items-center gap-1.5 text-xs text-text-secondary">
         <RefreshCw className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
         Saving…
       </span>
@@ -30,7 +30,7 @@ const AutoSaveIndicator = ({ status, lastSavedAt, onRetry }) => {
   }
   if (status === 'saved') {
     return (
-      <span className="inline-flex items-center gap-1.5 text-xs text-green-700">
+      <span className="inline-flex items-center gap-1.5 text-xs text-accent-success">
         <Check className="w-3.5 h-3.5" aria-hidden="true" />
         Saved
       </span>
@@ -38,7 +38,7 @@ const AutoSaveIndicator = ({ status, lastSavedAt, onRetry }) => {
   }
   if (status === 'error') {
     return (
-      <span className="inline-flex items-center gap-1.5 text-xs text-red-700">
+      <span className="inline-flex items-center gap-1.5 text-xs text-accent-danger">
         <AlertCircle className="w-3.5 h-3.5" aria-hidden="true" />
         Save failed
         {onRetry && (
@@ -55,7 +55,7 @@ const AutoSaveIndicator = ({ status, lastSavedAt, onRetry }) => {
   }
   if (lastSavedAt) {
     return (
-      <span className="inline-flex items-center gap-1.5 text-xs text-gray-500">
+      <span className="inline-flex items-center gap-1.5 text-xs text-text-tertiary">
         <Check className="w-3.5 h-3.5" aria-hidden="true" />
         Saved {formatRelative(lastSavedAt)}
       </span>

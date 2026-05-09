@@ -49,17 +49,20 @@ const DefaultProviderIcon = () => (
 );
 
 /* ─── Provider Styling ─── */
+// Brand colors below (#2F2F2F, #4274F6, #2E7D32, etc.) are intentional vendor SSO button colors
+// per Microsoft/Clever/ClassLink brand guidelines. Do not replace with theme tokens.
 
 const PROVIDER_STYLES = {
   google: {
-    bg: 'bg-white',
-    border: 'border border-gray-300',
-    text: 'text-gray-700',
-    hover: 'hover:bg-gray-50 hover:shadow-sm',
+    bg: 'bg-surface-0',
+    border: 'border border-border-strong',
+    text: 'text-text-secondary',
+    hover: 'hover:bg-surface-1 hover:shadow-sm',
     icon: GoogleIcon,
     label: 'Sign in with Google',
   },
   microsoft: {
+    // Brand color: vendor SSO button (Microsoft)
     bg: 'bg-[#2F2F2F]',
     border: 'border border-[#2F2F2F]',
     text: 'text-white',
@@ -68,6 +71,7 @@ const PROVIDER_STYLES = {
     label: 'Sign in with Microsoft',
   },
   clever: {
+    // Brand color: vendor SSO button (Clever)
     bg: 'bg-[#4274F6]',
     border: 'border border-[#4274F6]',
     text: 'text-white',
@@ -76,6 +80,7 @@ const PROVIDER_STYLES = {
     label: 'Sign in with Clever',
   },
   classlink: {
+    // Brand color: vendor SSO button (ClassLink)
     bg: 'bg-[#2E7D32]',
     border: 'border border-[#2E7D32]',
     text: 'text-white',
@@ -90,11 +95,12 @@ const getProviderStyle = (provider) => {
   for (const [name, style] of Object.entries(PROVIDER_STYLES)) {
     if (key.includes(name)) return style;
   }
+  // Brand color: vendor SSO button (generic fallback — neutral dark button for unknown providers)
   return {
-    bg: 'bg-gray-700',
-    border: 'border border-gray-700',
+    bg: 'bg-text-primary',
+    border: 'border border-text-primary',
     text: 'text-white',
-    hover: 'hover:bg-gray-800',
+    hover: 'hover:bg-text-secondary',
     icon: DefaultProviderIcon,
     label: `Sign in with ${provider.name}`,
   };
@@ -104,13 +110,13 @@ const getProviderStyle = (provider) => {
 
 const PaperLogo = () => (
   <div className="flex flex-col items-center mb-2">
-    <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mb-3 shadow-lg">
+    <div className="w-16 h-16 bg-brand-600 rounded-2xl flex items-center justify-center mb-3 shadow-lg">
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path d="M4 4h16v16H4z" fill="rgba(255,255,255,0.2)" rx="2" />
         <path d="M7 8h10M7 12h7M7 16h5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
       </svg>
     </div>
-    <h1 className="text-2xl font-bold text-gray-900">Paper LMS</h1>
+    <h1 className="text-2xl font-bold text-text-primary">Paper LMS</h1>
   </div>
 );
 
@@ -245,11 +251,11 @@ const LoginPageSSO = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-surface-1 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-surface-0 rounded-2xl shadow-xl p-8">
           <PaperLogo />
-          <p className="text-center text-gray-500 text-sm mb-6">
+          <p className="text-center text-text-tertiary text-sm mb-6">
             {view === 'forgotPassword' ? 'Reset your password' :
              view === 'resetPassword' ? 'Set a new password' :
              isRegister ? 'Create your account' : 'Sign in to continue'}
@@ -269,7 +275,7 @@ const LoginPageSSO = () => {
                     className={`
                       w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg
                       font-medium text-sm transition-all duration-150
-                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                      focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2
                       ${style.bg} ${style.border} ${style.text} ${style.hover}
                     `}
                     aria-label={style.label}
@@ -295,10 +301,10 @@ const LoginPageSSO = () => {
           {view === 'login' && !isRegister && providers.length > 0 && (
             <div className="relative my-6" role="separator">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200" />
+                <div className="w-full border-t border-border-default" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="bg-white px-4 text-gray-400">or sign in with email</span>
+                <span className="bg-surface-0 px-4 text-text-disabled">or sign in with email</span>
               </div>
             </div>
           )}
@@ -306,14 +312,14 @@ const LoginPageSSO = () => {
           {/* ── Loading SSO providers ── */}
           {view === 'login' && !isRegister && providersLoading && (
             <div className="flex justify-center mb-4">
-              <div className="h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" aria-label="Loading sign-in options" role="status" />
+              <div className="h-5 w-5 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" aria-label="Loading sign-in options" role="status" />
             </div>
           )}
 
           {/* ── Success Message ── */}
           {successMsg && (
             <div
-              className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm text-center"
+              className="mb-4 p-3 bg-accent-success/10 border border-accent-success/30 rounded-lg text-accent-success text-sm text-center"
               role="status"
               aria-live="polite"
             >
@@ -324,7 +330,7 @@ const LoginPageSSO = () => {
           {/* ── Error Display ── */}
           {error && (
             <div
-              className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm text-center"
+              className="mb-4 p-3 bg-accent-danger/10 border border-accent-danger/30 rounded-lg text-accent-danger text-sm text-center"
               role="alert"
               aria-live="assertive"
             >
@@ -335,13 +341,13 @@ const LoginPageSSO = () => {
           {/* ── Forgot Password Form ── */}
           {view === 'forgotPassword' && (
             <>
-              <p className="text-sm text-gray-500 mb-4 text-center">
+              <p className="text-sm text-text-tertiary mb-4 text-center">
                 Enter your email address and we'll send you instructions to reset your password.
               </p>
               <form onSubmit={handleForgotPassword} noValidate>
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="reset-email" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="reset-email" className="block text-sm font-medium text-text-secondary mb-1">
                       Email Address
                     </label>
                     <input
@@ -349,7 +355,7 @@ const LoginPageSSO = () => {
                       type="email"
                       name="email"
                       autoComplete="email"
-                      className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                      className="block w-full rounded-lg border border-border-strong px-3 py-2.5 text-text-primary placeholder:text-text-disabled focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
                       placeholder="you@school.edu"
                       required
                       aria-required="true"
@@ -357,14 +363,14 @@ const LoginPageSSO = () => {
                   </div>
                   <button
                     type="submit"
-                    className="w-full bg-blue-600 text-white py-2.5 px-4 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                    className="w-full bg-brand-600 text-white py-2.5 px-4 rounded-lg font-medium hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-colors"
                   >
                     Request Password Reset
                   </button>
                 </div>
               </form>
-              <p className="mt-5 text-center text-sm text-gray-500">
-                <button type="button" onClick={goToLogin} className="text-blue-600 font-medium hover:underline focus:outline-none focus:underline">
+              <p className="mt-5 text-center text-sm text-text-tertiary">
+                <button type="button" onClick={goToLogin} className="text-brand-600 font-medium hover:underline focus:outline-none focus:underline">
                   Back to sign in
                 </button>
               </p>
@@ -377,7 +383,7 @@ const LoginPageSSO = () => {
               <form onSubmit={handleResetPassword} noValidate>
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="reset-token" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="reset-token" className="block text-sm font-medium text-text-secondary mb-1">
                       Reset Token
                     </label>
                     <input
@@ -385,14 +391,14 @@ const LoginPageSSO = () => {
                       type="text"
                       name="token"
                       defaultValue={resetToken}
-                      className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors font-mono text-sm"
+                      className="block w-full rounded-lg border border-border-strong px-3 py-2.5 text-text-primary placeholder:text-text-disabled focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors font-mono text-sm"
                       placeholder="Paste your reset token"
                       required
                       aria-required="true"
                     />
                   </div>
                   <div>
-                    <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="new-password" className="block text-sm font-medium text-text-secondary mb-1">
                       New Password
                     </label>
                     <input
@@ -400,7 +406,7 @@ const LoginPageSSO = () => {
                       type="password"
                       name="new_password"
                       autoComplete="new-password"
-                      className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                      className="block w-full rounded-lg border border-border-strong px-3 py-2.5 text-text-primary placeholder:text-text-disabled focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
                       placeholder="At least 8 characters"
                       required
                       aria-required="true"
@@ -408,7 +414,7 @@ const LoginPageSSO = () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="confirm-password" className="block text-sm font-medium text-text-secondary mb-1">
                       Confirm Password
                     </label>
                     <input
@@ -416,7 +422,7 @@ const LoginPageSSO = () => {
                       type="password"
                       name="confirm_password"
                       autoComplete="new-password"
-                      className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                      className="block w-full rounded-lg border border-border-strong px-3 py-2.5 text-text-primary placeholder:text-text-disabled focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
                       placeholder="Re-enter your new password"
                       required
                       aria-required="true"
@@ -425,14 +431,14 @@ const LoginPageSSO = () => {
                   </div>
                   <button
                     type="submit"
-                    className="w-full bg-blue-600 text-white py-2.5 px-4 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                    className="w-full bg-brand-600 text-white py-2.5 px-4 rounded-lg font-medium hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-colors"
                   >
                     Reset Password
                   </button>
                 </div>
               </form>
-              <p className="mt-5 text-center text-sm text-gray-500">
-                <button type="button" onClick={goToLogin} className="text-blue-600 font-medium hover:underline focus:outline-none focus:underline">
+              <p className="mt-5 text-center text-sm text-text-tertiary">
+                <button type="button" onClick={goToLogin} className="text-brand-600 font-medium hover:underline focus:outline-none focus:underline">
                   Back to sign in
                 </button>
               </p>
@@ -446,7 +452,7 @@ const LoginPageSSO = () => {
                 <div className="space-y-4">
                   {isRegister && (
                     <div>
-                      <label htmlFor="sso-name" className="block text-sm font-medium text-gray-700 mb-1">
+                      <label htmlFor="sso-name" className="block text-sm font-medium text-text-secondary mb-1">
                         Full Name
                       </label>
                       <input
@@ -454,7 +460,7 @@ const LoginPageSSO = () => {
                         type="text"
                         name="name"
                         autoComplete="name"
-                        className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                        className="block w-full rounded-lg border border-border-strong px-3 py-2.5 text-text-primary placeholder:text-text-disabled focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
                         placeholder="Jane Doe"
                         required
                         aria-required="true"
@@ -462,7 +468,7 @@ const LoginPageSSO = () => {
                     </div>
                   )}
                   <div>
-                    <label htmlFor="sso-email" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="sso-email" className="block text-sm font-medium text-text-secondary mb-1">
                       Email Address
                     </label>
                     <input
@@ -470,14 +476,14 @@ const LoginPageSSO = () => {
                       type="email"
                       name="email"
                       autoComplete="email"
-                      className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                      className="block w-full rounded-lg border border-border-strong px-3 py-2.5 text-text-primary placeholder:text-text-disabled focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
                       placeholder="you@school.edu"
                       required
                       aria-required="true"
                     />
                   </div>
                   <div>
-                    <label htmlFor="sso-password" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="sso-password" className="block text-sm font-medium text-text-secondary mb-1">
                       Password
                     </label>
                     <input
@@ -485,7 +491,7 @@ const LoginPageSSO = () => {
                       type="password"
                       name="password"
                       autoComplete={isRegister ? 'new-password' : 'current-password'}
-                      className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                      className="block w-full rounded-lg border border-border-strong px-3 py-2.5 text-text-primary placeholder:text-text-disabled focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
                       placeholder="Enter your password"
                       required
                       aria-required="true"
@@ -496,7 +502,7 @@ const LoginPageSSO = () => {
                       <button
                         type="button"
                         onClick={goToForgotPassword}
-                        className="text-sm text-blue-600 hover:underline focus:outline-none focus:underline"
+                        className="text-sm text-brand-600 hover:underline focus:outline-none focus:underline"
                       >
                         Forgot password?
                       </button>
@@ -504,7 +510,7 @@ const LoginPageSSO = () => {
                   )}
                   <button
                     type="submit"
-                    className="w-full bg-blue-600 text-white py-2.5 px-4 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                    className="w-full bg-brand-600 text-white py-2.5 px-4 rounded-lg font-medium hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-colors"
                   >
                     {isRegister ? 'Create Account' : 'Log In'}
                   </button>
@@ -512,12 +518,12 @@ const LoginPageSSO = () => {
               </form>
 
               {/* ── Toggle Register / Login ── */}
-              <p className="mt-5 text-center text-sm text-gray-500">
+              <p className="mt-5 text-center text-sm text-text-tertiary">
                 {isRegister ? 'Already have an account? ' : "Don't have an account? "}
                 <button
                   type="button"
                   onClick={toggleMode}
-                  className="text-blue-600 font-medium hover:underline focus:outline-none focus:underline"
+                  className="text-brand-600 font-medium hover:underline focus:outline-none focus:underline"
                 >
                   {isRegister ? 'Sign in' : 'Register'}
                 </button>
@@ -526,14 +532,14 @@ const LoginPageSSO = () => {
           )}
 
           {/* ── COPPA Notice ── */}
-          <div className="mt-6 pt-5 border-t border-gray-100">
-            <p className="text-xs text-gray-400 text-center leading-relaxed">
+          <div className="mt-6 pt-5 border-t border-border-subtle">
+            <p className="text-xs text-text-disabled text-center leading-relaxed">
               By signing in, you agree to our{' '}
-              <a href="/privacy" className="text-blue-500 hover:underline focus:underline focus:outline-none">
+              <a href="/privacy" className="text-brand-500 hover:underline focus:underline focus:outline-none">
                 Privacy Policy
               </a>{' '}
               and{' '}
-              <a href="/terms" className="text-blue-500 hover:underline focus:underline focus:outline-none">
+              <a href="/terms" className="text-brand-500 hover:underline focus:underline focus:outline-none">
                 Terms of Service
               </a>.
               <br />

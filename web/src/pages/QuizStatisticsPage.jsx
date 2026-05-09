@@ -35,7 +35,7 @@ const QuizStatisticsPage = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+        <div className="flex items-center justify-center py-12 gap-2 text-text-tertiary">
           <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
@@ -50,10 +50,10 @@ const QuizStatisticsPage = () => {
     return (
       <Layout>
         <div className="text-center py-12">
-          <p className="text-red-600 mb-3">{error}</p>
+          <p className="text-accent-danger mb-3">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            className="text-brand-600 hover:text-brand-800 text-sm font-medium"
           >
             Try Again
           </button>
@@ -71,10 +71,10 @@ const QuizStatisticsPage = () => {
   };
 
   const getDifficultyColor = (idx) => {
-    if (idx >= 80) return 'text-green-700 bg-green-50';
-    if (idx >= 60) return 'text-blue-700 bg-blue-50';
-    if (idx >= 40) return 'text-yellow-700 bg-yellow-50';
-    return 'text-red-700 bg-red-50';
+    if (idx >= 80) return 'text-accent-success bg-accent-success/10';
+    if (idx >= 60) return 'text-brand-700 bg-brand-50';
+    if (idx >= 40) return 'text-accent-warning bg-accent-warning/10';
+    return 'text-accent-danger bg-accent-danger/10';
   };
 
   const getDifficultyLabel = (idx) => {
@@ -88,30 +88,30 @@ const QuizStatisticsPage = () => {
     <Layout>
       <CourseNav />
       <div className="mb-6">
-        <Link to={`/courses/${courseId}/quizzes`} className="text-blue-600 hover:underline text-sm inline-flex items-center gap-1">
+        <Link to={`/courses/${courseId}/quizzes`} className="text-brand-600 hover:underline text-sm inline-flex items-center gap-1">
           <ArrowLeft className="w-3 h-3" />
           Back to Quizzes
         </Link>
-        <h2 className="text-2xl font-bold text-gray-900 mt-2">
+        <h2 className="text-2xl font-bold text-text-primary mt-2">
           {quiz?.title || 'Quiz'} - Statistics
         </h2>
-        <p className="text-sm text-gray-500 mt-1">Item analysis and performance summary</p>
+        <p className="text-sm text-text-tertiary mt-1">Item analysis and performance summary</p>
       </div>
 
       {/* Quiz-Level Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <SummaryCard
-          icon={<Users className="w-5 h-5 text-blue-600" />}
+          icon={<Users className="w-5 h-5 text-brand-600" />}
           label="Submissions"
           value={quizLevel.submission_count || 0}
-          bgColor="bg-blue-50"
+          bgColor="bg-brand-50"
         />
         <SummaryCard
-          icon={<TrendingUp className="w-5 h-5 text-green-600" />}
+          icon={<TrendingUp className="w-5 h-5 text-accent-success" />}
           label="Average Score"
           value={`${quizLevel.average_score ?? 0}${quizLevel.points_possible ? ` / ${quizLevel.points_possible}` : ''}`}
           subtitle={quizLevel.points_possible > 0 ? `${Math.round((quizLevel.average_score / quizLevel.points_possible) * 100)}%` : null}
-          bgColor="bg-green-50"
+          bgColor="bg-accent-success/10"
         />
         <SummaryCard
           icon={<Award className="w-5 h-5 text-purple-600" />}
@@ -130,24 +130,24 @@ const QuizStatisticsPage = () => {
 
       {/* Score Distribution */}
       {quizLevel.submission_count > 0 && (
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Score Overview</h3>
+        <div className="bg-surface-0 rounded-lg shadow p-6 mb-8">
+          <h3 className="text-lg font-semibold text-text-primary mb-4">Score Overview</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
             <div>
-              <span className="text-gray-500">Average</span>
-              <p className="font-semibold text-gray-900">{quizLevel.average_score ?? 0}</p>
+              <span className="text-text-tertiary">Average</span>
+              <p className="font-semibold text-text-primary">{quizLevel.average_score ?? 0}</p>
             </div>
             <div>
-              <span className="text-gray-500">Median</span>
-              <p className="font-semibold text-gray-900">{quizLevel.median_score ?? 0}</p>
+              <span className="text-text-tertiary">Median</span>
+              <p className="font-semibold text-text-primary">{quizLevel.median_score ?? 0}</p>
             </div>
             <div>
-              <span className="text-gray-500">Highest</span>
-              <p className="font-semibold text-green-700">{quizLevel.high_score ?? 0}</p>
+              <span className="text-text-tertiary">Highest</span>
+              <p className="font-semibold text-accent-success">{quizLevel.high_score ?? 0}</p>
             </div>
             <div>
-              <span className="text-gray-500">Lowest</span>
-              <p className="font-semibold text-red-700">{quizLevel.low_score ?? 0}</p>
+              <span className="text-text-tertiary">Lowest</span>
+              <p className="font-semibold text-accent-danger">{quizLevel.low_score ?? 0}</p>
             </div>
           </div>
         </div>
@@ -155,9 +155,9 @@ const QuizStatisticsPage = () => {
 
       {/* Per-Question Breakdown */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900">Question Analysis</h3>
+        <h3 className="text-lg font-semibold text-text-primary">Question Analysis</h3>
         {questionStats.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
+          <div className="bg-surface-0 rounded-lg shadow p-6 text-center text-text-tertiary">
             No question data available yet.
           </div>
         ) : (
@@ -171,15 +171,15 @@ const QuizStatisticsPage = () => {
 };
 
 const SummaryCard = ({ icon, label, value, subtitle, bgColor }) => (
-  <div className="bg-white rounded-lg shadow p-4">
+  <div className="bg-surface-0 rounded-lg shadow p-4">
     <div className="flex items-center gap-3">
       <div className={`p-2 rounded-lg ${bgColor}`}>
         {icon}
       </div>
       <div>
-        <p className="text-xs text-gray-500 uppercase tracking-wide">{label}</p>
-        <p className="text-lg font-bold text-gray-900">{value}</p>
-        {subtitle && <p className="text-xs text-gray-500">{subtitle}</p>}
+        <p className="text-xs text-text-tertiary uppercase tracking-wide">{label}</p>
+        <p className="text-lg font-bold text-text-primary">{value}</p>
+        {subtitle && <p className="text-xs text-text-tertiary">{subtitle}</p>}
       </div>
     </div>
   </div>
@@ -201,24 +201,24 @@ const QuestionCard = ({ question, index, formatPercent, getDifficultyColor, getD
   };
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div className="p-4 border-b bg-gray-50">
+    <div className="bg-surface-0 rounded-lg shadow overflow-hidden">
+      <div className="p-4 border-b bg-surface-1">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-sm font-semibold text-gray-500">Q{index + 1}</span>
-              <span className="text-xs text-gray-400 px-2 py-0.5 bg-gray-100 rounded">
+              <span className="text-sm font-semibold text-text-tertiary">Q{index + 1}</span>
+              <span className="text-xs text-text-disabled px-2 py-0.5 bg-surface-2 rounded">
                 {typeLabel[q.question_type] || q.question_type}
               </span>
-              <span className="text-xs text-gray-400">{q.points_possible} pt{q.points_possible !== 1 ? 's' : ''}</span>
+              <span className="text-xs text-text-disabled">{q.points_possible} pt{q.points_possible !== 1 ? 's' : ''}</span>
             </div>
-            <p className="text-sm text-gray-800" dangerouslySetInnerHTML={{ __html: q.question_text }} />
+            <p className="text-sm text-text-primary" dangerouslySetInnerHTML={{ __html: q.question_text }} />
           </div>
           <div className="flex-shrink-0 text-right">
             <span className={`inline-block text-xs font-semibold px-2 py-1 rounded ${getDifficultyColor(q.difficulty_index)}`}>
               {formatPercent(q.difficulty_index)} correct
             </span>
-            <p className="text-xs text-gray-400 mt-0.5">{getDifficultyLabel(q.difficulty_index)}</p>
+            <p className="text-xs text-text-disabled mt-0.5">{getDifficultyLabel(q.difficulty_index)}</p>
           </div>
         </div>
       </div>
@@ -227,19 +227,19 @@ const QuestionCard = ({ question, index, formatPercent, getDifficultyColor, getD
         {/* Stats row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm mb-4">
           <div>
-            <span className="text-gray-500">Responses</span>
+            <span className="text-text-tertiary">Responses</span>
             <p className="font-semibold">{q.responses}</p>
           </div>
           <div>
-            <span className="text-gray-500">Correct</span>
-            <p className="font-semibold text-green-700">{q.correct}</p>
+            <span className="text-text-tertiary">Correct</span>
+            <p className="font-semibold text-accent-success">{q.correct}</p>
           </div>
           <div>
-            <span className="text-gray-500">Incorrect</span>
-            <p className="font-semibold text-red-700">{q.incorrect}</p>
+            <span className="text-text-tertiary">Incorrect</span>
+            <p className="font-semibold text-accent-danger">{q.incorrect}</p>
           </div>
           <div>
-            <span className="text-gray-500">Avg Score</span>
+            <span className="text-text-tertiary">Avg Score</span>
             <p className="font-semibold">{q.average_score} / {q.points_possible}</p>
           </div>
         </div>
@@ -247,23 +247,23 @@ const QuestionCard = ({ question, index, formatPercent, getDifficultyColor, getD
         {/* Answer distribution bars */}
         {hasAnswerDistribution && (
           <div className="space-y-2">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Answer Distribution</p>
+            <p className="text-xs font-medium text-text-tertiary uppercase tracking-wide">Answer Distribution</p>
             {q.answers.map((ans) => {
               const barWidth = maxCount > 0 ? (ans.count / maxCount) * 100 : 0;
-              const barColor = ans.correct ? 'bg-green-500' : 'bg-red-400';
-              const borderColor = ans.correct ? 'border-green-200' : 'border-gray-100';
+              const barColor = ans.correct ? 'bg-accent-success' : 'bg-accent-danger/60';
+              const borderColor = ans.correct ? 'border-accent-success/30' : 'border-border-subtle';
               return (
-                <div key={ans.id} className={`flex items-center gap-3 p-2 rounded border ${borderColor} ${ans.correct ? 'bg-green-50/50' : ''}`}>
+                <div key={ans.id} className={`flex items-center gap-3 p-2 rounded border ${borderColor} ${ans.correct ? 'bg-accent-success/10/50' : ''}`}>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm text-gray-800 truncate">{ans.text || ans.id}</span>
+                      <span className="text-sm text-text-primary truncate">{ans.text || ans.id}</span>
                       {ans.correct && (
-                        <span className="text-xs text-green-700 bg-green-100 px-1.5 py-0.5 rounded font-medium flex-shrink-0">
+                        <span className="text-xs text-accent-success bg-accent-success/20 px-1.5 py-0.5 rounded font-medium flex-shrink-0">
                           Correct
                         </span>
                       )}
                     </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2.5">
+                    <div className="w-full bg-surface-2 rounded-full h-2.5">
                       <div
                         className={`h-2.5 rounded-full transition-all ${barColor}`}
                         style={{ width: `${Math.max(barWidth, 1)}%` }}
@@ -271,8 +271,8 @@ const QuestionCard = ({ question, index, formatPercent, getDifficultyColor, getD
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0 min-w-[70px]">
-                    <span className="text-sm font-semibold text-gray-700">{ans.count}</span>
-                    <span className="text-xs text-gray-400 ml-1">({formatPercent(ans.percent)})</span>
+                    <span className="text-sm font-semibold text-text-secondary">{ans.count}</span>
+                    <span className="text-xs text-text-disabled ml-1">({formatPercent(ans.percent)})</span>
                   </div>
                 </div>
               );
@@ -282,10 +282,10 @@ const QuestionCard = ({ question, index, formatPercent, getDifficultyColor, getD
 
         {/* No answer distribution available for non-MC types */}
         {!hasAnswerDistribution && q.question_type !== 'essay' && (
-          <p className="text-xs text-gray-400 italic">Answer distribution not available for this question type.</p>
+          <p className="text-xs text-text-disabled italic">Answer distribution not available for this question type.</p>
         )}
         {q.question_type === 'essay' && (
-          <p className="text-xs text-gray-400 italic">Essay questions require manual grading.</p>
+          <p className="text-xs text-text-disabled italic">Essay questions require manual grading.</p>
         )}
       </div>
     </div>

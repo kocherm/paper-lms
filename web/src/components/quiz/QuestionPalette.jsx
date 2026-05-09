@@ -7,12 +7,12 @@ const QuestionButton = ({ idx, current, answered, onClick }) => (
     onClick={() => onClick(idx)}
     aria-current={current ? 'true' : undefined}
     aria-label={`Question ${idx + 1}${answered ? ', answered' : ', unanswered'}${current ? ', current' : ''}`}
-    className={`w-9 h-9 rounded text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors ${
+    className={`w-9 h-9 rounded text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1 transition-colors ${
       current
-        ? 'bg-blue-600 text-white'
+        ? 'bg-brand-600 text-white'
         : answered
-        ? 'bg-green-100 text-green-800 border border-green-300 hover:bg-green-200'
-        : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+        ? 'bg-accent-success/20 text-accent-success border border-green-300 hover:bg-green-200'
+        : 'bg-surface-2 text-text-secondary border border-border-strong hover:bg-border-default'
     }`}
   >
     {idx + 1}
@@ -49,7 +49,7 @@ const QuestionPalette = ({ questions, currentIdx, answers, onJump }) => {
           onClick={() => setMobileOpen((v) => !v)}
           aria-expanded={mobileOpen}
           aria-controls="question-palette-mobile"
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-gray-300 bg-white text-sm font-medium hover:bg-gray-50"
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-border-strong bg-surface-0 text-sm font-medium hover:bg-surface-1"
         >
           <Grid3x3 className="w-4 h-4" aria-hidden="true" />
           Q{currentIdx + 1} of {questions.length}
@@ -57,7 +57,7 @@ const QuestionPalette = ({ questions, currentIdx, answers, onJump }) => {
         {mobileOpen && (
           <div
             id="question-palette-mobile"
-            className="mt-2 p-3 bg-white border border-gray-200 rounded-lg shadow-sm"
+            className="mt-2 p-3 bg-surface-0 border border-border-default rounded-lg shadow-sm"
           >
             {grid}
           </div>
@@ -67,18 +67,18 @@ const QuestionPalette = ({ questions, currentIdx, answers, onJump }) => {
       {/* Desktop sticky aside */}
       <aside
         aria-label="Question palette"
-        className="hidden md:block sticky top-16 self-start max-h-[calc(100vh-5rem)] overflow-y-auto p-3 bg-white border border-gray-200 rounded-lg shadow-sm w-48"
+        className="hidden md:block sticky top-16 self-start max-h-[calc(100vh-5rem)] overflow-y-auto p-3 bg-surface-0 border border-border-default rounded-lg shadow-sm w-48"
       >
-        <div className="text-xs uppercase tracking-wide text-gray-500 font-semibold mb-2">
+        <div className="text-xs uppercase tracking-wide text-text-tertiary font-semibold mb-2">
           Questions
         </div>
         {grid}
-        <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500 space-y-1">
+        <div className="mt-3 pt-3 border-t border-border-subtle text-xs text-text-tertiary space-y-1">
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded bg-green-100 border border-green-300" /> Answered
+            <span className="w-3 h-3 rounded bg-accent-success/20 border border-green-300" /> Answered
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded bg-gray-100 border border-gray-300" /> Unanswered
+            <span className="w-3 h-3 rounded bg-surface-2 border border-border-strong" /> Unanswered
           </div>
         </div>
       </aside>

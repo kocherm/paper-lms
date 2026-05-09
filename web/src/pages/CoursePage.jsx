@@ -167,12 +167,12 @@ const CourseHero = ({ course, courseId, instructors, progress }) => {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-2">
             {course?.course_code && (
-              <span className="inline-flex items-center rounded-pill bg-white/20 px-2.5 py-0.5 text-xs font-medium backdrop-blur-sm">
+              <span className="inline-flex items-center rounded-pill bg-surface-0/20 px-2.5 py-0.5 text-xs font-medium backdrop-blur-sm">
                 {course.course_code}
               </span>
             )}
             {term && (
-              <span className="inline-flex items-center rounded-pill bg-white/15 px-2.5 py-0.5 text-xs font-medium backdrop-blur-sm">
+              <span className="inline-flex items-center rounded-pill bg-surface-0/15 px-2.5 py-0.5 text-xs font-medium backdrop-blur-sm">
                 {term}
               </span>
             )}
@@ -189,7 +189,7 @@ const CourseHero = ({ course, courseId, instructors, progress }) => {
                   return (
                     <Avatar key={t.id ?? i} className="h-7 w-7 ring-2 ring-white/70">
                       {avatar && <AvatarImage src={avatar} alt={name} />}
-                      <AvatarFallback className="bg-white/30 text-white text-[10px] font-semibold">
+                      <AvatarFallback className="bg-surface-0/30 text-white text-[10px] font-semibold">
                         {initialsOf(name)}
                       </AvatarFallback>
                     </Avatar>
@@ -415,7 +415,7 @@ const SetupChecklistCard = ({ courseId, items, completedCount, totalCount }) => 
             <Megaphone className="h-5 w-5 text-brand-600" aria-hidden="true" />
             <CardTitle className="text-lg text-brand-900">Get your course ready</CardTitle>
           </div>
-          <Badge variant="secondary" className="bg-white text-brand-700 rounded-pill">
+          <Badge variant="secondary" className="bg-surface-0 text-brand-700 rounded-pill">
             {completedCount}/{totalCount}
           </Badge>
         </div>
@@ -434,8 +434,8 @@ const SetupChecklistCard = ({ courseId, items, completedCount, totalCount }) => 
                   className={cn(
                     'flex items-center gap-3 rounded-control border px-3 py-2.5 transition-colors',
                     item.done
-                      ? 'border-accent-success/30 bg-white/60 text-text-secondary'
-                      : 'border-brand-200 bg-white hover:bg-brand-100/60 text-text-primary'
+                      ? 'border-accent-success/30 bg-surface-0/60 text-text-secondary'
+                      : 'border-brand-200 bg-surface-0 hover:bg-brand-100/60 text-text-primary'
                   )}
                 >
                   {item.done ? (
@@ -495,7 +495,7 @@ const ModuleList = ({ courseId, modules }) => {
 
   const getItemIcon = (type) => {
     const Icon = ITEM_ICONS[type] || Book;
-    return <Icon className="w-4 h-4 text-gray-500" />;
+    return <Icon className="w-4 h-4 text-text-tertiary" />;
   };
 
   const formatDueDate = (dateStr) => {
@@ -532,7 +532,7 @@ const ModuleList = ({ courseId, modules }) => {
         {getItemIcon(item.type)}
         <span className="text-sm flex-1">{item.title}</span>
         {isAssignment && item.content_details && (
-          <div className="flex items-center space-x-3 text-xs text-gray-400">
+          <div className="flex items-center space-x-3 text-xs text-text-disabled">
             {item.content_details.points_possible !== undefined && (
               <span className="flex items-center space-x-1">
                 <Award className="w-3 h-3" />
@@ -557,7 +557,7 @@ const ModuleList = ({ courseId, modules }) => {
           href={link}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center space-x-3 py-2 px-6 hover:bg-gray-100"
+          className="flex items-center space-x-3 py-2 px-6 hover:bg-surface-2"
           style={{ paddingLeft: `${1.5 + item.indent * 1.5}rem` }}
         >
           {content}
@@ -566,7 +566,7 @@ const ModuleList = ({ courseId, modules }) => {
         <Link
           key={item.id}
           to={link}
-          className="flex items-center space-x-3 py-2 px-6 hover:bg-gray-100"
+          className="flex items-center space-x-3 py-2 px-6 hover:bg-surface-2"
           style={{ paddingLeft: `${1.5 + item.indent * 1.5}rem` }}
         >
           {content}
@@ -577,7 +577,7 @@ const ModuleList = ({ courseId, modules }) => {
     return (
       <div
         key={item.id}
-        className="flex items-center space-x-3 py-2 px-6 hover:bg-gray-100"
+        className="flex items-center space-x-3 py-2 px-6 hover:bg-surface-2"
         style={{ paddingLeft: `${1.5 + item.indent * 1.5}rem` }}
       >
         {content}
@@ -602,24 +602,24 @@ const ModuleList = ({ courseId, modules }) => {
           {modules.map((module) => (
             <div key={module.id}>
               <button
-                className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50"
+                className="w-full px-4 py-3 flex items-center justify-between hover:bg-surface-1"
                 onClick={() => toggleModule(module.id)}
                 aria-expanded={!!expandedModules[module.id]}
                 aria-label={`Toggle ${module.name}`}
               >
                 <span className="font-medium">{module.name}</span>
                 {expandedModules[module.id] ? (
-                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                  <ChevronDown className="w-5 h-5 text-text-disabled" />
                 ) : (
-                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                  <ChevronRight className="w-5 h-5 text-text-disabled" />
                 )}
               </button>
 
               {expandedModules[module.id] && module.items && (
-                <div className="bg-gray-50 border-t">
+                <div className="bg-surface-1 border-t">
                   {module.items.map((item) => renderModuleItem(item))}
                   {module.items.length === 0 && (
-                    <div className="py-3 px-6 text-sm text-gray-400">No items</div>
+                    <div className="py-3 px-6 text-sm text-text-disabled">No items</div>
                   )}
                 </div>
               )}

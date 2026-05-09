@@ -71,6 +71,12 @@ export default {
           warning: 'rgb(var(--color-accent-warning) / <alpha-value>)',
           danger:  'rgb(var(--color-accent-danger)  / <alpha-value>)',
         },
+        chrome: {
+          sidebar:      'rgb(var(--color-chrome-sidebar)    / <alpha-value>)',
+          'sidebar-fg': 'rgb(var(--color-chrome-sidebar-fg) / <alpha-value>)',
+          tooltip:      'rgb(var(--color-chrome-tooltip)    / <alpha-value>)',
+          'tooltip-fg': 'rgb(var(--color-chrome-tooltip-fg) / <alpha-value>)',
+        },
       },
       borderRadius: {
         control: '0.5rem',

@@ -142,13 +142,13 @@ const CommonsPublishPage = () => {
           Share course content with other teachers in your district.
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-5 bg-white border border-slate-200 rounded-lg p-6">
+        <form onSubmit={handleSubmit} className="space-y-5 bg-surface-0 border border-slate-200 rounded-lg p-6">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">What do you want to publish?</label>
             <select
               value={resourceType}
               onChange={(e) => setResourceType(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-200 rounded text-sm bg-white"
+              className="w-full px-3 py-2 border border-slate-200 rounded text-sm bg-surface-0"
             >
               {RESOURCE_TYPES.map((rt) => (
                 <option key={rt.value} value={rt.value}>{rt.label}</option>
@@ -162,7 +162,7 @@ const CommonsPublishPage = () => {
               <select
                 value={resourceId}
                 onChange={(e) => setResourceId(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded text-sm bg-white"
+                className="w-full px-3 py-2 border border-slate-200 rounded text-sm bg-surface-0"
                 disabled={loadingOptions}
               >
                 <option value="">{loadingOptions ? 'Loading...' : 'Select...'}</option>
@@ -202,7 +202,7 @@ const CommonsPublishPage = () => {
               <select
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded text-sm bg-white"
+                className="w-full px-3 py-2 border border-slate-200 rounded text-sm bg-surface-0"
               >
                 {SUBJECTS.map((s) => (
                   <option key={s || 'none'} value={s}>{s || 'Choose...'}</option>
@@ -214,7 +214,7 @@ const CommonsPublishPage = () => {
               <select
                 value={gradeLevel}
                 onChange={(e) => setGradeLevel(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded text-sm bg-white"
+                className="w-full px-3 py-2 border border-slate-200 rounded text-sm bg-surface-0"
               >
                 {GRADE_LEVELS.map((g) => (
                   <option key={g || 'none'} value={g}>{g || 'Choose...'}</option>
@@ -250,7 +250,7 @@ const CommonsPublishPage = () => {
             <select
               value={visibility}
               onChange={(e) => setVisibility(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-200 rounded text-sm bg-white"
+              className="w-full px-3 py-2 border border-slate-200 rounded text-sm bg-surface-0"
             >
               <option value="account">My district only</option>
               <option value="public">Public</option>
@@ -258,12 +258,12 @@ const CommonsPublishPage = () => {
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded">
+            <div className="bg-accent-danger/10 border border-accent-danger/30 text-accent-danger text-sm p-3 rounded">
               {error}
             </div>
           )}
           {success && (
-            <div className="bg-green-50 border border-green-200 text-green-700 text-sm p-3 rounded">
+            <div className="bg-accent-success/10 border border-accent-success/30 text-accent-success text-sm p-3 rounded">
               Published! Redirecting to Commons...
             </div>
           )}

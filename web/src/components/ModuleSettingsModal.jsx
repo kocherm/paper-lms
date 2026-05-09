@@ -173,15 +173,15 @@ const ModuleSettingsModal = ({ courseId, module, modules, prerequisites, onClose
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
       <FocusTrap ariaLabelledBy="module-settings-title">
-        <div ref={modalRef} className="relative bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col z-10">
+        <div ref={modalRef} className="relative bg-surface-0 rounded-lg shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col z-10">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 id="module-settings-title" className="text-lg font-semibold text-gray-900">
+          <h2 id="module-settings-title" className="text-lg font-semibold text-text-primary">
             Module Settings — {module.name}
           </h2>
           <button
             onClick={onClose}
-            className="p-1 text-gray-600 hover:text-gray-600 rounded"
+            className="p-1 text-text-secondary hover:text-text-secondary rounded"
             aria-label="Close module settings"
           >
             <X className="w-5 h-5" />
@@ -207,8 +207,8 @@ const ModuleSettingsModal = ({ courseId, module, modules, prerequisites, onClose
                   onKeyDown={(e) => handleTabKeyDown(e, index)}
                   className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                     selected
-                      ? 'border-blue-600 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'border-brand-600 text-brand-600'
+                      : 'border-transparent text-text-tertiary hover:text-text-secondary hover:border-border-strong'
                   }`}
                 >
                   <tab.icon className="w-4 h-4" />
@@ -228,16 +228,16 @@ const ModuleSettingsModal = ({ courseId, module, modules, prerequisites, onClose
               aria-labelledby="module-settings-tab-settings"
               className="space-y-4"
             >
-              <label className="flex items-start gap-3 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
+              <label className="flex items-start gap-3 p-4 border rounded-lg hover:bg-surface-1 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={requireSequential}
                   onChange={e => setRequireSequential(e.target.checked)}
-                  className="mt-0.5 rounded border-gray-300"
+                  className="mt-0.5 rounded border-border-strong"
                 />
                 <div>
-                  <div className="font-medium text-gray-900">Require students to complete items in the listed order</div>
-                  <div className="text-sm text-gray-500 mt-1">
+                  <div className="font-medium text-text-primary">Require students to complete items in the listed order</div>
+                  <div className="text-sm text-text-tertiary mt-1">
                     Students will only be able to access the next module item after completing the previous one.
                   </div>
                 </div>
@@ -252,12 +252,12 @@ const ModuleSettingsModal = ({ courseId, module, modules, prerequisites, onClose
               aria-labelledby="module-settings-tab-prerequisites"
               className="space-y-4"
             >
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-text-tertiary">
                 Students must complete these modules before they can access this one.
               </p>
 
               {prereqIds.length === 0 ? (
-                <div className="text-sm text-gray-600 italic py-4 text-center">
+                <div className="text-sm text-text-secondary italic py-4 text-center">
                   No prerequisites set
                 </div>
               ) : (
@@ -265,16 +265,16 @@ const ModuleSettingsModal = ({ courseId, module, modules, prerequisites, onClose
                   {prereqIds.map(id => {
                     const mod = modules.find(m => m.id === id);
                     return (
-                      <div key={id} className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-4 py-2.5">
+                      <div key={id} className="flex items-center justify-between bg-brand-50 border border-blue-200 rounded-lg px-4 py-2.5">
                         <div className="flex items-center gap-2">
-                          <Lock className="w-4 h-4 text-blue-500" />
+                          <Lock className="w-4 h-4 text-brand-500" />
                           <span className="text-sm font-medium text-blue-900">
                             {mod ? mod.name : `Module ${id}`}
                           </span>
                         </div>
                         <button
                           onClick={() => removePrereq(id)}
-                          className="p-1 text-blue-400 hover:text-red-600 rounded"
+                          className="p-1 text-blue-400 hover:text-accent-danger rounded"
                           title="Remove prerequisite"
                           aria-label={`Remove prerequisite ${mod ? mod.name : `Module ${id}`}`}
                         >
@@ -288,7 +288,7 @@ const ModuleSettingsModal = ({ courseId, module, modules, prerequisites, onClose
 
               {availablePrereqs.length > 0 && (
                 <select
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-border-strong rounded-lg px-3 py-2 text-sm bg-surface-0 focus:outline-none focus:ring-2 focus:ring-brand-500"
                   value=""
                   onChange={e => addPrereq(parseInt(e.target.value, 10))}
                   aria-label="Add prerequisite module"
@@ -309,12 +309,12 @@ const ModuleSettingsModal = ({ courseId, module, modules, prerequisites, onClose
               aria-labelledby="module-settings-tab-requirements"
               className="space-y-4"
             >
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-text-tertiary">
                 Set completion requirements for individual items. Students must fulfill these to complete the module.
               </p>
 
               {requireableItems.length === 0 ? (
-                <div className="text-sm text-gray-600 italic py-4 text-center">
+                <div className="text-sm text-text-secondary italic py-4 text-center">
                   No items to set requirements on. Add items to this module first.
                 </div>
               ) : (
@@ -325,14 +325,14 @@ const ModuleSettingsModal = ({ courseId, module, modules, prerequisites, onClose
                     return (
                       <div key={item.id} className="border rounded-lg p-3">
                         <div className="flex items-center justify-between gap-3">
-                          <span className="text-sm font-medium text-gray-900 truncate flex-1">
+                          <span className="text-sm font-medium text-text-primary truncate flex-1">
                             {item.title}
                           </span>
-                          <span className="text-xs text-gray-600 flex-shrink-0">{item.type}</span>
+                          <span className="text-xs text-text-secondary flex-shrink-0">{item.type}</span>
                         </div>
                         <div className="mt-2 flex items-center gap-3">
                           <select
-                            className="flex-1 border border-gray-300 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="flex-1 border border-border-strong rounded px-2 py-1.5 text-sm bg-surface-0 focus:outline-none focus:ring-1 focus:ring-brand-500"
                             value={req.completion_type}
                             onChange={e => updateItemReq(item.id, 'completion_type', e.target.value)}
                             aria-label={`Completion requirement for ${item.title}`}
@@ -348,13 +348,13 @@ const ModuleSettingsModal = ({ courseId, module, modules, prerequisites, onClose
                                 min="0"
                                 max="100"
                                 step="1"
-                                className="w-20 border border-gray-300 rounded px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                className="w-20 border border-border-strong rounded px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-brand-500"
                                 value={req.min_score}
                                 onChange={e => updateItemReq(item.id, 'min_score', e.target.value)}
                                 placeholder="Score"
                                 aria-label={`Minimum score percentage for ${item.title}`}
                               />
-                              <span className="text-sm text-gray-500">%</span>
+                              <span className="text-sm text-text-tertiary">%</span>
                             </div>
                           )}
                         </div>
@@ -370,19 +370,19 @@ const ModuleSettingsModal = ({ courseId, module, modules, prerequisites, onClose
         {/* Footer */}
         <div className="border-t px-6 py-4 flex items-center justify-between">
           <div>
-            {error && <span className="text-sm text-red-600" role="alert">{error}</span>}
+            {error && <span className="text-sm text-accent-danger" role="alert">{error}</span>}
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-md"
+              className="px-4 py-2 text-sm text-text-secondary hover:bg-surface-2 rounded-md"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-md hover:bg-brand-700 disabled:opacity-50"
             >
               {saving ? 'Saving...' : 'Save'}
             </button>

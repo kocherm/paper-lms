@@ -199,8 +199,8 @@ const GraphiQLPage = () => {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">GraphQL Explorer</h1>
-            <p className="mt-1 text-sm text-gray-500">
+            <h1 className="text-2xl font-bold text-text-primary">GraphQL Explorer</h1>
+            <p className="mt-1 text-sm text-text-tertiary">
               Query the Paper LMS API using GraphQL. Press Ctrl+Enter (Cmd+Enter) to execute.
             </p>
           </div>
@@ -208,7 +208,7 @@ const GraphiQLPage = () => {
 
         {/* Example Queries */}
         <div className="flex flex-wrap gap-2">
-          <span className="text-sm text-gray-500 self-center">Examples:</span>
+          <span className="text-sm text-text-tertiary self-center">Examples:</span>
           {exampleQueries.map((example) => (
             <button
               key={example.name}
@@ -216,7 +216,7 @@ const GraphiQLPage = () => {
                 setQuery(example.query);
                 setVariables('{}');
               }}
-              className="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+              className="px-3 py-1 text-xs font-medium rounded-full bg-brand-100 text-brand-700 hover:bg-blue-200 transition-colors"
             >
               {example.name}
             </button>
@@ -227,13 +227,13 @@ const GraphiQLPage = () => {
           {/* Left Panel - Query Editor */}
           <div className="space-y-2">
             {/* Tabs */}
-            <div className="flex border-b border-gray-200">
+            <div className="flex border-b border-border-default">
               <button
                 onClick={() => setActiveTab('query')}
                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === 'query'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'border-brand-500 text-brand-600'
+                    : 'border-transparent text-text-tertiary hover:text-text-secondary'
                 }`}
               >
                 Query
@@ -242,8 +242,8 @@ const GraphiQLPage = () => {
                 onClick={() => setActiveTab('variables')}
                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === 'variables'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'border-brand-500 text-brand-600'
+                    : 'border-transparent text-text-tertiary hover:text-text-secondary'
                 }`}
               >
                 Variables
@@ -257,7 +257,7 @@ const GraphiQLPage = () => {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  className="w-full h-96 p-4 font-mono text-sm bg-gray-900 text-green-400 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full h-96 p-4 font-mono text-sm bg-gray-900 text-green-400 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
                   placeholder="Enter your GraphQL query..."
                   spellCheck="false"
                 />
@@ -266,7 +266,7 @@ const GraphiQLPage = () => {
                   value={variables}
                   onChange={(e) => setVariables(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  className="w-full h-96 p-4 font-mono text-sm bg-gray-900 text-yellow-400 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full h-96 p-4 font-mono text-sm bg-gray-900 text-yellow-400 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
                   placeholder='{"key": "value"}'
                   spellCheck="false"
                 />
@@ -279,8 +279,8 @@ const GraphiQLPage = () => {
               disabled={loading || !query.trim()}
               className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
                 loading || !query.trim()
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
+                  ? 'bg-gray-300 text-text-tertiary cursor-not-allowed'
+                  : 'bg-brand-600 text-white hover:bg-brand-700'
               }`}
             >
               {loading ? (
@@ -317,16 +317,16 @@ const GraphiQLPage = () => {
 
           {/* Right Panel - Results */}
           <div className="space-y-2">
-            <div className="flex border-b border-gray-200">
-              <span className="px-4 py-2 text-sm font-medium border-b-2 border-blue-500 text-blue-600">
+            <div className="flex border-b border-border-default">
+              <span className="px-4 py-2 text-sm font-medium border-b-2 border-brand-500 text-brand-600">
                 Response
               </span>
             </div>
 
             <div className="relative">
               {error && (
-                <div className="mb-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-700">{error}</p>
+                <div className="mb-2 p-3 bg-accent-danger/10 border border-accent-danger/30 rounded-lg">
+                  <p className="text-sm text-accent-danger">{error}</p>
                 </div>
               )}
 
@@ -353,14 +353,14 @@ const GraphiQLPage = () => {
 
             {/* Response metadata */}
             {result && (
-              <div className="flex gap-4 text-xs text-gray-500">
+              <div className="flex gap-4 text-xs text-text-tertiary">
                 {result.errors && result.errors.length > 0 && (
-                  <span className="text-red-500">
+                  <span className="text-accent-danger">
                     {result.errors.length} error{result.errors.length !== 1 ? 's' : ''}
                   </span>
                 )}
                 {result.data && (
-                  <span className="text-green-600">
+                  <span className="text-accent-success">
                     {Object.keys(result.data).length} field{Object.keys(result.data).length !== 1 ? 's' : ''} returned
                   </span>
                 )}
@@ -370,27 +370,27 @@ const GraphiQLPage = () => {
         </div>
 
         {/* Schema Reference */}
-        <details className="bg-white rounded-lg border border-gray-200 p-4">
-          <summary className="text-sm font-medium text-gray-700 cursor-pointer hover:text-gray-900">
+        <details className="bg-surface-0 rounded-lg border border-border-default p-4">
+          <summary className="text-sm font-medium text-text-secondary cursor-pointer hover:text-text-primary">
             Schema Reference
           </summary>
           <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
-              <h3 className="font-semibold text-gray-800 mb-2">Root Queries</h3>
-              <div className="space-y-2 font-mono text-xs bg-gray-50 p-3 rounded">
-                <p><span className="text-blue-600">course</span>(id: ID): Course</p>
-                <p><span className="text-blue-600">allCourses</span>(page: Int, perPage: Int): [Course]</p>
-                <p><span className="text-blue-600">assignment</span>(id: ID): Assignment</p>
-                <p><span className="text-blue-600">self</span>: User</p>
-                <p><span className="text-blue-600">user</span>(id: ID): User</p>
+              <h3 className="font-semibold text-text-primary mb-2">Root Queries</h3>
+              <div className="space-y-2 font-mono text-xs bg-surface-1 p-3 rounded">
+                <p><span className="text-brand-600">course</span>(id: ID): Course</p>
+                <p><span className="text-brand-600">allCourses</span>(page: Int, perPage: Int): [Course]</p>
+                <p><span className="text-brand-600">assignment</span>(id: ID): Assignment</p>
+                <p><span className="text-brand-600">self</span>: User</p>
+                <p><span className="text-brand-600">user</span>(id: ID): User</p>
               </div>
             </div>
             <div>
-              <h3 className="font-semibold text-gray-800 mb-2">Types</h3>
-              <div className="space-y-2 font-mono text-xs bg-gray-50 p-3 rounded">
+              <h3 className="font-semibold text-text-primary mb-2">Types</h3>
+              <div className="space-y-2 font-mono text-xs bg-surface-1 p-3 rounded">
                 <p className="font-semibold text-purple-600">Course</p>
                 <p className="ml-2">id, name, course_code, workflow_state, account_id, start_at, end_at, default_view, is_public, created_at, updated_at</p>
-                <p className="ml-2 text-green-600">assignments, enrollments, modules (nested)</p>
+                <p className="ml-2 text-accent-success">assignments, enrollments, modules (nested)</p>
                 <p className="font-semibold text-purple-600 mt-2">Assignment</p>
                 <p className="ml-2">id, name, description, points_possible, due_at, unlock_at, lock_at, course_id, grading_type, submission_types, workflow_state, published, position, created_at</p>
                 <p className="font-semibold text-purple-600 mt-2">User</p>

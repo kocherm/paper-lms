@@ -25,10 +25,10 @@ function ToolbarButton({ icon: Icon, label, shortcut, active, disabled, onClick,
       type="button"
       className={cx(
         'relative flex items-center justify-center w-8 h-8 rounded transition-colors',
-        'hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1',
-        active && 'bg-blue-100 text-blue-700',
+        'hover:bg-border-default focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1',
+        active && 'bg-brand-100 text-brand-700',
         disabled && 'opacity-40 pointer-events-none',
-        !active && !disabled && 'text-gray-600',
+        !active && !disabled && 'text-text-secondary',
         className,
       )}
       onMouseDown={(e) => {
@@ -81,9 +81,9 @@ function Popover({ open, onClose, children, className }) {
     <div
       ref={ref}
       className={cx(
-        'absolute top-full left-0 mt-1 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3',
+        'absolute top-full left-0 mt-1 z-50 bg-surface-0 border border-border-default rounded-lg shadow-lg p-3',
         'before:absolute before:-top-1.5 before:left-4 before:w-3 before:h-3',
-        'before:bg-white before:border-l before:border-t before:border-gray-200 before:rotate-45',
+        'before:bg-surface-0 before:border-l before:border-t before:border-border-default before:rotate-45',
         className,
       )}
     >
@@ -113,28 +113,28 @@ function LinkPopover({ open, onClose, onInsert }) {
 
   return (
     <Popover open={open} onClose={onClose} className="w-72">
-      <label className="block text-xs font-medium text-gray-700 mb-1">URL</label>
+      <label className="block text-xs font-medium text-text-secondary mb-1">URL</label>
       <input
         ref={urlRef}
         type="url"
-        className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none mb-2"
+        className="w-full border border-border-strong rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none mb-2"
         value={url}
         onChange={(e) => setUrl(e.target.value)}
         onKeyDown={(e) => { if (e.key === 'Enter') handleInsert(); }}
         placeholder="https://example.com"
       />
-      <label className="block text-xs font-medium text-gray-700 mb-1">Display text (optional)</label>
+      <label className="block text-xs font-medium text-text-secondary mb-1">Display text (optional)</label>
       <input
         type="text"
-        className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none mb-3"
+        className="w-full border border-border-strong rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none mb-3"
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => { if (e.key === 'Enter') handleInsert(); }}
         placeholder="Link text"
       />
       <div className="flex justify-end gap-2">
-        <button type="button" onClick={onClose} className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
-        <button type="button" onClick={handleInsert} className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Insert Link</button>
+        <button type="button" onClick={onClose} className="px-3 py-1 text-sm text-text-secondary hover:bg-surface-2 rounded">Cancel</button>
+        <button type="button" onClick={handleInsert} className="px-3 py-1 text-sm bg-brand-600 text-white rounded hover:bg-brand-700">Insert Link</button>
       </div>
     </Popover>
   );
@@ -212,17 +212,17 @@ function ImagePopover({ open, onClose, onInsert, courseId }) {
   return (
     <Popover open={open} onClose={onClose} className="w-80">
       {courseId && (
-        <div className="flex gap-1 mb-3 border-b border-gray-200">
+        <div className="flex gap-1 mb-3 border-b border-border-default">
           <button
             type="button"
-            className={cx('px-3 py-1.5 text-xs font-medium border-b-2 -mb-px transition-colors', tab === 'upload' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700')}
+            className={cx('px-3 py-1.5 text-xs font-medium border-b-2 -mb-px transition-colors', tab === 'upload' ? 'border-brand-600 text-brand-700' : 'border-transparent text-text-tertiary hover:text-text-secondary')}
             onClick={() => setTab('upload')}
           >
             <Upload size={12} className="inline mr-1 -mt-0.5" />Upload
           </button>
           <button
             type="button"
-            className={cx('px-3 py-1.5 text-xs font-medium border-b-2 -mb-px transition-colors', tab === 'url' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700')}
+            className={cx('px-3 py-1.5 text-xs font-medium border-b-2 -mb-px transition-colors', tab === 'url' ? 'border-brand-600 text-brand-700' : 'border-transparent text-text-tertiary hover:text-text-secondary')}
             onClick={() => setTab('url')}
           >
             URL
@@ -232,28 +232,28 @@ function ImagePopover({ open, onClose, onInsert, courseId }) {
 
       {tab === 'url' ? (
         <>
-          <label className="block text-xs font-medium text-gray-700 mb-1">Image URL</label>
+          <label className="block text-xs font-medium text-text-secondary mb-1">Image URL</label>
           <input
             ref={urlRef}
             type="url"
-            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none mb-2"
+            className="w-full border border-border-strong rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none mb-2"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleInsertUrl(); }}
             placeholder="https://example.com/image.png"
           />
-          <label className="block text-xs font-medium text-gray-700 mb-1">Alt text (for accessibility)</label>
+          <label className="block text-xs font-medium text-text-secondary mb-1">Alt text (for accessibility)</label>
           <input
             type="text"
-            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none mb-3"
+            className="w-full border border-border-strong rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none mb-3"
             value={alt}
             onChange={(e) => setAlt(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleInsertUrl(); }}
             placeholder="Describe the image"
           />
           <div className="flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
-            <button type="button" onClick={handleInsertUrl} className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Insert Image</button>
+            <button type="button" onClick={onClose} className="px-3 py-1 text-sm text-text-secondary hover:bg-surface-2 rounded">Cancel</button>
+            <button type="button" onClick={handleInsertUrl} className="px-3 py-1 text-sm bg-brand-600 text-white rounded hover:bg-brand-700">Insert Image</button>
           </div>
         </>
       ) : (
@@ -263,46 +263,46 @@ function ImagePopover({ open, onClose, onInsert, courseId }) {
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 hover:bg-blue-50 transition-colors"
+              className="w-full border-2 border-dashed border-border-strong rounded-lg p-6 text-center hover:border-blue-400 hover:bg-brand-50 transition-colors"
             >
-              <Upload size={24} className="mx-auto mb-2 text-gray-400" />
-              <span className="text-sm text-gray-600">Click to choose an image</span>
-              <span className="block text-xs text-gray-400 mt-1">or drag & drop onto the editor</span>
+              <Upload size={24} className="mx-auto mb-2 text-text-disabled" />
+              <span className="text-sm text-text-secondary">Click to choose an image</span>
+              <span className="block text-xs text-text-disabled mt-1">or drag & drop onto the editor</span>
             </button>
           ) : (
             <div className="space-y-2">
               {preview && (
-                <div className="flex justify-center p-2 bg-gray-50 rounded border border-gray-200">
+                <div className="flex justify-center p-2 bg-surface-1 rounded border border-border-default">
                   <img src={preview} alt="Preview" className="max-h-32 max-w-full rounded" />
                 </div>
               )}
-              <div className="flex items-center justify-between text-xs text-gray-500">
+              <div className="flex items-center justify-between text-xs text-text-tertiary">
                 <span className="truncate max-w-[180px]">{selectedFile.name}</span>
-                <button type="button" onClick={() => { setSelectedFile(null); setPreview(null); }} className="text-gray-400 hover:text-gray-600 ml-2"><X size={14} /></button>
+                <button type="button" onClick={() => { setSelectedFile(null); setPreview(null); }} className="text-text-disabled hover:text-text-secondary ml-2"><X size={14} /></button>
               </div>
             </div>
           )}
-          <label className="block text-xs font-medium text-gray-700 mb-1 mt-2">Alt text (for accessibility)</label>
+          <label className="block text-xs font-medium text-text-secondary mb-1 mt-2">Alt text (for accessibility)</label>
           <input
             type="text"
-            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none mb-2"
+            className="w-full border border-border-strong rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none mb-2"
             value={alt}
             onChange={(e) => setAlt(e.target.value)}
             placeholder="Describe the image"
           />
           {uploading && (
-            <div className="w-full bg-gray-200 rounded-full h-1.5 mb-2">
-              <div className="bg-blue-600 h-1.5 rounded-full transition-all duration-200" style={{ width: `${Math.round(uploadProgress * 100)}%` }} />
+            <div className="w-full bg-border-default rounded-full h-1.5 mb-2">
+              <div className="bg-brand-600 h-1.5 rounded-full transition-all duration-200" style={{ width: `${Math.round(uploadProgress * 100)}%` }} />
             </div>
           )}
-          {uploadError && <p className="text-xs text-red-600 mb-2">{uploadError}</p>}
+          {uploadError && <p className="text-xs text-accent-danger mb-2">{uploadError}</p>}
           <div className="flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
+            <button type="button" onClick={onClose} className="px-3 py-1 text-sm text-text-secondary hover:bg-surface-2 rounded">Cancel</button>
             <button
               type="button"
               onClick={handleUpload}
               disabled={!selectedFile || uploading}
-              className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1 text-sm bg-brand-600 text-white rounded hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {uploading ? 'Uploading...' : 'Upload & Insert'}
             </button>
@@ -327,7 +327,7 @@ function TablePopover({ open, onClose, onInsert }) {
 
   return (
     <Popover open={open} onClose={onClose} className="w-auto">
-      <p className="text-xs text-gray-500 mb-2 text-center">
+      <p className="text-xs text-text-tertiary mb-2 text-center">
         {hover.r + 1} &times; {hover.c + 1} table
       </p>
       <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${maxCols}, 1fr)` }}>
@@ -339,7 +339,7 @@ function TablePopover({ open, onClose, onInsert }) {
                 'w-5 h-5 border rounded-sm cursor-pointer transition-colors',
                 r <= hover.r && c <= hover.c
                   ? 'bg-blue-200 border-blue-400'
-                  : 'bg-gray-50 border-gray-300',
+                  : 'bg-surface-1 border-border-strong',
               )}
               onMouseEnter={() => setHover({ r, c })}
               onMouseDown={(e) => {
@@ -382,11 +382,11 @@ function EquationPopover({ open, onClose, onInsert }) {
 
   return (
     <Popover open={open} onClose={onClose} className="w-80">
-      <label className="block text-xs font-medium text-gray-700 mb-1">LaTeX expression</label>
+      <label className="block text-xs font-medium text-text-secondary mb-1">LaTeX expression</label>
       <input
         ref={inputRef}
         type="text"
-        className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm font-mono focus:ring-2 focus:ring-blue-400 focus:outline-none mb-2"
+        className="w-full border border-border-strong rounded px-2 py-1.5 text-sm font-mono focus:ring-2 focus:ring-blue-400 focus:outline-none mb-2"
         value={latex}
         onChange={(e) => setLatex(e.target.value)}
         onKeyDown={(e) => { if (e.key === 'Enter') handleInsert(); }}
@@ -397,7 +397,7 @@ function EquationPopover({ open, onClose, onInsert }) {
           <button
             key={s.label}
             type="button"
-            className="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-100 font-mono"
+            className="px-2 py-1 text-xs border border-border-strong rounded hover:bg-surface-2 font-mono"
             title={s.title}
             onMouseDown={(e) => {
               e.preventDefault();
@@ -410,14 +410,14 @@ function EquationPopover({ open, onClose, onInsert }) {
         ))}
       </div>
       {latex.trim() && (
-        <div className="mb-3 p-2 bg-gray-50 rounded border border-gray-200 text-center">
+        <div className="mb-3 p-2 bg-surface-1 rounded border border-border-default text-center">
           <span
             dangerouslySetInnerHTML={{
               __html: (() => {
                 try {
                   return katex.renderToString(latex, { throwOnError: false, displayMode: false });
                 } catch {
-                  return `<span class="text-sm italic text-gray-800">${latex.replace(/</g, '&lt;')}</span>`;
+                  return `<span class="text-sm italic text-text-primary">${latex.replace(/</g, '&lt;')}</span>`;
                 }
               })()
             }}
@@ -425,8 +425,8 @@ function EquationPopover({ open, onClose, onInsert }) {
         </div>
       )}
       <div className="flex justify-end gap-2">
-        <button type="button" onClick={onClose} className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
-        <button type="button" onClick={handleInsert} className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Insert Equation</button>
+        <button type="button" onClick={onClose} className="px-3 py-1 text-sm text-text-secondary hover:bg-surface-2 rounded">Cancel</button>
+        <button type="button" onClick={handleInsert} className="px-3 py-1 text-sm bg-brand-600 text-white rounded hover:bg-brand-700">Insert Equation</button>
       </div>
     </Popover>
   );
@@ -467,21 +467,21 @@ function MediaPopover({ open, onClose, onInsert }) {
 
   return (
     <Popover open={open} onClose={onClose} className="w-80">
-      <label className="block text-xs font-medium text-gray-700 mb-1">Media URL</label>
+      <label className="block text-xs font-medium text-text-secondary mb-1">Media URL</label>
       <input
         ref={urlRef}
         type="url"
-        className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none mb-1"
+        className="w-full border border-border-strong rounded px-2 py-1.5 text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none mb-1"
         value={url}
         onChange={(e) => { setUrl(e.target.value); setError(''); }}
         onKeyDown={(e) => { if (e.key === 'Enter') handleInsert(); }}
         placeholder="https://youtube.com/watch?v=..."
       />
-      {error && <p className="text-xs text-red-600 mb-2">{error}</p>}
-      <p className="text-xs text-gray-400 mb-3">Supports YouTube, Vimeo, .mp4, .webm, .mp3, .wav</p>
+      {error && <p className="text-xs text-accent-danger mb-2">{error}</p>}
+      <p className="text-xs text-text-disabled mb-3">Supports YouTube, Vimeo, .mp4, .webm, .mp3, .wav</p>
       <div className="flex justify-end gap-2">
-        <button type="button" onClick={onClose} className="px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
-        <button type="button" onClick={handleInsert} className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Embed</button>
+        <button type="button" onClick={onClose} className="px-3 py-1 text-sm text-text-secondary hover:bg-surface-2 rounded">Cancel</button>
+        <button type="button" onClick={handleInsert} className="px-3 py-1 text-sm bg-brand-600 text-white rounded hover:bg-brand-700">Embed</button>
       </div>
     </Popover>
   );
@@ -540,13 +540,13 @@ function AccessibilityPanel({ open, onClose, issues }) {
   return (
     <Popover open={open} onClose={onClose} className="w-80 max-h-64 overflow-y-auto right-0 left-auto">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-semibold text-gray-800">Accessibility Check</h3>
-        <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600">
+        <h3 className="text-sm font-semibold text-text-primary">Accessibility Check</h3>
+        <button type="button" onClick={onClose} className="text-text-disabled hover:text-text-secondary">
           <X size={14} />
         </button>
       </div>
       {issues.length === 0 ? (
-        <div className="flex items-center gap-2 text-green-700 text-sm py-2">
+        <div className="flex items-center gap-2 text-accent-success text-sm py-2">
           <Check size={16} /> No issues found
         </div>
       ) : (
@@ -555,11 +555,11 @@ function AccessibilityPanel({ open, onClose, issues }) {
             <li key={i} className="text-xs">
               <div className={cx(
                 'font-medium',
-                issue.type === 'error' ? 'text-red-700' : 'text-amber-700',
+                issue.type === 'error' ? 'text-accent-danger' : 'text-accent-warning',
               )}>
                 {issue.type === 'error' ? 'Error' : 'Warning'}: {issue.message}
               </div>
-              <div className="text-gray-500 mt-0.5">{issue.suggestion}</div>
+              <div className="text-text-tertiary mt-0.5">{issue.suggestion}</div>
             </li>
           ))}
         </ul>
@@ -974,7 +974,7 @@ export default function RichContentEditor({
   return (
     <div
       className={cx(
-        'border border-gray-300 rounded-lg overflow-hidden bg-white',
+        'border border-border-strong rounded-lg overflow-hidden bg-surface-0',
         disabled && 'opacity-60 pointer-events-none',
       )}
     >
@@ -982,7 +982,7 @@ export default function RichContentEditor({
       <div
         role="toolbar"
         aria-label="Formatting toolbar"
-        className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 bg-gray-50 border-b border-gray-200"
+        className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 bg-surface-1 border-b border-border-default"
       >
         <ToolbarButton icon={Bold} label="Bold" shortcut={modKey + '+B'} active={activeFormats.bold} onClick={toggleBold} disabled={disabled} />
         <ToolbarButton icon={Italic} label="Italic" shortcut={modKey + '+I'} active={activeFormats.italic} onClick={toggleItalic} disabled={disabled} />
@@ -1045,30 +1045,30 @@ export default function RichContentEditor({
 
       {/* Upload progress bar */}
       {uploadProgress !== null && (
-        <div className="px-3 py-1.5 bg-blue-50 border-b border-blue-200">
+        <div className="px-3 py-1.5 bg-brand-50 border-b border-blue-200">
           <div className="flex items-center gap-2">
-            <Upload size={14} className="text-blue-600 shrink-0" />
+            <Upload size={14} className="text-brand-600 shrink-0" />
             <div className="flex-1 bg-blue-200 rounded-full h-1.5">
-              <div className="bg-blue-600 h-1.5 rounded-full transition-all duration-200" style={{ width: `${Math.round(uploadProgress * 100)}%` }} />
+              <div className="bg-brand-600 h-1.5 rounded-full transition-all duration-200" style={{ width: `${Math.round(uploadProgress * 100)}%` }} />
             </div>
-            <span className="text-xs text-blue-700">{Math.round(uploadProgress * 100)}%</span>
+            <span className="text-xs text-brand-700">{Math.round(uploadProgress * 100)}%</span>
           </div>
         </div>
       )}
 
       {/* Upload error banner */}
       {uploadError && (
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 border-b border-red-200 text-xs text-red-700">
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-accent-danger/10 border-b border-accent-danger/30 text-xs text-accent-danger">
           <AlertTriangle size={14} className="shrink-0" />
           <span className="flex-1">{uploadError}</span>
-          <button type="button" onClick={() => setUploadError(null)} className="text-red-400 hover:text-red-600"><X size={14} /></button>
+          <button type="button" onClick={() => setUploadError(null)} className="text-red-400 hover:text-accent-danger"><X size={14} /></button>
         </div>
       )}
 
       {/* Editor Surface */}
       {sourceView ? (
         <textarea
-          className="w-full p-4 font-mono text-sm text-gray-800 bg-gray-50 focus:outline-none resize-y"
+          className="w-full p-4 font-mono text-sm text-text-primary bg-surface-1 focus:outline-none resize-y"
           style={{ minHeight }}
           value={sourceHtml}
           onChange={handleSourceChange}
@@ -1091,9 +1091,9 @@ export default function RichContentEditor({
             aria-multiline="true"
             aria-label={ariaLabel}
             className={cx(
-              'w-full p-4 text-gray-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-400',
+              'w-full p-4 text-text-primary focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-400',
               'prose prose-sm max-w-none',
-              'empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:pointer-events-none',
+              'empty:before:content-[attr(data-placeholder)] empty:before:text-text-disabled empty:before:pointer-events-none',
             )}
             style={{ minHeight }}
             data-placeholder={placeholder}
@@ -1104,8 +1104,8 @@ export default function RichContentEditor({
             onMouseUp={updateActiveFormats}
           />
           {dragOver && (
-            <div className="absolute inset-0 bg-blue-50/70 border-2 border-dashed border-blue-400 rounded flex items-center justify-center pointer-events-none z-10">
-              <div className="flex items-center gap-2 text-blue-700 font-medium text-sm">
+            <div className="absolute inset-0 bg-brand-50/70 border-2 border-dashed border-blue-400 rounded flex items-center justify-center pointer-events-none z-10">
+              <div className="flex items-center gap-2 text-brand-700 font-medium text-sm">
                 <Image size={20} />
                 Drop image here to upload
               </div>
@@ -1115,9 +1115,9 @@ export default function RichContentEditor({
       )}
 
       {/* Bottom Bar */}
-      <div className="flex items-center justify-between px-3 py-1.5 bg-gray-50 border-t border-gray-200 text-xs text-gray-500">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-surface-1 border-t border-border-default text-xs text-text-tertiary">
         <span>{charCount} character{charCount !== 1 ? 's' : ''}</span>
-        <span className="text-gray-400">
+        <span className="text-text-disabled">
           {sourceView ? 'HTML source mode' : 'Visual editor'}
         </span>
       </div>

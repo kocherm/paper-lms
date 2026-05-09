@@ -15,7 +15,7 @@ import { Calendar, Users, Check, MapPin } from 'lucide-react';
 const SlotPicker = ({ slots = [], reservedIds = new Set(), onReserve, onCancel, locationName, busy }) => {
   if (!slots.length) {
     return (
-      <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-6 py-10 text-center text-gray-500">
+      <div className="rounded-lg border border-dashed border-border-strong bg-surface-1 px-6 py-10 text-center text-text-tertiary">
         <Calendar className="mx-auto mb-2 h-6 w-6 opacity-50" />
         No appointments are currently available.
       </div>
@@ -36,13 +36,13 @@ const SlotPicker = ({ slots = [], reservedIds = new Set(), onReserve, onCancel, 
   return (
     <div className="space-y-6">
       {locationName && (
-        <div className="flex items-center gap-2 text-sm text-gray-600">
+        <div className="flex items-center gap-2 text-sm text-text-secondary">
           <MapPin className="h-4 w-4" /> {locationName}
         </div>
       )}
       {Object.entries(byDate).map(([date, daySlots]) => (
         <div key={date}>
-          <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">{date}</h3>
+          <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-text-tertiary">{date}</h3>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {daySlots.map((slot) => {
               const reserved = reservedIds.has(slot.id);
@@ -52,17 +52,17 @@ const SlotPicker = ({ slots = [], reservedIds = new Set(), onReserve, onCancel, 
                   key={slot.id}
                   className={`rounded-lg border p-3 transition ${
                     reserved
-                      ? 'border-emerald-300 bg-emerald-50'
+                      ? 'border-emerald-300 bg-accent-success/10'
                       : full
-                      ? 'border-gray-200 bg-gray-50 opacity-60'
-                      : 'border-gray-200 bg-white hover:border-blue-400 hover:shadow-sm'
+                      ? 'border-border-default bg-surface-1 opacity-60'
+                      : 'border-border-default bg-surface-0 hover:border-blue-400 hover:shadow-sm'
                   }`}
                 >
                   <div className="flex items-baseline justify-between">
-                    <div className="text-base font-medium text-gray-900">
+                    <div className="text-base font-medium text-text-primary">
                       {fmtTime(slot.start_at)} – {fmtTime(slot.end_at)}
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                    <div className="flex items-center gap-1 text-xs text-text-tertiary">
                       <Users className="h-3 w-3" />
                       {slot.reservation_count ?? 0}/{slot.effective_limit ?? 1}
                     </div>
@@ -73,12 +73,12 @@ const SlotPicker = ({ slots = [], reservedIds = new Set(), onReserve, onCancel, 
                         type="button"
                         onClick={() => onCancel && onCancel(slot)}
                         disabled={busy}
-                        className="inline-flex w-full items-center justify-center gap-1 rounded-md border border-emerald-400 bg-white px-3 py-1.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+                        className="inline-flex w-full items-center justify-center gap-1 rounded-md border border-emerald-400 bg-surface-0 px-3 py-1.5 text-sm font-medium text-emerald-700 hover:bg-accent-success/10 disabled:opacity-50"
                       >
                         <Check className="h-4 w-4" /> Reserved — Cancel
                       </button>
                     ) : full ? (
-                      <span className="block w-full rounded-md bg-gray-100 px-3 py-1.5 text-center text-sm text-gray-500">
+                      <span className="block w-full rounded-md bg-surface-2 px-3 py-1.5 text-center text-sm text-text-tertiary">
                         Full
                       </span>
                     ) : (
@@ -86,7 +86,7 @@ const SlotPicker = ({ slots = [], reservedIds = new Set(), onReserve, onCancel, 
                         type="button"
                         onClick={() => onReserve && onReserve(slot)}
                         disabled={busy}
-                        className="w-full rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                        className="w-full rounded-md bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
                       >
                         Reserve
                       </button>

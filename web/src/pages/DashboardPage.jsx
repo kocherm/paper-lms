@@ -273,7 +273,7 @@ const CourseTile = ({ course, nextItem, percent }) => {
                   variant="ghost"
                   size="icon"
                   aria-label="Course options"
-                  className="h-7 w-7 bg-white/20 text-white hover:bg-white/30 hover:text-white backdrop-blur"
+                  className="h-7 w-7 bg-surface-0/20 text-white hover:bg-surface-0/30 hover:text-white backdrop-blur"
                 >
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
@@ -388,7 +388,7 @@ const ActivityRail = ({ announcements, grades, loading }) => {
                 className="flex items-start gap-3 rounded-md px-2 py-2 transition-colors hover:bg-accent/40"
               >
                 <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-emerald-500/10 text-emerald-600">
+                  <AvatarFallback className="bg-accent-success/10 text-accent-success">
                     <GraduationCap className="h-4 w-4" />
                   </AvatarFallback>
                 </Avatar>

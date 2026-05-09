@@ -147,7 +147,7 @@ const CommonsPage = () => {
           </p>
         </div>
 
-        <div className="mb-4 bg-white border border-slate-200 rounded-lg p-4 space-y-3">
+        <div className="mb-4 bg-surface-0 border border-slate-200 rounded-lg p-4 space-y-3">
           <div className="flex flex-wrap gap-2">
             {RESOURCE_TYPES.map((rt) => (
               <button
@@ -156,7 +156,7 @@ const CommonsPage = () => {
                 className={`px-3 py-1 text-xs font-medium rounded-full border transition ${
                   resourceType === rt.value
                     ? 'bg-indigo-600 text-white border-indigo-600'
-                    : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-400'
+                    : 'bg-surface-0 text-slate-700 border-slate-200 hover:border-indigo-400'
                 }`}
               >
                 {rt.label}
@@ -169,7 +169,7 @@ const CommonsPage = () => {
               <select
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                className="px-2 py-1 border border-slate-200 rounded text-sm bg-white"
+                className="px-2 py-1 border border-slate-200 rounded text-sm bg-surface-0"
               >
                 {SUBJECTS.map((s) => (
                   <option key={s || 'all'} value={s}>
@@ -183,7 +183,7 @@ const CommonsPage = () => {
               <select
                 value={gradeLevel}
                 onChange={(e) => setGradeLevel(e.target.value)}
-                className="px-2 py-1 border border-slate-200 rounded text-sm bg-white"
+                className="px-2 py-1 border border-slate-200 rounded text-sm bg-surface-0"
               >
                 {GRADE_LEVELS.map((g) => (
                   <option key={g || 'all'} value={g}>
@@ -216,11 +216,11 @@ const CommonsPage = () => {
         {loading ? (
           <div className="flex justify-center py-12"><Spinner /></div>
         ) : error ? (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg">
+          <div className="bg-accent-danger/10 border border-accent-danger/30 text-accent-danger p-4 rounded-lg">
             <p>{error}</p>
             <button
               onClick={loadItems}
-              className="mt-2 px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700"
+              className="mt-2 px-3 py-1 text-sm bg-accent-danger text-white rounded hover:bg-accent-danger/90"
             >
               Try Again
             </button>
@@ -252,7 +252,7 @@ const CommonsPage = () => {
           onClick={() => setSelected(null)}
         >
           <div
-            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-surface-0 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6">
@@ -277,7 +277,7 @@ const CommonsPage = () => {
                   <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded">{selected.grade_level}</span>
                 )}
                 {(selected.tags || []).map((t) => (
-                  <span key={t} className="px-2 py-0.5 bg-amber-50 text-amber-700 rounded">#{t}</span>
+                  <span key={t} className="px-2 py-0.5 bg-accent-warning/10 text-accent-warning rounded">#{t}</span>
                 ))}
               </div>
               <p className="mt-4 text-sm text-slate-600 whitespace-pre-wrap">
@@ -296,7 +296,7 @@ const CommonsPage = () => {
                   <select
                     value={importTargetCourseId}
                     onChange={(e) => setImportTargetCourseId(e.target.value)}
-                    className="flex-1 px-2 py-1.5 border border-slate-200 rounded text-sm bg-white"
+                    className="flex-1 px-2 py-1.5 border border-slate-200 rounded text-sm bg-surface-0"
                   >
                     <option value="">Select a course...</option>
                     {courses.map((c) => (

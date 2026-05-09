@@ -82,7 +82,7 @@ const NotificationsPage = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+        <div className="flex items-center justify-center py-12 gap-2 text-text-tertiary">
           <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
           Loading notifications...
         </div>
@@ -94,12 +94,12 @@ const NotificationsPage = () => {
     <Layout>
       <div className="mb-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">Notifications</h2>
+          <h2 className="text-2xl font-bold text-text-primary">Notifications</h2>
           <div className="flex items-center gap-3">
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-border-strong rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
               <option value="all">All</option>
               <option value="unread">Unread only</option>
@@ -107,7 +107,7 @@ const NotificationsPage = () => {
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllRead}
-                className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 font-medium"
+                className="inline-flex items-center gap-1.5 text-sm text-brand-600 hover:text-brand-800 font-medium"
               >
                 <CheckCheck className="w-4 h-4" />
                 Mark all read
@@ -116,29 +116,29 @@ const NotificationsPage = () => {
           </div>
         </div>
         {unreadCount > 0 && (
-          <p className="text-sm text-gray-500 mt-1">{unreadCount} unread</p>
+          <p className="text-sm text-text-tertiary mt-1">{unreadCount} unread</p>
         )}
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-md p-3 mb-4 text-sm">
+        <div className="bg-accent-danger/10 border border-accent-danger/30 text-accent-danger rounded-md p-3 mb-4 text-sm">
           {error}
-          <button onClick={() => { setError(null); fetchNotifications(); }} className="ml-2 text-red-500 hover:text-red-700 font-bold">Try Again</button>
+          <button onClick={() => { setError(null); fetchNotifications(); }} className="ml-2 text-accent-danger hover:text-accent-danger font-bold">Try Again</button>
         </div>
       )}
 
       {notifications.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
+        <div className="bg-surface-0 rounded-lg shadow p-12 text-center">
           <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 text-lg mb-1">
+          <p className="text-text-tertiary text-lg mb-1">
             {filter === 'unread' ? 'No unread notifications' : 'No notifications yet'}
           </p>
-          <p className="text-gray-400 text-sm">
+          <p className="text-text-disabled text-sm">
             You'll see notifications here when something happens in your courses.
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow divide-y divide-gray-100">
+        <div className="bg-surface-0 rounded-lg shadow divide-y divide-gray-100">
           {notifications.map((n) => {
             const link = getNotificationLink(n);
             const icon = NOTIFICATION_ICONS[n.notification_type] || '🔔';
@@ -146,7 +146,7 @@ const NotificationsPage = () => {
             return (
               <div
                 key={n.id}
-                className={`flex items-start gap-4 px-6 py-4 ${!n.is_read ? 'bg-blue-50/30' : ''}`}
+                className={`flex items-start gap-4 px-6 py-4 ${!n.is_read ? 'bg-brand-50/30' : ''}`}
               >
                 <span className="text-2xl flex-shrink-0 mt-0.5">{icon}</span>
                 <div className="flex-1 min-w-0">
@@ -155,25 +155,25 @@ const NotificationsPage = () => {
                       {link ? (
                         <Link
                           to={link}
-                          className={`text-sm hover:text-blue-600 ${!n.is_read ? 'font-semibold text-gray-900' : 'text-gray-700'}`}
+                          className={`text-sm hover:text-brand-600 ${!n.is_read ? 'font-semibold text-text-primary' : 'text-text-secondary'}`}
                           onClick={() => !n.is_read && handleMarkAsRead(n.id)}
                         >
                           {n.title}
                         </Link>
                       ) : (
-                        <p className={`text-sm ${!n.is_read ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
+                        <p className={`text-sm ${!n.is_read ? 'font-semibold text-text-primary' : 'text-text-secondary'}`}>
                           {n.title}
                         </p>
                       )}
                       {n.message && (
-                        <p className="text-sm text-gray-500 mt-0.5">{n.message}</p>
+                        <p className="text-sm text-text-tertiary mt-0.5">{n.message}</p>
                       )}
-                      <p className="text-xs text-gray-400 mt-1">{formatTime(n.created_at)}</p>
+                      <p className="text-xs text-text-disabled mt-1">{formatTime(n.created_at)}</p>
                     </div>
                     {!n.is_read && (
                       <button
                         onClick={() => handleMarkAsRead(n.id)}
-                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded flex-shrink-0"
+                        className="p-1.5 text-text-disabled hover:text-brand-600 hover:bg-brand-50 rounded flex-shrink-0"
                         title="Mark as read"
                       >
                         <Check className="w-4 h-4" />

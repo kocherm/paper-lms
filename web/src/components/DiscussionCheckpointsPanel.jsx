@@ -45,7 +45,7 @@ const typeLabel = (t) =>
 
 const StatusIcon = ({ status }) => {
   if (status === 'completed')
-    return <CheckCircle className="h-5 w-5 text-green-600" aria-label="Completed" />;
+    return <CheckCircle className="h-5 w-5 text-accent-success" aria-label="Completed" />;
   if (status === 'in_progress')
     return <Clock className="h-5 w-5 text-amber-500" aria-label="In progress" />;
   return <AlertCircle className="h-5 w-5 text-slate-400" aria-label="Not started" />;
@@ -186,7 +186,7 @@ const DiscussionCheckpointsPanel = ({
       </CardHeader>
       <CardContent className="space-y-3">
         {error && (
-          <div className="flex items-center gap-2 rounded border border-red-200 bg-red-50 p-2 text-sm text-red-700">
+          <div className="flex items-center gap-2 rounded border border-accent-danger/30 bg-accent-danger/10 p-2 text-sm text-accent-danger">
             <AlertCircle className="h-4 w-4" />
             <span>{error}</span>
             <Button onClick={load} variant="ghost" size="sm" className="ml-auto">
@@ -242,7 +242,7 @@ const DiscussionCheckpointsPanel = ({
                   size="sm"
                   aria-label={`Delete ${typeLabel(cp.checkpoint_type)} checkpoint`}
                 >
-                  <Trash2 className="h-4 w-4 text-red-500" />
+                  <Trash2 className="h-4 w-4 text-accent-danger" />
                 </Button>
               )}
             </div>

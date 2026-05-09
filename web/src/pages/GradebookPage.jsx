@@ -39,7 +39,7 @@ import {
 } from '../components/ui/dialog';
 
 const Skeleton = ({ className = '' }) => (
-  <div className={`animate-pulse rounded-md bg-gray-200 ${className}`} />
+  <div className={`animate-pulse rounded-md bg-border-default ${className}`} />
 );
 
 const Badge = ({ className = '', children }) => (
@@ -65,11 +65,11 @@ const cellStatus = (cell) => {
 };
 
 const statusBg = {
-  graded: 'bg-green-50',
-  submitted: 'bg-yellow-50',
-  missing: 'bg-red-50 ring-1 ring-inset ring-red-300',
-  late: 'bg-amber-50',
-  excused: 'bg-gray-50',
+  graded: 'bg-accent-success/10',
+  submitted: 'bg-accent-warning/10',
+  missing: 'bg-accent-danger/10 ring-1 ring-inset ring-red-300',
+  late: 'bg-accent-warning/10',
+  excused: 'bg-surface-1',
   empty: '',
 };
 
@@ -141,15 +141,15 @@ const SetDefaultGradeDialog = ({ open, onOpenChange, assignment, students, getCe
             min="0"
             value={score}
             onChange={(e) => setScore(e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
             autoFocus
           />
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-accent-danger">{error}</p>}
         </div>
         <DialogFooter>
           <button
             onClick={() => onOpenChange(false)}
-            className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+            className="px-4 py-2 text-sm border border-border-strong rounded-md hover:bg-surface-1"
             disabled={submitting}
           >
             Cancel
@@ -157,7 +157,7 @@ const SetDefaultGradeDialog = ({ open, onOpenChange, assignment, students, getCe
           <button
             onClick={handleConfirm}
             disabled={submitting || ungraded.length === 0}
-            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+            className="px-4 py-2 text-sm bg-brand-600 text-white rounded-md hover:bg-brand-700 disabled:opacity-50"
           >
             {submitting ? 'Applying…' : `Apply to ${ungraded.length}`}
           </button>
@@ -233,17 +233,17 @@ const CurveDialog = ({ open, onOpenChange, assignment, students, getCellData, on
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
-          <div className="grid grid-cols-3 gap-3 text-sm bg-gray-50 p-3 rounded-md">
+          <div className="grid grid-cols-3 gap-3 text-sm bg-surface-1 p-3 rounded-md">
             <div>
-              <div className="text-xs text-gray-500">Graded</div>
+              <div className="text-xs text-text-tertiary">Graded</div>
               <div className="font-medium">{stats.count}</div>
             </div>
             <div>
-              <div className="text-xs text-gray-500">Current avg</div>
+              <div className="text-xs text-text-tertiary">Current avg</div>
               <div className="font-medium">{stats.avg.toFixed(2)}</div>
             </div>
             <div>
-              <div className="text-xs text-gray-500">Max points</div>
+              <div className="text-xs text-text-tertiary">Max points</div>
               <div className="font-medium">{stats.max}</div>
             </div>
           </div>
@@ -253,15 +253,15 @@ const CurveDialog = ({ open, onOpenChange, assignment, students, getCellData, on
             step="0.01"
             value={targetAvg}
             onChange={(e) => setTargetAvg(e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"
             autoFocus
           />
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-accent-danger">{error}</p>}
         </div>
         <DialogFooter>
           <button
             onClick={() => onOpenChange(false)}
-            className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+            className="px-4 py-2 text-sm border border-border-strong rounded-md hover:bg-surface-1"
             disabled={submitting}
           >
             Cancel
@@ -269,7 +269,7 @@ const CurveDialog = ({ open, onOpenChange, assignment, students, getCellData, on
           <button
             onClick={handleConfirm}
             disabled={submitting || stats.count === 0}
-            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+            className="px-4 py-2 text-sm bg-brand-600 text-white rounded-md hover:bg-brand-700 disabled:opacity-50"
           >
             {submitting ? 'Curving…' : `Curve ${stats.count} scores`}
           </button>
@@ -343,7 +343,7 @@ const MessageStudentsDialog = ({ open, onOpenChange, assignment, students, getCe
               <select
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm"
+                className="w-full border border-border-strong rounded-md px-2 py-1.5 text-sm"
               >
                 <option value="not_submitted">Haven&apos;t submitted</option>
                 <option value="less_than">Scored less than…</option>
@@ -358,12 +358,12 @@ const MessageStudentsDialog = ({ open, onOpenChange, assignment, students, getCe
                   step="0.01"
                   value={threshold}
                   onChange={(e) => setThreshold(e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm"
+                  className="w-full border border-border-strong rounded-md px-2 py-1.5 text-sm"
                 />
               </div>
             )}
           </div>
-          <div className="text-xs text-gray-600 bg-gray-50 rounded p-2">
+          <div className="text-xs text-text-secondary bg-surface-1 rounded p-2">
             {recipients.length} recipient{recipients.length === 1 ? '' : 's'}:{' '}
             {recipients.slice(0, 6).map((r) => r.name).join(', ')}
             {recipients.length > 6 ? ` + ${recipients.length - 6} more` : ''}
@@ -374,7 +374,7 @@ const MessageStudentsDialog = ({ open, onOpenChange, assignment, students, getCe
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm"
+              className="w-full border border-border-strong rounded-md px-2 py-1.5 text-sm"
             />
           </div>
           <div>
@@ -383,15 +383,15 @@ const MessageStudentsDialog = ({ open, onOpenChange, assignment, students, getCe
               value={body}
               onChange={(e) => setBody(e.target.value)}
               rows={5}
-              className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm"
+              className="w-full border border-border-strong rounded-md px-2 py-1.5 text-sm"
             />
           </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-accent-danger">{error}</p>}
         </div>
         <DialogFooter>
           <button
             onClick={() => onOpenChange(false)}
-            className="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+            className="px-4 py-2 text-sm border border-border-strong rounded-md hover:bg-surface-1"
             disabled={submitting}
           >
             Cancel
@@ -399,7 +399,7 @@ const MessageStudentsDialog = ({ open, onOpenChange, assignment, students, getCe
           <button
             onClick={handleSend}
             disabled={submitting || recipients.length === 0 || !subject || !body}
-            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+            className="px-4 py-2 text-sm bg-brand-600 text-white rounded-md hover:bg-brand-700 disabled:opacity-50"
           >
             {submitting ? 'Sending…' : `Send to ${recipients.length}`}
           </button>
@@ -427,18 +427,18 @@ const KeyboardShortcutsDialog = ({ open, onOpenChange }) => (
           ['g e', 'Jump to bottom of column'],
           ['?', 'Open this help dialog'],
         ].map(([keys, desc]) => (
-          <li key={keys} className="flex items-center justify-between border-b border-gray-100 pb-1">
-            <kbd className="font-mono text-xs bg-gray-100 px-2 py-0.5 rounded border border-gray-300">
+          <li key={keys} className="flex items-center justify-between border-b border-border-subtle pb-1">
+            <kbd className="font-mono text-xs bg-surface-2 px-2 py-0.5 rounded border border-border-strong">
               {keys}
             </kbd>
-            <span className="text-gray-700">{desc}</span>
+            <span className="text-text-secondary">{desc}</span>
           </li>
         ))}
       </ul>
       <DialogFooter>
         <button
           onClick={() => onOpenChange(false)}
-          className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          className="px-4 py-2 text-sm bg-brand-600 text-white rounded-md hover:bg-brand-700"
         >
           Close
         </button>
@@ -467,7 +467,7 @@ const ColumnMenu = memo(function ColumnMenu({
         <button
           type="button"
           aria-label={`Options for ${assignment.name}`}
-          className="rounded p-0.5 text-gray-500 hover:bg-gray-200 hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          className="rounded p-0.5 text-text-tertiary hover:bg-border-default hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
         >
           <MoreVertical className="h-3.5 w-3.5" />
         </button>
@@ -478,36 +478,36 @@ const ColumnMenu = memo(function ColumnMenu({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => onSetDefault(assignment)}>
-          <Sparkles className="h-4 w-4 text-gray-500" />
+          <Sparkles className="h-4 w-4 text-text-tertiary" />
           Set Default Grade…
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => onCurve(assignment)}>
-          <Calculator className="h-4 w-4 text-gray-500" />
+          <Calculator className="h-4 w-4 text-text-tertiary" />
           Curve Grades…
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => onMessage(assignment)}>
-          <Send className="h-4 w-4 text-gray-500" />
+          <Send className="h-4 w-4 text-text-tertiary" />
           Message Students Who…
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         {assignment.gradesPosted ? (
           <DropdownMenuItem onSelect={() => onHide(assignment.id)}>
-            <EyeOff className="h-4 w-4 text-gray-500" />
+            <EyeOff className="h-4 w-4 text-text-tertiary" />
             Hide Grades
           </DropdownMenuItem>
         ) : (
           <DropdownMenuItem onSelect={() => onPost(assignment.id)}>
-            <Eye className="h-4 w-4 text-gray-500" />
+            <Eye className="h-4 w-4 text-text-tertiary" />
             Post Grades
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => onSortAsc(assignment)}>
-          <ArrowUpAZ className="h-4 w-4 text-gray-500" />
+          <ArrowUpAZ className="h-4 w-4 text-text-tertiary" />
           Sort by score (asc)
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => onSortDesc(assignment)}>
-          <ArrowDownAZ className="h-4 w-4 text-gray-500" />
+          <ArrowDownAZ className="h-4 w-4 text-text-tertiary" />
           Sort by score (desc)
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -547,14 +547,14 @@ const GradebookCell = memo(function GradebookCell({
       tabIndex={isFocused ? 0 : -1}
       onClick={() => onFocusCell(rowIndex, columnIndex)}
       style={style}
-      className={`relative flex items-center justify-center border-b border-r border-gray-100 px-2 ${statusBg[status]} ${
-        isFocused ? 'ring-2 ring-blue-500 ring-offset-1 z-10' : ''
+      className={`relative flex items-center justify-center border-b border-r border-border-subtle px-2 ${statusBg[status]} ${
+        isFocused ? 'ring-2 ring-brand-500 ring-offset-1 z-10' : ''
       }`}
     >
       {isExcused ? (
-        <span className="text-xs text-gray-400 italic">EX</span>
+        <span className="text-xs text-text-disabled italic">EX</span>
       ) : (
-        <div className={isMissing ? 'line-through text-red-700' : ''}>
+        <div className={isMissing ? 'line-through text-accent-danger' : ''}>
           <GradeInput
             value={cell?.score ?? null}
             pointsPossible={assignment.points_possible ?? 0}
@@ -567,7 +567,7 @@ const GradebookCell = memo(function GradebookCell({
         <span
           aria-label="Late submission"
           title="Late"
-          className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-red-500"
+          className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-accent-danger"
         />
       )}
     </div>
@@ -584,13 +584,13 @@ const StudentRowHeader = memo(function StudentRowHeader({
     <div
       role="row"
       aria-rowindex={rowIndex + 2}
-      className="flex items-stretch border-b border-gray-100 bg-white hover:bg-gray-50"
+      className="flex items-stretch border-b border-border-subtle bg-surface-0 hover:bg-surface-1"
       style={{ height: ROW_HEIGHT }}
     >
       <div
         role="rowheader"
         aria-colindex={1}
-        className="flex items-center px-4 text-sm font-medium text-gray-900 border-r border-gray-200 truncate"
+        className="flex items-center px-4 text-sm font-medium text-text-primary border-r border-border-default truncate"
         style={{ width: STUDENT_COL_WIDTH, minWidth: STUDENT_COL_WIDTH }}
         title={student.name}
       >
@@ -599,17 +599,17 @@ const StudentRowHeader = memo(function StudentRowHeader({
       <div
         role="gridcell"
         aria-colindex={2}
-        className="flex items-center justify-center text-xs px-3 border-r border-gray-200 whitespace-nowrap"
+        className="flex items-center justify-center text-xs px-3 border-r border-border-default whitespace-nowrap"
         style={{ width: TOTAL_COL_WIDTH, minWidth: TOTAL_COL_WIDTH }}
       >
         {total.percentage !== null ? (
           <span className="font-medium">
             {total.earned}/{total.possible}
-            <span className="text-gray-500 ml-1">({total.percentage}%)</span>
+            <span className="text-text-tertiary ml-1">({total.percentage}%)</span>
             <span className={`ml-2 font-semibold ${gradeColor(letterGrade)}`}>{letterGrade}</span>
           </span>
         ) : (
-          <span className="text-gray-400">&mdash;</span>
+          <span className="text-text-disabled">&mdash;</span>
         )}
       </div>
     </div>
@@ -632,7 +632,7 @@ const AssignmentColumnHeader = memo(function AssignmentColumnHeader({
     <div
       role="columnheader"
       aria-sort="none"
-      className="flex flex-col items-center justify-center px-2 py-2 text-xs border-r border-gray-200 bg-gray-50 relative"
+      className="flex flex-col items-center justify-center px-2 py-2 text-xs border-r border-border-default bg-surface-1 relative"
       style={{ width: COL_WIDTH, minWidth: COL_WIDTH, height: HEADER_HEIGHT }}
     >
       <div className="absolute top-1 right-1">
@@ -649,12 +649,12 @@ const AssignmentColumnHeader = memo(function AssignmentColumnHeader({
       </div>
       <Link
         to={`/courses/${courseId}/assignments/${assignment.id}`}
-        className="text-blue-600 hover:underline block truncate w-full text-center font-medium pr-4"
+        className="text-brand-600 hover:underline block truncate w-full text-center font-medium pr-4"
         title={assignment.name}
       >
         {assignment.name}
       </Link>
-      <div className="text-gray-500 mt-0.5">{assignment.points_possible ?? 0} pts</div>
+      <div className="text-text-tertiary mt-0.5">{assignment.points_possible ?? 0} pts</div>
       {assignment.post_policy === 'manual' && (
         <button
           onClick={() =>
@@ -663,7 +663,7 @@ const AssignmentColumnHeader = memo(function AssignmentColumnHeader({
           disabled={postingAssignment === assignment.id}
           className={`mt-1 text-[10px] px-1.5 py-0.5 rounded ${
             assignment.gradesPosted
-              ? 'bg-green-100 text-green-700 hover:bg-green-200'
+              ? 'bg-accent-success/20 text-accent-success hover:bg-green-200'
               : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
           } transition-colors`}
         >
@@ -693,13 +693,13 @@ const FrozenHeaderRow = memo(function FrozenHeaderRow({
   width,
 }) {
   return (
-    <div className="sticky top-0 z-20 bg-gray-50 border-b border-gray-200">
+    <div className="sticky top-0 z-20 bg-surface-1 border-b border-border-default">
       <div className="flex">
         <div
           role="columnheader"
           aria-colindex={1}
           aria-sort="ascending"
-          className="flex items-center px-4 font-semibold text-sm text-gray-700 border-r border-gray-200 bg-gray-50"
+          className="flex items-center px-4 font-semibold text-sm text-text-secondary border-r border-border-default bg-surface-1"
           style={{ width: STUDENT_COL_WIDTH, minWidth: STUDENT_COL_WIDTH, height: HEADER_HEIGHT }}
         >
           Student
@@ -708,7 +708,7 @@ const FrozenHeaderRow = memo(function FrozenHeaderRow({
           role="columnheader"
           aria-colindex={2}
           aria-sort="none"
-          className="flex items-center justify-center font-semibold text-sm text-gray-700 border-r border-gray-200 bg-gray-50"
+          className="flex items-center justify-center font-semibold text-sm text-text-secondary border-r border-border-default bg-surface-1"
           style={{ width: TOTAL_COL_WIDTH, minWidth: TOTAL_COL_WIDTH, height: HEADER_HEIGHT }}
         >
           Total / Grade
@@ -747,7 +747,7 @@ const FrozenStudentColumn = memo(function FrozenStudentColumn({
   return (
     <div
       ref={scrollRef}
-      className="overflow-hidden border-r border-gray-200 bg-white"
+      className="overflow-hidden border-r border-border-default bg-surface-0"
       style={{
         width: STUDENT_COL_WIDTH + TOTAL_COL_WIDTH,
         minWidth: STUDENT_COL_WIDTH + TOTAL_COL_WIDTH,
@@ -889,7 +889,7 @@ const GradebookGrid = ({
       role="grid"
       aria-rowcount={students.length + 1}
       aria-colcount={assignments.length + 2}
-      className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden"
+      className="bg-surface-0 rounded-lg shadow border border-border-default overflow-hidden"
       style={{ width, height }}
     >
       <FrozenHeaderRow
@@ -933,7 +933,7 @@ const GradebookGrid = ({
 };
 
 const GradebookSkeleton = () => (
-  <div className="bg-white rounded-lg shadow p-4 space-y-2">
+  <div className="bg-surface-0 rounded-lg shadow p-4 space-y-2">
     <div className="flex gap-2">
       {Array.from({ length: 5 }).map((_, i) => (
         <Skeleton key={i} className="h-10 flex-1" />
@@ -951,14 +951,14 @@ const GradebookSkeleton = () => (
 
 const Legend = () => (
   <div className="flex items-center gap-2 flex-wrap">
-    <Badge className="border-green-300 bg-green-50 text-green-800">Graded</Badge>
-    <Badge className="border-yellow-300 bg-yellow-50 text-yellow-800">Submitted</Badge>
-    <Badge className="border-red-300 bg-red-50 text-red-800">Missing</Badge>
-    <Badge className="border-amber-300 bg-amber-50 text-amber-800">
-      <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500 mr-1" />
+    <Badge className="border-green-300 bg-accent-success/10 text-accent-success">Graded</Badge>
+    <Badge className="border-yellow-300 bg-accent-warning/10 text-accent-warning">Submitted</Badge>
+    <Badge className="border-red-300 bg-accent-danger/10 text-accent-danger">Missing</Badge>
+    <Badge className="border-amber-300 bg-accent-warning/10 text-amber-800">
+      <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent-danger mr-1" />
       Late
     </Badge>
-    <Badge className="border-gray-300 bg-gray-50 text-gray-600 italic">EX = Excused</Badge>
+    <Badge className="border-border-strong bg-surface-1 text-text-secondary italic">EX = Excused</Badge>
   </div>
 );
 
@@ -1626,7 +1626,7 @@ const GradebookPage = () => {
   if (isTeacher === null)
     return (
       <Layout>
-        <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+        <div className="flex items-center justify-center py-12 gap-2 text-text-tertiary">
           <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
@@ -1653,10 +1653,10 @@ const GradebookPage = () => {
     return (
       <Layout>
         <div className="text-center py-12">
-          <p className="text-red-600 mb-3">{error}</p>
+          <p className="text-accent-danger mb-3">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            className="text-brand-600 hover:text-brand-800 text-sm font-medium"
           >
             Try Again
           </button>
@@ -1672,21 +1672,21 @@ const GradebookPage = () => {
     <Layout>
       <CourseNav />
       <div className="mb-4">
-        <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm">
+        <Link to={`/courses/${courseId}`} className="text-brand-600 hover:underline text-sm">
           &larr; Back to Course
         </Link>
         <div className="flex items-center justify-between mt-2 flex-wrap gap-3">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-2xl font-bold text-text-primary">
               Gradebook{course ? `: ${course.name}` : ''}
             </h2>
-            <p className="text-gray-500 text-sm mt-1">
+            <p className="text-text-tertiary text-sm mt-1">
               {students.length} {students.length === 1 ? 'student' : 'students'},{' '}
               {assignments.length} {assignments.length === 1 ? 'assignment' : 'assignments'}
               {sortOverride && (
                 <button
                   onClick={() => setSortOverride(null)}
-                  className="ml-2 text-blue-600 hover:underline text-xs"
+                  className="ml-2 text-brand-600 hover:underline text-xs"
                 >
                   Clear sort
                 </button>
@@ -1697,14 +1697,14 @@ const GradebookPage = () => {
             <Legend />
             <button
               onClick={() => setShortcutsDialog(true)}
-              className="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-md hover:bg-gray-50 text-sm font-medium"
+              className="inline-flex items-center gap-2 bg-surface-0 border border-border-strong text-text-secondary px-3 py-2 rounded-md hover:bg-surface-1 text-sm font-medium"
               aria-label="Keyboard shortcuts"
               title="Keyboard shortcuts (?)"
             >
               <HelpCircle className="w-4 h-4" />
             </button>
             <label
-              className={`inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 text-sm font-medium cursor-pointer ${
+              className={`inline-flex items-center gap-2 bg-surface-0 border border-border-strong text-text-secondary px-4 py-2 rounded-md hover:bg-surface-1 text-sm font-medium cursor-pointer ${
                 importing ? 'opacity-50 pointer-events-none' : ''
               }`}
             >
@@ -1720,7 +1720,7 @@ const GradebookPage = () => {
             </label>
             <button
               onClick={exportGradebookCSV}
-              className="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 text-sm font-medium"
+              className="inline-flex items-center gap-2 bg-surface-0 border border-border-strong text-text-secondary px-4 py-2 rounded-md hover:bg-surface-1 text-sm font-medium"
             >
               <Download className="w-4 h-4" />
               Export CSV
@@ -1733,8 +1733,8 @@ const GradebookPage = () => {
         <div
           className={`mb-4 p-3 rounded-md text-sm ${
             importResult.success
-              ? 'bg-green-50 text-green-800 border border-green-200'
-              : 'bg-red-50 text-red-800 border border-red-200'
+              ? 'bg-accent-success/10 text-accent-success border border-accent-success/30'
+              : 'bg-accent-danger/10 text-accent-danger border border-accent-danger/30'
           }`}
         >
           {importResult.success ? (
@@ -1748,7 +1748,7 @@ const GradebookPage = () => {
               </p>
               {importResult.errors.length > 0 && (
                 <details className="mt-1">
-                  <summary className="cursor-pointer text-yellow-700">
+                  <summary className="cursor-pointer text-accent-warning">
                     {importResult.errors.length} error
                     {importResult.errors.length !== 1 ? 's' : ''}
                   </summary>
@@ -1781,7 +1781,7 @@ const GradebookPage = () => {
 
       <div ref={containerRef} className="w-full">
         {students.length === 0 || orderedAssignments.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
+          <div className="bg-surface-0 rounded-lg shadow p-8 text-center text-text-tertiary">
             {students.length === 0 ? 'No students enrolled.' : 'No assignments yet.'}
           </div>
         ) : (
@@ -1815,18 +1815,18 @@ const GradebookPage = () => {
         <div
           role="status"
           aria-live="polite"
-          className="mt-2 flex items-center justify-between text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-md px-3 py-1.5"
+          className="mt-2 flex items-center justify-between text-xs text-text-secondary bg-surface-1 border border-border-default rounded-md px-3 py-1.5"
         >
           <span>
             Cell <strong>{colLabel(focusedCell.col)}{focusedCell.row + 1}</strong> of {numRows}×{numCols}
             {focusedAssignment && focusedStudent && (
-              <span className="ml-2 text-gray-500">
+              <span className="ml-2 text-text-tertiary">
                 — {focusedStudent.name} · {focusedAssignment.name}
               </span>
             )}
           </span>
           <span>
-            Press <kbd className="font-mono bg-white border border-gray-300 rounded px-1">?</kbd> for shortcuts
+            Press <kbd className="font-mono bg-surface-0 border border-border-strong rounded px-1">?</kbd> for shortcuts
           </span>
         </div>
       )}

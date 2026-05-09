@@ -17,6 +17,7 @@ const AssignmentsPage = () => {
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [actionError, setActionError] = useState(null);
   const [collapsedGroups, setCollapsedGroups] = useState({});
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -68,6 +69,7 @@ const AssignmentsPage = () => {
 
   const doCreate = async () => {
     setCreating(true);
+    setActionError(null);
     try {
       const payload = {
         name: newAssignment.name,
@@ -87,7 +89,7 @@ const AssignmentsPage = () => {
       setNewAssignment({ name: '', description: '', points_possible: 100, due_at: '', submission_types: ['online_text_entry'], anonymous_grading: false, post_policy: 'automatic', is_group_assignment: false, group_category_id: '' });
       setShowCreate(false);
     } catch (err) {
-      setError(err.message);
+      setActionError(err.message || 'Could not create assignment. Please try again.');
     } finally {
       setCreating(false);
     }
@@ -124,7 +126,7 @@ const AssignmentsPage = () => {
         prev.map((a) => a.id === assignment.id ? { ...a, published: newPublished } : a)
       );
     } catch (err) {
-      setError(err.message);
+      setActionError(err.message || 'Could not update assignment. Please try again.');
     }
   };
 
@@ -171,8 +173,8 @@ const AssignmentsPage = () => {
   }
   if (error) {
     return <Layout><div className="text-center py-12">
-  <p className="text-red-600 mb-3">{error}</p>
-  <button onClick={() => { setError(null); setLoading(true); fetchData(); }} className="text-blue-600 hover:text-blue-800 text-sm font-medium">Try Again</button>
+  <p className="text-accent-danger mb-3">{error}</p>
+  <button onClick={() => { setError(null); setLoading(true); fetchData(); }} className="text-brand-600 hover:text-brand-800 text-sm font-medium">Try Again</button>
 </div></Layout>;
   }
 
@@ -180,13 +182,13 @@ const AssignmentsPage = () => {
     <Link
       key={assignment.id}
       to={`/courses/${courseId}/assignments/${assignment.id}`}
-      className="flex items-center justify-between p-4 hover:bg-gray-50"
+      className="flex items-center justify-between p-4 hover:bg-surface-1"
     >
       <div className="flex items-center space-x-3 min-w-0">
-        <FileCheck className="w-5 h-5 text-gray-400 flex-shrink-0" />
+        <FileCheck className="w-5 h-5 text-text-disabled flex-shrink-0" />
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-gray-900 truncate">{assignment.name}</span>
+            <span className="font-medium text-text-primary truncate">{assignment.name}</span>
             {assignment.is_group_assignment && (
               <span className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">
                 <Users className="w-3 h-3" />
@@ -194,10 +196,10 @@ const AssignmentsPage = () => {
               </span>
             )}
             {assignment.published === false && (
-              <span className="text-xs px-1.5 py-0.5 rounded bg-gray-200 text-gray-500">Unpublished</span>
+              <span className="text-xs px-1.5 py-0.5 rounded bg-border-default text-text-tertiary">Unpublished</span>
             )}
           </div>
-          <div className="flex items-center space-x-3 text-xs text-gray-400 mt-0.5">
+          <div className="flex items-center space-x-3 text-xs text-text-disabled mt-0.5">
             {assignment.due_at && (
               <span>Due {formatDate(assignment.due_at)}</span>
             )}
@@ -212,8 +214,8 @@ const AssignmentsPage = () => {
           onClick={(e) => togglePublish(e, assignment)}
           className={`flex-shrink-0 p-1.5 rounded-md transition-colors ${
             assignment.published !== false
-              ? 'text-green-600 hover:bg-green-50'
-              : 'text-gray-400 hover:bg-gray-100'
+              ? 'text-accent-success hover:bg-accent-success/10'
+              : 'text-text-disabled hover:bg-surface-2'
           }`}
           title={assignment.published !== false ? 'Unpublish' : 'Publish'}
         >
@@ -227,15 +229,15 @@ const AssignmentsPage = () => {
     <Layout>
       <CourseNav />
       <div className="mb-6">
-        <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm">
+        <Link to={`/courses/${courseId}`} className="text-brand-600 hover:underline text-sm">
           &larr; Back to Course
         </Link>
         <div className="flex items-center justify-between mt-2">
-          <h2 className="text-2xl font-bold text-gray-900">Assignments</h2>
+          <h2 className="text-2xl font-bold text-text-primary">Assignments</h2>
           {isTeacher && (
             <button
               onClick={() => setShowCreate(!showCreate)}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium"
+              className="inline-flex items-center px-4 py-2 bg-brand-600 text-white rounded-md hover:bg-brand-700 text-sm font-medium"
             >
               <Plus className="w-4 h-4 mr-1" />
               Assignment
@@ -247,20 +249,20 @@ const AssignmentsPage = () => {
       {/* Search and Filter */}
       <div className="flex items-center gap-3 mb-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-disabled" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search assignments..."
             aria-label="Search assignments"
-            className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-9 pr-3 py-2 border border-border-strong rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700"
+          className="border border-border-strong rounded-md px-3 py-2 text-sm text-text-secondary"
         >
           <option value="all">All ({assignments.length})</option>
           <option value="published">Published</option>
@@ -270,22 +272,51 @@ const AssignmentsPage = () => {
         </select>
       </div>
 
+      {actionError && (
+        <div
+          role="alert"
+          className="mb-4 flex items-start justify-between gap-3 rounded-md border border-accent-danger/30 bg-accent-danger/10 px-4 py-3 text-sm text-accent-danger"
+        >
+          <div className="flex-1">
+            <p className="font-medium">Something went wrong</p>
+            <p className="mt-0.5 text-text-secondary">{actionError}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => { setActionError(null); doCreate(); }}
+              className="text-accent-danger hover:underline font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded"
+            >
+              Try Again
+            </button>
+            <button
+              type="button"
+              onClick={() => setActionError(null)}
+              className="text-text-tertiary hover:text-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded"
+              aria-label="Dismiss error"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
       {showCreate && (
-        <form onSubmit={handleCreate} className="bg-white rounded-lg shadow p-6 mb-6 space-y-4">
+        <form onSubmit={handleCreate} className="bg-surface-0 rounded-lg shadow p-6 mb-6 space-y-4">
           <div>
-            <label htmlFor="assignment-name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <label htmlFor="assignment-name" className="block text-sm font-medium text-text-secondary mb-1">Name</label>
             <input
               id="assignment-name"
               type="text"
               required
               value={newAssignment.name}
               onChange={(e) => setNewAssignment({ ...newAssignment, name: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              className="w-full border border-border-strong rounded-md px-3 py-2 text-sm"
               placeholder="Assignment name"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
             <RichContentEditorV2
               value={newAssignment.description}
               onChange={(html) => setNewAssignment((prev) => ({ ...prev, description: html }))}
@@ -297,43 +328,43 @@ const AssignmentsPage = () => {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="assignment-points" className="block text-sm font-medium text-gray-700 mb-1">Points</label>
+              <label htmlFor="assignment-points" className="block text-sm font-medium text-text-secondary mb-1">Points</label>
               <input
                 id="assignment-points"
                 type="number"
                 min="0"
                 value={newAssignment.points_possible}
                 onChange={(e) => setNewAssignment({ ...newAssignment, points_possible: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                className="w-full border border-border-strong rounded-md px-3 py-2 text-sm"
               />
             </div>
             <div>
-              <label htmlFor="assignment-due-date" className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+              <label htmlFor="assignment-due-date" className="block text-sm font-medium text-text-secondary mb-1">Due Date</label>
               <input
                 id="assignment-due-date"
                 type="datetime-local"
                 value={newAssignment.due_at}
                 onChange={(e) => setNewAssignment({ ...newAssignment, due_at: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                className="w-full border border-border-strong rounded-md px-3 py-2 text-sm"
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <label className="flex items-center gap-2 text-sm text-gray-700">
+            <label className="flex items-center gap-2 text-sm text-text-secondary">
               <input
                 type="checkbox"
                 checked={newAssignment.anonymous_grading}
                 onChange={(e) => setNewAssignment({ ...newAssignment, anonymous_grading: e.target.checked })}
-                className="rounded border-gray-300"
+                className="rounded border-border-strong"
               />
               Anonymous Grading
             </label>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Grade Posting</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Grade Posting</label>
               <select
                 value={newAssignment.post_policy}
                 onChange={(e) => setNewAssignment({ ...newAssignment, post_policy: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                className="w-full border border-border-strong rounded-md px-3 py-2 text-sm"
               >
                 <option value="automatic">Automatic</option>
                 <option value="manual">Manual</option>
@@ -341,7 +372,7 @@ const AssignmentsPage = () => {
             </div>
           </div>
           <div>
-            <label className="flex items-center gap-2 text-sm text-gray-700">
+            <label className="flex items-center gap-2 text-sm text-text-secondary">
               <input
                 type="checkbox"
                 checked={newAssignment.is_group_assignment}
@@ -349,23 +380,23 @@ const AssignmentsPage = () => {
                   const checked = e.target.checked;
                   setNewAssignment({ ...newAssignment, is_group_assignment: checked, group_category_id: checked ? newAssignment.group_category_id : '' });
                 }}
-                className="rounded border-gray-300"
+                className="rounded border-border-strong"
               />
-              <Users className="w-4 h-4 text-gray-500" />
+              <Users className="w-4 h-4 text-text-tertiary" />
               Group Assignment
             </label>
             {newAssignment.is_group_assignment && (
               <div className="mt-2 ml-6">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Group Category</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Group Category</label>
                 {loadingGroupCategories ? (
-                  <p className="text-sm text-gray-400">Loading group categories...</p>
+                  <p className="text-sm text-text-disabled">Loading group categories...</p>
                 ) : groupCategories.length === 0 ? (
-                  <p className="text-sm text-gray-400">No group categories found for this course. Create one on the Groups page first.</p>
+                  <p className="text-sm text-text-disabled">No group categories found for this course. Create one on the Groups page first.</p>
                 ) : (
                   <select
                     value={newAssignment.group_category_id}
                     onChange={(e) => setNewAssignment({ ...newAssignment, group_category_id: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                    className="w-full border border-border-strong rounded-md px-3 py-2 text-sm"
                   >
                     <option value="">Select a group category...</option>
                     {groupCategories.map((gc) => (
@@ -377,10 +408,10 @@ const AssignmentsPage = () => {
             )}
           </div>
           <div className="flex justify-end space-x-3">
-            <button type="button" onClick={() => setShowCreate(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">
+            <button type="button" onClick={() => setShowCreate(false)} className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary">
               Cancel
             </button>
-            <button type="submit" disabled={creating} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium disabled:opacity-50">
+            <button type="submit" disabled={creating} className="px-4 py-2 bg-brand-600 text-white rounded-md hover:bg-brand-700 text-sm font-medium disabled:opacity-50">
               {creating ? 'Creating...' : 'Create Assignment'}
             </button>
           </div>
@@ -388,11 +419,11 @@ const AssignmentsPage = () => {
       )}
 
       {assignments.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
+        <div className="bg-surface-0 rounded-lg shadow p-6 text-center text-text-tertiary">
           No assignments yet.
         </div>
       ) : filteredAssignments.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
+        <div className="bg-surface-0 rounded-lg shadow p-6 text-center text-text-tertiary">
           No assignments match your search.
         </div>
       ) : (
@@ -404,24 +435,24 @@ const AssignmentsPage = () => {
             const isCollapsed = collapsedGroups[group.id];
 
             return (
-              <div key={group.id} className="bg-white rounded-lg shadow">
+              <div key={group.id} className="bg-surface-0 rounded-lg shadow">
                 <button
                   onClick={() => toggleGroup(group.id)}
-                  className="w-full flex items-center justify-between p-4 border-b hover:bg-gray-50 text-left"
+                  className="w-full flex items-center justify-between p-4 border-b hover:bg-surface-1 text-left"
                 >
                   <div className="flex items-center space-x-2">
                     {isCollapsed ? (
-                      <ChevronRight className="w-4 h-4 text-gray-400" />
+                      <ChevronRight className="w-4 h-4 text-text-disabled" />
                     ) : (
-                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                      <ChevronDown className="w-4 h-4 text-text-disabled" />
                     )}
-                    <h3 className="font-semibold text-gray-900">{group.name}</h3>
-                    <span className="text-xs text-gray-400">
+                    <h3 className="font-semibold text-text-primary">{group.name}</h3>
+                    <span className="text-xs text-text-disabled">
                       ({groupAssignments.length} assignment{groupAssignments.length !== 1 ? 's' : ''})
                     </span>
                   </div>
                   {group.group_weight != null && group.group_weight > 0 && (
-                    <span className="text-xs text-gray-500">{group.group_weight}% of grade</span>
+                    <span className="text-xs text-text-tertiary">{group.group_weight}% of grade</span>
                   )}
                 </button>
                 {!isCollapsed && (
@@ -435,9 +466,9 @@ const AssignmentsPage = () => {
 
           {/* Ungrouped assignments */}
           {ungrouped.length > 0 && (
-            <div className="bg-white rounded-lg shadow">
+            <div className="bg-surface-0 rounded-lg shadow">
               <div className="p-4 border-b">
-                <h3 className="font-semibold text-gray-900">Other Assignments</h3>
+                <h3 className="font-semibold text-text-primary">Other Assignments</h3>
               </div>
               <div className="divide-y">
                 {ungrouped.map(renderAssignment)}

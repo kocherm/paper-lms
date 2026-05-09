@@ -145,10 +145,10 @@ const OutcomeProficiencyPage = () => {
     <div className="max-w-4xl mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Award className="w-7 h-7 text-blue-600" />
+          <Award className="w-7 h-7 text-brand-600" />
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Outcome Proficiency Scale</h1>
-            <p className="text-sm text-gray-600">
+            <h1 className="text-2xl font-bold text-text-primary">Outcome Proficiency Scale</h1>
+            <p className="text-sm text-text-secondary">
               {isAccountScope
                 ? 'Default scale used by all courses in this account.'
                 : 'Course-specific scale (overrides the account default).'}
@@ -158,26 +158,26 @@ const OutcomeProficiencyPage = () => {
       </div>
 
       {error && (
-        <div className="mb-4 rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-md bg-accent-danger/10 border border-accent-danger/30 px-4 py-3 text-sm text-accent-danger">
           {error}
         </div>
       )}
       {success && (
-        <div className="mb-4 rounded-md bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
+        <div className="mb-4 rounded-md bg-accent-success/10 border border-accent-success/30 px-4 py-3 text-sm text-accent-success">
           {success}
         </div>
       )}
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <svg className="animate-spin h-8 w-8 text-blue-600" viewBox="0 0 24 24" fill="none">
+          <svg className="animate-spin h-8 w-8 text-brand-600" viewBox="0 0 24 24" fill="none">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
           </svg>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
-          <div className="grid grid-cols-12 gap-2 px-4 py-3 bg-gray-50 border-b border-gray-200 text-xs font-semibold uppercase text-gray-600">
+        <div className="bg-surface-0 rounded-lg shadow border border-border-default overflow-hidden">
+          <div className="grid grid-cols-12 gap-2 px-4 py-3 bg-surface-1 border-b border-border-default text-xs font-semibold uppercase text-text-secondary">
             <div className="col-span-1" />
             <div className="col-span-4">Description</div>
             <div className="col-span-2">Points</div>
@@ -192,9 +192,9 @@ const OutcomeProficiencyPage = () => {
               onDragStart={() => onDragStart(idx)}
               onDragOver={onDragOver}
               onDrop={() => onDrop(idx)}
-              className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-gray-100 items-center hover:bg-gray-50"
+              className="grid grid-cols-12 gap-2 px-4 py-3 border-b border-border-subtle items-center hover:bg-surface-1"
             >
-              <div className="col-span-1 flex items-center justify-center cursor-move text-gray-400">
+              <div className="col-span-1 flex items-center justify-center cursor-move text-text-disabled">
                 <GripVertical className="w-4 h-4" />
               </div>
               <div className="col-span-4">
@@ -202,7 +202,7 @@ const OutcomeProficiencyPage = () => {
                   type="text"
                   value={r.description}
                   onChange={(e) => updateRating(idx, { description: e.target.value })}
-                  className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
+                  className="w-full rounded border border-border-strong px-2 py-1 text-sm"
                 />
               </div>
               <div className="col-span-2">
@@ -211,7 +211,7 @@ const OutcomeProficiencyPage = () => {
                   step="0.1"
                   value={r.points}
                   onChange={(e) => updateRating(idx, { points: parseFloat(e.target.value) || 0 })}
-                  className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
+                  className="w-full rounded border border-border-strong px-2 py-1 text-sm"
                 />
               </div>
               <div className="col-span-2 flex items-center gap-2">
@@ -219,13 +219,13 @@ const OutcomeProficiencyPage = () => {
                   type="color"
                   value={r.color}
                   onChange={(e) => updateRating(idx, { color: e.target.value })}
-                  className="w-8 h-8 rounded border border-gray-300"
+                  className="w-8 h-8 rounded border border-border-strong"
                 />
                 <input
                   type="text"
                   value={r.color}
                   onChange={(e) => updateRating(idx, { color: e.target.value })}
-                  className="w-full rounded border border-gray-300 px-2 py-1 text-xs font-mono"
+                  className="w-full rounded border border-border-strong px-2 py-1 text-xs font-mono"
                 />
               </div>
               <div className="col-span-2 flex items-center">
@@ -242,7 +242,7 @@ const OutcomeProficiencyPage = () => {
               <div className="col-span-1 flex items-center justify-center">
                 <button
                   onClick={() => removeRating(idx)}
-                  className="text-red-500 hover:text-red-700"
+                  className="text-accent-danger hover:text-accent-danger"
                   aria-label="Remove rating"
                   disabled={ratings.length <= 2}
                 >
@@ -251,10 +251,10 @@ const OutcomeProficiencyPage = () => {
               </div>
             </div>
           ))}
-          <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
+          <div className="px-4 py-3 bg-surface-1 border-t border-border-default">
             <button
               onClick={addRating}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded border border-gray-300 hover:bg-white"
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded border border-border-strong hover:bg-surface-0"
             >
               <Plus className="w-4 h-4" /> Add Rating
             </button>
@@ -266,14 +266,14 @@ const OutcomeProficiencyPage = () => {
         <button
           onClick={save}
           disabled={saving || loading}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded bg-brand-600 text-white text-sm font-medium hover:bg-brand-700 disabled:opacity-50"
         >
           <Save className="w-4 h-4" /> {saving ? 'Saving...' : 'Save Scale'}
         </button>
         <button
           onClick={resetToDefault}
           disabled={saving || loading}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded border border-gray-300 text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded border border-border-strong text-sm font-medium hover:bg-surface-1 disabled:opacity-50"
         >
           <RotateCcw className="w-4 h-4" /> Reset to Default
         </button>

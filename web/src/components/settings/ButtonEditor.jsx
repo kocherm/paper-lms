@@ -67,30 +67,30 @@ const ButtonEditor = ({ courseId, buttons, setButtons }) => {
       {/* Current buttons */}
       <div className="space-y-2">
         {buttons.map((btn, idx) => (
-          <div key={btn.id} className="flex items-center gap-3 p-3 border rounded-lg bg-gray-50">
-            <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />
+          <div key={btn.id} className="flex items-center gap-3 p-3 border rounded-lg bg-surface-1">
+            <GripVertical className="w-4 h-4 text-text-disabled cursor-grab" />
             <div className="w-8 h-8 rounded flex items-center justify-center" style={{ backgroundColor: btn.color || '#0374B5' }}>
               <span className="text-white text-xs">{btn.icon?.[0]}</span>
             </div>
             <div className="flex-1">
               <div className="font-medium text-sm">{btn.label || btn.button_type}</div>
-              <div className="text-xs text-gray-500">{btn.button_type} &middot; {btn.visible ? 'Visible' : 'Hidden'}</div>
+              <div className="text-xs text-text-tertiary">{btn.button_type} &middot; {btn.visible ? 'Visible' : 'Hidden'}</div>
             </div>
-            <button onClick={() => handleDelete(btn.id)} className="text-red-500 hover:text-red-700 p-1">
+            <button onClick={() => handleDelete(btn.id)} className="text-accent-danger hover:text-accent-danger p-1">
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
         ))}
-        {buttons.length === 0 && <p className="text-sm text-gray-500">No buttons configured.</p>}
+        {buttons.length === 0 && <p className="text-sm text-text-tertiary">No buttons configured.</p>}
       </div>
 
       {/* Add preset buttons */}
       <div>
-        <h4 className="text-sm font-medium text-gray-700 mb-2">Add Preset Button</h4>
+        <h4 className="text-sm font-medium text-text-secondary mb-2">Add Preset Button</h4>
         <div className="flex flex-wrap gap-2">
           {presetTypes.map(preset => (
             <button key={preset.type} onClick={() => handleAddPreset(preset)}
-              className="flex items-center gap-1 px-3 py-1.5 border rounded-full text-sm hover:bg-gray-50">
+              className="flex items-center gap-1 px-3 py-1.5 border rounded-full text-sm hover:bg-surface-1">
               <Plus className="w-3 h-3" /> {preset.label}
             </button>
           ))}
@@ -99,28 +99,28 @@ const ButtonEditor = ({ courseId, buttons, setButtons }) => {
 
       {/* Add custom button */}
       <div className="border-t pt-4">
-        <h4 className="text-sm font-medium text-gray-700 mb-2">Add Custom Button</h4>
+        <h4 className="text-sm font-medium text-text-secondary mb-2">Add Custom Button</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Label</label>
+            <label className="block text-xs text-text-tertiary mb-1">Label</label>
             <input type="text" className="w-full border rounded px-3 py-1.5 text-sm" value={form.label}
               onChange={e => setForm(f => ({ ...f, label: e.target.value }))} />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Link URL</label>
+            <label className="block text-xs text-text-tertiary mb-1">Link URL</label>
             <input type="text" className="w-full border rounded px-3 py-1.5 text-sm" value={form.link_url}
               placeholder="https://... or /courses/..." onChange={e => setForm(f => ({ ...f, link_url: e.target.value, link_type: 'external_url' }))} />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Icon</label>
+            <label className="block text-xs text-text-tertiary mb-1">Icon</label>
             <IconPicker value={form.icon} onChange={icon => setForm(f => ({ ...f, icon }))} />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Color</label>
+            <label className="block text-xs text-text-tertiary mb-1">Color</label>
             <ColorPicker value={form.color} onChange={color => setForm(f => ({ ...f, color }))} />
           </div>
         </div>
-        <button onClick={handleAddCustom} className="mt-3 flex items-center gap-1 bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700">
+        <button onClick={handleAddCustom} className="mt-3 flex items-center gap-1 bg-brand-600 text-white px-4 py-1.5 rounded text-sm hover:bg-brand-700">
           <Plus className="w-4 h-4" /> Add Custom Button
         </button>
       </div>

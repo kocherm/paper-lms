@@ -9,12 +9,12 @@ const TAB_RETENTION = 'retention';
 const TAB_EXPORT = 'export';
 
 const STATUS_COLORS = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  approved: 'bg-blue-100 text-blue-800',
-  completed: 'bg-green-100 text-green-800',
+  pending: 'bg-accent-warning/20 text-accent-warning',
+  approved: 'bg-brand-100 text-brand-800',
+  completed: 'bg-accent-success/20 text-accent-success',
   processing: 'bg-indigo-100 text-indigo-800',
-  failed: 'bg-red-100 text-red-800',
-  ready: 'bg-green-100 text-green-800',
+  failed: 'bg-accent-danger/20 text-accent-danger',
+  ready: 'bg-accent-success/20 text-accent-success',
 };
 
 const formatDate = (dateStr) => {
@@ -243,7 +243,7 @@ const FERPAPage = () => {
   };
 
   const getStatusBadge = (status) => {
-    const colorClass = STATUS_COLORS[status] || 'bg-gray-100 text-gray-800';
+    const colorClass = STATUS_COLORS[status] || 'bg-surface-2 text-text-primary';
     return (
       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}`}>
         {status}
@@ -256,10 +256,10 @@ const FERPAPage = () => {
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center space-x-3">
-          <Shield className="w-8 h-8 text-blue-600" aria-hidden="true" />
+          <Shield className="w-8 h-8 text-brand-600" aria-hidden="true" />
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">FERPA Compliance</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="text-2xl font-bold text-text-primary">FERPA Compliance</h1>
+            <p className="text-sm text-text-tertiary">
               Manage data privacy in compliance with the Family Educational Rights and Privacy Act
             </p>
           </div>
@@ -268,12 +268,12 @@ const FERPAPage = () => {
 
       {/* Error Alert */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-md mb-4 flex items-center justify-between" role="alert">
+        <div className="bg-accent-danger/10 border border-accent-danger/30 text-accent-danger p-3 rounded-md mb-4 flex items-center justify-between" role="alert">
           <div className="flex items-center space-x-2">
             <AlertTriangle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
             <span className="text-sm">{error}</span>
           </div>
-          <button onClick={() => setError(null)} className="text-red-500 hover:text-red-700 text-sm" aria-label="Dismiss error">
+          <button onClick={() => setError(null)} className="text-accent-danger hover:text-accent-danger text-sm" aria-label="Dismiss error">
             <X className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
@@ -281,19 +281,19 @@ const FERPAPage = () => {
 
       {/* Success Alert */}
       {successMessage && (
-        <div className="bg-green-50 border border-green-200 text-green-700 p-3 rounded-md mb-4 flex items-center justify-between" role="status">
+        <div className="bg-accent-success/10 border border-accent-success/30 text-accent-success p-3 rounded-md mb-4 flex items-center justify-between" role="status">
           <div className="flex items-center space-x-2">
             <Check className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
             <span className="text-sm">{successMessage}</span>
           </div>
-          <button onClick={() => setSuccessMessage(null)} className="text-green-500 hover:text-green-700 text-sm" aria-label="Dismiss message">
+          <button onClick={() => setSuccessMessage(null)} className="text-accent-success hover:text-accent-success text-sm" aria-label="Dismiss message">
             <X className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       )}
 
       {/* Tabs */}
-      <div className="border-b border-gray-200 mb-6" role="tablist" aria-label="FERPA compliance tabs">
+      <div className="border-b border-border-default mb-6" role="tablist" aria-label="FERPA compliance tabs">
         <nav className="flex space-x-8">
           <button
             role="tab"
@@ -302,8 +302,8 @@ const FERPAPage = () => {
             onClick={() => setActiveTab(TAB_DELETION)}
             className={`pb-3 px-1 border-b-2 font-medium text-sm transition-colors flex items-center space-x-2 ${
               activeTab === TAB_DELETION
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-brand-500 text-brand-600'
+                : 'border-transparent text-text-tertiary hover:text-text-secondary hover:border-border-strong'
             }`}
           >
             <Trash2 className="w-4 h-4" aria-hidden="true" />
@@ -316,8 +316,8 @@ const FERPAPage = () => {
             onClick={() => setActiveTab(TAB_RETENTION)}
             className={`pb-3 px-1 border-b-2 font-medium text-sm transition-colors flex items-center space-x-2 ${
               activeTab === TAB_RETENTION
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-brand-500 text-brand-600'
+                : 'border-transparent text-text-tertiary hover:text-text-secondary hover:border-border-strong'
             }`}
           >
             <Clock className="w-4 h-4" aria-hidden="true" />
@@ -330,8 +330,8 @@ const FERPAPage = () => {
             onClick={() => setActiveTab(TAB_EXPORT)}
             className={`pb-3 px-1 border-b-2 font-medium text-sm transition-colors flex items-center space-x-2 ${
               activeTab === TAB_EXPORT
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-brand-500 text-brand-600'
+                : 'border-transparent text-text-tertiary hover:text-text-secondary hover:border-border-strong'
             }`}
           >
             <Download className="w-4 h-4" aria-hidden="true" />
@@ -346,12 +346,12 @@ const FERPAPage = () => {
       {activeTab === TAB_DELETION && (
         <div id="panel-deletion" role="tabpanel" aria-labelledby="tab-deletion">
           <div className="mb-4 flex items-center justify-between">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-text-secondary">
               Review and approve pending data deletion requests from users exercising their FERPA right to request deletion of educational records.
             </p>
             <button
               onClick={() => fetchDeletionRequests(deletionPage)}
-              className="flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700"
+              className="flex items-center space-x-1 text-sm text-text-tertiary hover:text-text-secondary"
               aria-label="Refresh deletion requests"
             >
               <RefreshCw className="w-4 h-4" aria-hidden="true" />
@@ -360,47 +360,47 @@ const FERPAPage = () => {
           </div>
 
           {deletionLoading ? (
-            <div className="text-center py-12 text-gray-500" role="status" aria-live="polite">
+            <div className="text-center py-12 text-text-tertiary" role="status" aria-live="polite">
               Loading deletion requests...
             </div>
           ) : deletionRequests.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-              <Trash2 className="w-12 h-12 text-gray-300 mx-auto mb-3" aria-hidden="true" />
-              <p className="text-gray-500 font-medium">No pending deletion requests</p>
-              <p className="text-gray-400 text-sm mt-1">
+            <div className="bg-surface-0 rounded-lg shadow-sm p-8 text-center">
+              <Trash2 className="w-12 h-12 text-text-disabled mx-auto mb-3" aria-hidden="true" />
+              <p className="text-text-tertiary font-medium">No pending deletion requests</p>
+              <p className="text-text-disabled text-sm mt-1">
                 Deletion requests will appear here when users submit them.
               </p>
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div className="bg-surface-0 rounded-lg shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200" aria-label="Data deletion requests">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-border-default" aria-label="Data deletion requests">
+                  <thead className="bg-surface-1">
                     <tr>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requested</th>
-                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">ID</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">User</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Reason</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Status</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Requested</th>
+                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-text-tertiary uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-surface-0 divide-y divide-border-default">
                     {deletionRequests.map((req) => (
-                      <tr key={req.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 font-mono">
+                      <tr key={req.id} className="hover:bg-surface-1">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-text-tertiary font-mono">
                           #{req.id}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-text-primary">
                             {req.user_name || req.user_email || `User ${req.user_id}`}
                           </div>
                           {req.user_email && req.user_name && (
-                            <div className="text-xs text-gray-500">{req.user_email}</div>
+                            <div className="text-xs text-text-tertiary">{req.user_email}</div>
                           )}
-                          <div className="text-xs text-gray-400">ID: {req.user_id}</div>
+                          <div className="text-xs text-text-disabled">ID: {req.user_id}</div>
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-700 max-w-xs">
+                        <td className="px-4 py-3 text-sm text-text-secondary max-w-xs">
                           <p className="truncate" title={req.reason}>
                             {req.reason || 'No reason provided'}
                           </p>
@@ -408,7 +408,7 @@ const FERPAPage = () => {
                         <td className="px-4 py-3 whitespace-nowrap">
                           {getStatusBadge(req.status || 'pending')}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-text-tertiary">
                           {formatDate(req.created_at)}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-right">
@@ -416,7 +416,7 @@ const FERPAPage = () => {
                             <button
                               onClick={() => handleApproveDeletion(req.id)}
                               disabled={approvingId === req.id}
-                              className="inline-flex items-center space-x-1 px-3 py-1.5 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                              className="inline-flex items-center space-x-1 px-3 py-1.5 bg-accent-danger text-white text-sm rounded-md hover:bg-accent-danger/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-accent-danger focus:ring-offset-2"
                               aria-label={`Approve deletion request #${req.id}`}
                             >
                               {approvingId === req.id ? (
@@ -433,13 +433,13 @@ const FERPAPage = () => {
                             </button>
                           )}
                           {req.status === 'approved' && (
-                            <span className="text-sm text-blue-600 flex items-center justify-end space-x-1">
+                            <span className="text-sm text-brand-600 flex items-center justify-end space-x-1">
                               <Check className="w-3.5 h-3.5" aria-hidden="true" />
                               <span>Approved</span>
                             </span>
                           )}
                           {req.status === 'completed' && (
-                            <span className="text-sm text-green-600 flex items-center justify-end space-x-1">
+                            <span className="text-sm text-accent-success flex items-center justify-end space-x-1">
                               <Check className="w-3.5 h-3.5" aria-hidden="true" />
                               <span>Completed</span>
                             </span>
@@ -452,19 +452,19 @@ const FERPAPage = () => {
               </div>
 
               {/* Pagination */}
-              <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+              <div className="px-4 py-3 bg-surface-1 border-t border-border-default flex items-center justify-between">
                 <button
                   onClick={() => fetchDeletionRequests(deletionPage - 1)}
                   disabled={deletionPage <= 1}
-                  className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm border border-border-strong rounded hover:bg-surface-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
-                <span className="text-sm text-gray-600">Page {deletionPage}</span>
+                <span className="text-sm text-text-secondary">Page {deletionPage}</span>
                 <button
                   onClick={() => fetchDeletionRequests(deletionPage + 1)}
                   disabled={!deletionHasMore}
-                  className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm border border-border-strong rounded hover:bg-surface-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>
@@ -480,12 +480,12 @@ const FERPAPage = () => {
       {activeTab === TAB_RETENTION && (
         <div id="panel-retention" role="tabpanel" aria-labelledby="tab-retention">
           <div className="mb-4 flex items-center justify-between">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-text-secondary">
               Configure how long different types of educational data are retained before automatic purging.
             </p>
             <button
               onClick={() => { resetPolicyForm(); setShowPolicyForm(!showPolicyForm); }}
-              className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="flex items-center space-x-2 bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
               aria-expanded={showPolicyForm}
             >
               <Plus className="w-4 h-4" aria-hidden="true" />
@@ -495,45 +495,45 @@ const FERPAPage = () => {
 
           {/* Create / Edit Policy Form */}
           {showPolicyForm && (
-            <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border border-gray-200" role="region" aria-label={editingPolicy ? 'Edit retention policy' : 'Create retention policy'}>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="bg-surface-0 rounded-lg shadow-sm p-6 mb-6 border border-border-default" role="region" aria-label={editingPolicy ? 'Edit retention policy' : 'Create retention policy'}>
+              <h2 className="text-lg font-semibold text-text-primary mb-4">
                 {editingPolicy ? 'Edit Retention Policy' : 'Create Retention Policy'}
               </h2>
               <form onSubmit={handleSubmitPolicy} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="policy-name" className="block text-sm font-medium text-gray-700 mb-1">
-                      Policy Name <span className="text-red-500">*</span>
+                    <label htmlFor="policy-name" className="block text-sm font-medium text-text-secondary mb-1">
+                      Policy Name <span className="text-accent-danger">*</span>
                     </label>
                     <input
                       id="policy-name"
                       type="text"
                       value={policyForm.name}
                       onChange={(e) => setPolicyForm({ ...policyForm, name: e.target.value })}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                       placeholder="e.g. Student Grades Retention"
                       required
                       aria-required="true"
                     />
                   </div>
                   <div>
-                    <label htmlFor="policy-data-type" className="block text-sm font-medium text-gray-700 mb-1">
-                      Data Type <span className="text-red-500">*</span>
+                    <label htmlFor="policy-data-type" className="block text-sm font-medium text-text-secondary mb-1">
+                      Data Type <span className="text-accent-danger">*</span>
                     </label>
                     <input
                       id="policy-data-type"
                       type="text"
                       value={policyForm.data_type}
                       onChange={(e) => setPolicyForm({ ...policyForm, data_type: e.target.value })}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                       placeholder="e.g. grades, submissions, enrollments"
                       required
                       aria-required="true"
                     />
                   </div>
                   <div>
-                    <label htmlFor="policy-retention-days" className="block text-sm font-medium text-gray-700 mb-1">
-                      Retention Period (days) <span className="text-red-500">*</span>
+                    <label htmlFor="policy-retention-days" className="block text-sm font-medium text-text-secondary mb-1">
+                      Retention Period (days) <span className="text-accent-danger">*</span>
                     </label>
                     <input
                       id="policy-retention-days"
@@ -541,7 +541,7 @@ const FERPAPage = () => {
                       min="1"
                       value={policyForm.retention_period_days}
                       onChange={(e) => setPolicyForm({ ...policyForm, retention_period_days: e.target.value })}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                       placeholder="e.g. 2555 (7 years)"
                       required
                       aria-required="true"
@@ -552,32 +552,32 @@ const FERPAPage = () => {
                       <button
                         type="button"
                         onClick={() => setPolicyForm({ ...policyForm, active: !policyForm.active })}
-                        className="flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                        className="flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-brand-500 rounded"
                         role="switch"
                         aria-checked={policyForm.active}
                         aria-label="Toggle policy active status"
                       >
                         {policyForm.active ? (
-                          <ToggleRight className="w-8 h-5 text-blue-600" aria-hidden="true" />
+                          <ToggleRight className="w-8 h-5 text-brand-600" aria-hidden="true" />
                         ) : (
-                          <ToggleLeft className="w-8 h-5 text-gray-400" aria-hidden="true" />
+                          <ToggleLeft className="w-8 h-5 text-text-disabled" aria-hidden="true" />
                         )}
                       </button>
-                      <span className="text-sm font-medium text-gray-700">
+                      <span className="text-sm font-medium text-text-secondary">
                         {policyForm.active ? 'Active' : 'Inactive'}
                       </span>
                     </div>
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="policy-description" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="policy-description" className="block text-sm font-medium text-text-secondary mb-1">
                     Description
                   </label>
                   <textarea
                     id="policy-description"
                     value={policyForm.description}
                     onChange={(e) => setPolicyForm({ ...policyForm, description: e.target.value })}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                     rows={3}
                     placeholder="Describe what data this policy covers and why it is retained for this duration."
                   />
@@ -585,14 +585,14 @@ const FERPAPage = () => {
                 <div className="flex items-center space-x-3">
                   <button
                     type="submit"
-                    className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="bg-brand-600 text-white px-4 py-2 rounded-md text-sm hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
                   >
                     {editingPolicy ? 'Update Policy' : 'Create Policy'}
                   </button>
                   <button
                     type="button"
                     onClick={resetPolicyForm}
-                    className="text-gray-600 hover:text-gray-800 text-sm px-4 py-2"
+                    className="text-text-secondary hover:text-text-primary text-sm px-4 py-2"
                   >
                     Cancel
                   </button>
@@ -603,35 +603,35 @@ const FERPAPage = () => {
 
           {/* Policies List */}
           {policiesLoading ? (
-            <div className="text-center py-12 text-gray-500" role="status" aria-live="polite">
+            <div className="text-center py-12 text-text-tertiary" role="status" aria-live="polite">
               Loading retention policies...
             </div>
           ) : policies.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-              <Clock className="w-12 h-12 text-gray-300 mx-auto mb-3" aria-hidden="true" />
-              <p className="text-gray-500 font-medium">No retention policies configured</p>
-              <p className="text-gray-400 text-sm mt-1">
+            <div className="bg-surface-0 rounded-lg shadow-sm p-8 text-center">
+              <Clock className="w-12 h-12 text-text-disabled mx-auto mb-3" aria-hidden="true" />
+              <p className="text-text-tertiary font-medium">No retention policies configured</p>
+              <p className="text-text-disabled text-sm mt-1">
                 Create retention policies to define how long different types of data should be kept.
               </p>
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div className="bg-surface-0 rounded-lg shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200" aria-label="Retention policies">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-border-default" aria-label="Retention policies">
+                  <thead className="bg-surface-1">
                     <tr>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Type</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Retention Period</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Name</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Data Type</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Retention Period</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Status</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Description</th>
+                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-text-tertiary uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-surface-0 divide-y divide-border-default">
                     {policies.map((policy) => (
-                      <tr key={policy.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <tr key={policy.id} className="hover:bg-surface-1">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-text-primary">
                           {policy.name}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
@@ -639,12 +639,12 @@ const FERPAPage = () => {
                             {policy.data_type}
                           </span>
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-text-secondary">
                           <div className="flex items-center space-x-1">
-                            <Clock className="w-3.5 h-3.5 text-gray-400" aria-hidden="true" />
+                            <Clock className="w-3.5 h-3.5 text-text-disabled" aria-hidden="true" />
                             <span>{policy.retention_period_days} days</span>
                             {policy.retention_period_days >= 365 && (
-                              <span className="text-gray-400 text-xs">
+                              <span className="text-text-disabled text-xs">
                                 ({(policy.retention_period_days / 365).toFixed(1)} years)
                               </span>
                             )}
@@ -652,16 +652,16 @@ const FERPAPage = () => {
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           {policy.active ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-accent-success/20 text-accent-success">
                               Active
                             </span>
                           ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-surface-2 text-text-secondary">
                               Inactive
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-500 max-w-xs">
+                        <td className="px-4 py-3 text-sm text-text-tertiary max-w-xs">
                           <p className="truncate" title={policy.description}>
                             {policy.description || '--'}
                           </p>
@@ -670,7 +670,7 @@ const FERPAPage = () => {
                           <div className="flex items-center justify-end space-x-2">
                             <button
                               onClick={() => handleEditPolicy(policy)}
-                              className="text-gray-400 hover:text-blue-600 p-1 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="text-text-disabled hover:text-brand-600 p-1 rounded focus:outline-none focus:ring-2 focus:ring-brand-500"
                               aria-label={`Edit policy ${policy.name}`}
                               title="Edit policy"
                             >
@@ -678,7 +678,7 @@ const FERPAPage = () => {
                             </button>
                             <button
                               onClick={() => handleDeletePolicy(policy.id)}
-                              className="text-gray-400 hover:text-red-600 p-1 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+                              className="text-text-disabled hover:text-accent-danger p-1 rounded focus:outline-none focus:ring-2 focus:ring-accent-danger"
                               aria-label={`Delete policy ${policy.name}`}
                               title="Delete policy"
                             >
@@ -693,19 +693,19 @@ const FERPAPage = () => {
               </div>
 
               {/* Pagination */}
-              <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+              <div className="px-4 py-3 bg-surface-1 border-t border-border-default flex items-center justify-between">
                 <button
                   onClick={() => fetchPolicies(policiesPage - 1)}
                   disabled={policiesPage <= 1}
-                  className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm border border-border-strong rounded hover:bg-surface-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
-                <span className="text-sm text-gray-600">Page {policiesPage}</span>
+                <span className="text-sm text-text-secondary">Page {policiesPage}</span>
                 <button
                   onClick={() => fetchPolicies(policiesPage + 1)}
                   disabled={!policiesHasMore}
-                  className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm border border-border-strong rounded hover:bg-surface-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>
@@ -721,30 +721,30 @@ const FERPAPage = () => {
       {activeTab === TAB_EXPORT && (
         <div id="panel-export" role="tabpanel" aria-labelledby="tab-export">
           <div className="mb-4">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-text-secondary">
               Generate data export packages for users exercising their FERPA right to inspect and review their educational records.
             </p>
           </div>
 
           {/* Export Request Form */}
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
-              <Download className="w-5 h-5 text-blue-600" aria-hidden="true" />
+          <div className="bg-surface-0 rounded-lg shadow-sm p-6 mb-6 border border-border-default">
+            <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center space-x-2">
+              <Download className="w-5 h-5 text-brand-600" aria-hidden="true" />
               <span>Create Data Export Request</span>
             </h2>
             <form onSubmit={handleCreateExport} className="flex items-end space-x-4">
               <div className="flex-1 max-w-sm">
-                <label htmlFor="export-user-id" className="block text-sm font-medium text-gray-700 mb-1">
-                  User ID <span className="text-red-500">*</span>
+                <label htmlFor="export-user-id" className="block text-sm font-medium text-text-secondary mb-1">
+                  User ID <span className="text-accent-danger">*</span>
                 </label>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-disabled" aria-hidden="true" />
                   <input
                     id="export-user-id"
                     type="text"
                     value={exportUserId}
                     onChange={(e) => setExportUserId(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-10 pr-4 py-2 border border-border-strong rounded-md text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                     placeholder="Enter user ID"
                     required
                     aria-required="true"
@@ -754,7 +754,7 @@ const FERPAPage = () => {
               <button
                 type="submit"
                 disabled={exportLoading || !exportUserId.trim()}
-                className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="flex items-center space-x-2 bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
               >
                 {exportLoading ? (
                   <>
@@ -769,19 +769,19 @@ const FERPAPage = () => {
                 )}
               </button>
             </form>
-            <p className="mt-2 text-xs text-gray-400">
+            <p className="mt-2 text-xs text-text-disabled">
               This will generate a comprehensive data package containing all educational records for the specified user.
             </p>
           </div>
 
           {/* Export Requests List */}
           <div>
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Recent Export Requests</h3>
+            <h3 className="text-sm font-medium text-text-secondary mb-3">Recent Export Requests</h3>
             {exportRequests.length === 0 ? (
-              <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-                <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" aria-hidden="true" />
-                <p className="text-gray-500 font-medium">No export requests yet</p>
-                <p className="text-gray-400 text-sm mt-1">
+              <div className="bg-surface-0 rounded-lg shadow-sm p-8 text-center">
+                <FileText className="w-12 h-12 text-text-disabled mx-auto mb-3" aria-hidden="true" />
+                <p className="text-text-tertiary font-medium">No export requests yet</p>
+                <p className="text-text-disabled text-sm mt-1">
                   Submit a user ID above to create a data export request.
                 </p>
               </div>
@@ -790,20 +790,20 @@ const FERPAPage = () => {
                 {exportRequests.map((exportReq) => (
                   <div
                     key={exportReq.id}
-                    className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex items-center justify-between"
+                    className="bg-surface-0 rounded-lg shadow-sm border border-border-default p-4 flex items-center justify-between"
                   >
                     <div className="flex items-center space-x-4">
                       <div className="flex-shrink-0">
-                        <FileText className="w-8 h-8 text-gray-400" aria-hidden="true" />
+                        <FileText className="w-8 h-8 text-text-disabled" aria-hidden="true" />
                       </div>
                       <div>
                         <div className="flex items-center space-x-2">
-                          <span className="text-sm font-medium text-gray-900">
+                          <span className="text-sm font-medium text-text-primary">
                             Export #{exportReq.id}
                           </span>
                           {getStatusBadge(exportReq.status || 'processing')}
                         </div>
-                        <div className="text-xs text-gray-500 mt-0.5">
+                        <div className="text-xs text-text-tertiary mt-0.5">
                           User ID: {exportReq.user_id} | Created: {formatDate(exportReq.created_at)}
                         </div>
                       </div>
@@ -818,7 +818,7 @@ const FERPAPage = () => {
                       {(exportReq.status === 'completed' || exportReq.status === 'ready') && exportReq.download_url && (
                         <a
                           href={exportReq.download_url}
-                          className="inline-flex items-center space-x-1 px-3 py-1.5 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                          className="inline-flex items-center space-x-1 px-3 py-1.5 bg-accent-success text-white text-sm rounded-md hover:bg-accent-success/90 transition-colors focus:outline-none focus:ring-2 focus:ring-accent-success focus:ring-offset-2"
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label={`Download export #${exportReq.id}`}
@@ -828,7 +828,7 @@ const FERPAPage = () => {
                         </a>
                       )}
                       {exportReq.status === 'failed' && (
-                        <span className="text-sm text-red-600 flex items-center space-x-1">
+                        <span className="text-sm text-accent-danger flex items-center space-x-1">
                           <AlertTriangle className="w-3.5 h-3.5" aria-hidden="true" />
                           <span>Failed</span>
                         </span>

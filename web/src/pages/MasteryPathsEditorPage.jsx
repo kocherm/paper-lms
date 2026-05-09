@@ -140,14 +140,14 @@ const MasteryPathsEditorPage = () => {
         <div className="flex items-center gap-3 mb-2">
           <Link
             to={`/courses/${courseId}/assignments/${assignmentId}`}
-            className="text-blue-600 hover:underline inline-flex items-center text-sm"
+            className="text-brand-600 hover:underline inline-flex items-center text-sm"
           >
             <ArrowLeft size={14} className="mr-1" />
             Back to assignment
           </Link>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Mastery Paths</h1>
-        <p className="text-gray-600 mb-6">
+        <h1 className="text-2xl font-bold text-text-primary mb-1">Mastery Paths</h1>
+        <p className="text-text-secondary mb-6">
           {assignment?.name
             ? `Conditional follow-ups for "${assignment.name}".`
             : 'Conditional follow-ups for this assignment.'}{' '}
@@ -157,7 +157,7 @@ const MasteryPathsEditorPage = () => {
 
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <svg className="animate-spin h-6 w-6 text-blue-600" viewBox="0 0 24 24">
+            <svg className="animate-spin h-6 w-6 text-brand-600" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
             </svg>
@@ -165,7 +165,7 @@ const MasteryPathsEditorPage = () => {
         ) : (
           <>
             {error && (
-              <Card className="p-4 mb-4 bg-red-50 border-red-200 text-red-700">
+              <Card className="p-4 mb-4 bg-accent-danger/10 border-accent-danger/30 text-accent-danger">
                 <p>{error}</p>
                 <Button size="sm" variant="secondary" className="mt-2" onClick={load}>
                   Try Again
@@ -211,7 +211,7 @@ const MasteryPathsEditorPage = () => {
               </Button>
             </div>
             {savedAt && !saving && (
-              <p className="text-sm text-green-700 mt-2">
+              <p className="text-sm text-accent-success mt-2">
                 Saved at {savedAt.toLocaleTimeString()}.
               </p>
             )}

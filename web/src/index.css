@@ -5,122 +5,201 @@
 @tailwind utilities;
 
 /* =========================================================
-   Design tokens — semantic palette as RGB channels.
-   Use as: rgb(var(--token) / <alpha>)  via Tailwind colors.
+   Paper LMS design tokens.
+
+   Designed to be legible on:
+     • a desktop browser, light and dark
+     • an e-ink tablet with ~32 shades of grey
+   The palette is grayscale-forward (the "paper") with one
+   restrained Canvas-style blue and three muted status accents.
+   Avoid dropping in saturated tints — they dither into mud
+   on grayscale displays.
+
+   Tokens are RGB channels so Tailwind can compose alpha:
+     class="bg-surface-0/80"  →  rgb(var(--color-surface-0) / 0.8)
    ========================================================= */
+
+/* ---------- LIGHT (paper) ---------- */
 :root {
-  /* Surfaces (light) */
-  --color-surface-0: 255 255 255;
-  --color-surface-1: 249 250 251;
-  --color-surface-2: 243 244 246;
-  --color-surface-raised: 255 255 255;
+  /* Surfaces — warm neutral whites, not cold blue-grays */
+  --color-surface-0:      252 252 250;   /* page — like real paper */
+  --color-surface-1:      247 247 244;   /* subdued panel */
+  --color-surface-2:      240 240 236;   /* recessed / sunken */
+  --color-surface-raised: 255 255 255;   /* card / popover lifted above page */
 
-  /* Borders */
-  --color-border-subtle:  243 244 246;
-  --color-border-default: 229 231 235;
-  --color-border-strong:  209 213 219;
+  /* Borders — soft graphite */
+  --color-border-subtle:  234 234 230;
+  --color-border-default: 218 218 213;
+  --color-border-strong:  179 179 173;
 
-  /* Text */
-  --color-text-primary:   17 24 39;
-  --color-text-secondary: 55 65 81;
-  --color-text-tertiary:  107 114 128;
-  --color-text-disabled:  156 163 175;
+  /* Text — Canvas-style deep gray, never pitch black */
+  --color-text-primary:   38 41 47;      /* #26292F */
+  --color-text-secondary: 75 81 92;
+  --color-text-tertiary:  118 124 134;
+  --color-text-disabled:  165 170 178;
 
-  /* Brand (Tailwind blue) */
-  --color-brand-50:  239 246 255;
-  --color-brand-100: 219 234 254;
-  --color-brand-200: 191 219 254;
-  --color-brand-300: 147 197 253;
-  --color-brand-400: 96 165 250;
-  --color-brand-500: 59 130 246;
-  --color-brand-600: 37 99 235;
-  --color-brand-700: 29 78 216;
-  --color-brand-800: 30 64 175;
-  --color-brand-900: 30 58 138;
+  /* Brand — restrained Canvas-style blue.
+     Anchored at brand-600 (#1B6EB1), close to Canvas's #008EE2
+     but desaturated so it reads as paper-ink, not vibe-coded. */
+  --color-brand-50:  235 243 250;
+  --color-brand-100: 213 229 244;
+  --color-brand-200: 173 205 232;
+  --color-brand-300: 121 175 215;
+  --color-brand-400: 65 138 191;
+  --color-brand-500: 38 117 175;
+  --color-brand-600: 27 110 177;          /* #1B6EB1 — primary */
+  --color-brand-700: 23 88 141;
+  --color-brand-800: 22 70 110;
+  --color-brand-900: 24 56 86;
 
-  /* Accents */
-  --color-accent-info:    59 130 246;
-  --color-accent-success: 22 163 74;
-  --color-accent-warning: 217 119 6;
-  --color-accent-danger:  220 38 38;
+  /* Accents — muted; status colors must read on grayscale */
+  --color-accent-info:    27 110 177;     /* same as brand */
+  --color-accent-success: 47 122 65;      /* muted forest */
+  --color-accent-warning: 156 109 33;     /* ochre, not neon */
+  --color-accent-danger:  171 60 36;      /* Canvas-red brick */
 
-  /* shadcn/ui (slate) — HSL channels */
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 222.2 84% 4.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
-  --primary: 222.2 47.4% 11.2%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --accent: 210 40% 96.1%;
-  --accent-foreground: 222.2 47.4% 11.2%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 222.2 84% 4.9%;
-  --radius: 0.5rem;
+  /* Chrome — persistent app shell; matches Canvas chrome */
+  --color-chrome-sidebar:    45 59 69;    /* #2D3B45 */
+  --color-chrome-sidebar-fg: 252 252 250;
+  --color-chrome-tooltip:    38 41 47;
+  --color-chrome-tooltip-fg: 252 252 250;
+
+  /* shadcn/ui — HSL channels mapped to the same palette so
+     shadcn primitives (Card, Button, Dropdown, …) match. */
+  --background:        0 0% 99%;
+  --foreground:        220 10% 17%;
+  --card:              0 0% 100%;
+  --card-foreground:   220 10% 17%;
+  --popover:           0 0% 100%;
+  --popover-foreground:220 10% 17%;
+  --primary:           207 74% 40%;
+  --primary-foreground:0 0% 99%;
+  --secondary:         60 9% 95%;
+  --secondary-foreground: 220 10% 17%;
+  --muted:             60 8% 94%;
+  --muted-foreground:  220 8% 49%;
+  --accent:            60 9% 95%;
+  --accent-foreground: 220 10% 17%;
+  --destructive:       12 65% 41%;
+  --destructive-foreground: 0 0% 99%;
+  --input:             45 8% 87%;
+  --ring:              207 74% 40%;
+  --radius:            0.5rem;
 }
 
+/* ---------- DARK (graphite) ---------- */
+/* Warm dark grays, not cold navy. Pure black is hard on the eye;
+   warm graphite reads like ink-on-charcoal-paper at night. */
 .dark {
-  /* Surfaces (dark) — deep slate base, layered upward */
-  --color-surface-0:      9 14 25;
-  --color-surface-1:      15 23 42;
-  --color-surface-2:      30 41 59;
-  --color-surface-raised: 30 41 59;
+  /* Surfaces */
+  --color-surface-0:      24 24 27;       /* page — warm graphite */
+  --color-surface-1:      30 30 33;
+  --color-surface-2:      40 40 44;
+  --color-surface-raised: 36 36 40;       /* cards lift above page */
 
   /* Borders */
-  --color-border-subtle:  30 41 59;
-  --color-border-default: 51 65 85;
-  --color-border-strong:  71 85 105;
+  --color-border-subtle:  44 44 49;
+  --color-border-default: 60 60 66;
+  --color-border-strong:  92 92 100;
 
   /* Text */
-  --color-text-primary:   248 250 252;
-  --color-text-secondary: 203 213 225;
-  --color-text-tertiary:  148 163 184;
-  --color-text-disabled:  100 116 139;
+  --color-text-primary:   240 239 232;    /* warm white */
+  --color-text-secondary: 196 195 188;
+  --color-text-tertiary:  140 140 134;
+  --color-text-disabled:  90 92 96;
 
-  /* Brand — inverted scale: 50 reads as deepest, 900 as lightest on dark */
-  --color-brand-50:  23 37 84;
-  --color-brand-100: 30 58 138;
-  --color-brand-200: 30 64 175;
-  --color-brand-300: 29 78 216;
-  --color-brand-400: 37 99 235;
-  --color-brand-500: 59 130 246;
-  --color-brand-600: 96 165 250;
-  --color-brand-700: 147 197 253;
-  --color-brand-800: 191 219 254;
-  --color-brand-900: 219 234 254;
+  /* Brand — lifted ~2 stops so it reads on dark surfaces */
+  --color-brand-50:  24 56 86;
+  --color-brand-100: 22 70 110;
+  --color-brand-200: 23 88 141;
+  --color-brand-300: 27 110 177;
+  --color-brand-400: 38 117 175;
+  --color-brand-500: 65 138 191;
+  --color-brand-600: 121 175 215;          /* primary on dark */
+  --color-brand-700: 173 205 232;
+  --color-brand-800: 213 229 244;
+  --color-brand-900: 235 243 250;
 
-  /* Accents — slightly desaturated for dark surfaces */
-  --color-accent-info:    96 165 250;
-  --color-accent-success: 74 222 128;
-  --color-accent-warning: 251 191 36;
-  --color-accent-danger:  248 113 113;
+  /* Accents — slightly lifted for legibility on dark, still muted */
+  --color-accent-info:    121 175 215;
+  --color-accent-success: 86 167 102;
+  --color-accent-warning: 200 159 76;
+  --color-accent-danger:  207 102 80;
 
-  /* shadcn/ui dark (slate) — HSL channels */
-  --background: 222.2 84% 4.9%;
-  --foreground: 210 40% 98%;
-  --card: 222.2 84% 4.9%;
-  --card-foreground: 210 40% 98%;
-  --popover: 222.2 84% 4.9%;
-  --popover-foreground: 210 40% 98%;
-  --primary: 210 40% 98%;
-  --primary-foreground: 222.2 47.4% 11.2%;
-  --secondary: 217.2 32.6% 17.5%;
-  --secondary-foreground: 210 40% 98%;
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
-  --accent: 217.2 32.6% 17.5%;
-  --accent-foreground: 210 40% 98%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 212.7 26.8% 83.9%;
+  /* Chrome — lift the sidebar so it reads as a distinct layer */
+  --color-chrome-sidebar:    18 18 21;
+  --color-chrome-sidebar-fg: 240 239 232;
+  --color-chrome-tooltip:    240 239 232;
+  --color-chrome-tooltip-fg: 24 24 27;
+
+  /* shadcn/ui dark — mapped to the same palette */
+  --background:        240 4% 10%;
+  --foreground:        45 12% 92%;
+  --card:              240 5% 14%;
+  --card-foreground:   45 12% 92%;
+  --popover:           240 5% 14%;
+  --popover-foreground:45 12% 92%;
+  --primary:           207 50% 66%;
+  --primary-foreground:240 4% 10%;
+  --secondary:         240 4% 16%;
+  --secondary-foreground: 45 12% 92%;
+  --muted:             240 4% 16%;
+  --muted-foreground:  45 8% 60%;
+  --accent:            240 4% 16%;
+  --accent-foreground: 45 12% 92%;
+  --destructive:       12 55% 56%;
+  --destructive-foreground: 45 12% 92%;
+  --input:             240 4% 22%;
+  --ring:              207 50% 66%;
+}
+
+/* Sidebar scrollbar — slim, ink-on-paper, only appears on hover.
+   The default OS scrollbar inside the dark chrome sidebar reads as a
+   bright white bar that clashes with the muted palette. */
+.sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 200ms ease;
+}
+.sidebar-scroll:hover,
+.sidebar-scroll:focus-within {
+  scrollbar-color: rgb(255 255 255 / 0.20) transparent;
+}
+.sidebar-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 3px;
+  transition: background-color 200ms ease;
+}
+.sidebar-scroll:hover::-webkit-scrollbar-thumb,
+.sidebar-scroll:focus-within::-webkit-scrollbar-thumb {
+  background-color: rgb(255 255 255 / 0.20);
+}
+
+/* Generic content scrollbars — same restrained style for any page
+   element using overflow + .paper-scroll. Uses ink-on-paper grays. */
+.paper-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--color-border-strong) / 0.5) transparent;
+}
+.paper-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.paper-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.paper-scroll::-webkit-scrollbar-thumb {
+  background-color: rgb(var(--color-border-strong) / 0.5);
+  border-radius: 4px;
+}
+.paper-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(var(--color-border-strong) / 0.8);
 }
 
 @media (prefers-reduced-motion: reduce) {

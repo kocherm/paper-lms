@@ -67,12 +67,12 @@ export default function InstallPrompt() {
   return (
     <div
       role="banner"
-      className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-lg rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 shadow-lg sm:bottom-6 sm:left-auto sm:right-6"
+      className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-w-lg rounded-lg border border-blue-200 bg-brand-50 px-4 py-3 shadow-lg sm:bottom-6 sm:left-auto sm:right-6"
     >
       <div className="flex items-center gap-3">
         <div className="flex-shrink-0">
           <svg
-            className="h-8 w-8 text-blue-600"
+            className="h-8 w-8 text-brand-600"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -93,14 +93,14 @@ export default function InstallPrompt() {
         <div className="flex flex-shrink-0 items-center gap-2">
           <button
             onClick={handleInstall}
-            className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+            className="rounded-md bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-colors"
           >
             Install
           </button>
           <button
             onClick={handleDismiss}
             aria-label="Dismiss install prompt"
-            className="rounded-md p-1 text-blue-400 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+            className="rounded-md p-1 text-blue-400 hover:text-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-colors"
           >
             <svg
               className="h-5 w-5"

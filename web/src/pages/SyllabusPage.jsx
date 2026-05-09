@@ -8,9 +8,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { sanitizeHTML } from '../components/RichContentViewer';
 
 const GROUP_COLORS = {
-  '#3b82f6': { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300', dot: 'bg-blue-500' },
-  '#10b981': { bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-300', dot: 'bg-emerald-500' },
-  '#f59e0b': { bg: 'bg-amber-100', text: 'text-amber-800', border: 'border-amber-300', dot: 'bg-amber-500' },
+  '#3b82f6': { bg: 'bg-brand-100', text: 'text-brand-800', border: 'border-brand-300', dot: 'bg-brand-500' },
+  '#10b981': { bg: 'bg-accent-success/20', text: 'text-accent-success', border: 'border-accent-success/40', dot: 'bg-accent-success' },
+  '#f59e0b': { bg: 'bg-accent-warning/20', text: 'text-accent-warning', border: 'border-accent-warning/40', dot: 'bg-accent-warning' },
   '#f43f5e': { bg: 'bg-rose-100', text: 'text-rose-800', border: 'border-rose-300', dot: 'bg-rose-500' },
   '#8b5cf6': { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-300', dot: 'bg-purple-500' },
   '#14b8a6': { bg: 'bg-teal-100', text: 'text-teal-800', border: 'border-teal-300', dot: 'bg-teal-500' },
@@ -19,14 +19,14 @@ const GROUP_COLORS = {
 };
 
 const STATUS_CONFIG = {
-  submitted: { icon: CheckCircle, label: 'Submitted', className: 'text-green-600' },
-  graded: { icon: Star, label: 'Graded', className: 'text-amber-500' },
-  upcoming: { icon: Clock, label: 'Upcoming', className: 'text-blue-500' },
-  missing: { icon: AlertTriangle, label: 'Overdue', className: 'text-red-500' },
+  submitted: { icon: CheckCircle, label: 'Submitted', className: 'text-accent-success' },
+  graded: { icon: Star, label: 'Graded', className: 'text-accent-warning' },
+  upcoming: { icon: Clock, label: 'Upcoming', className: 'text-brand-500' },
+  missing: { icon: AlertTriangle, label: 'Overdue', className: 'text-accent-danger' },
 };
 
 function getColorClasses(hex) {
-  return GROUP_COLORS[hex] || { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-300', dot: 'bg-gray-500' };
+  return GROUP_COLORS[hex] || { bg: 'bg-surface-2', text: 'text-text-primary', border: 'border-border-strong', dot: 'bg-text-tertiary' };
 }
 
 function formatDate(dateStr) {
@@ -91,7 +91,7 @@ function GradingBar({ breakdown }) {
 
   return (
     <div className="space-y-3">
-      <div className="flex h-8 w-full rounded-lg overflow-hidden shadow-inner bg-gray-100" role="img" aria-label="Grading weight distribution">
+      <div className="flex h-8 w-full rounded-lg overflow-hidden shadow-inner bg-surface-2" role="img" aria-label="Grading weight distribution">
         {breakdown.map((group, idx) => {
           if (group.group_weight <= 0) return null;
           const widthPct = group.group_weight;
@@ -108,7 +108,7 @@ function GradingBar({ breakdown }) {
         })}
         {remaining > 0 && (
           <div
-            className="h-full flex items-center justify-center text-xs font-medium text-gray-400 bg-gray-200"
+            className="h-full flex items-center justify-center text-xs font-medium text-text-disabled bg-border-default"
             style={{ width: remaining + '%' }}
             title={'Unassigned: ' + remaining.toFixed(1) + '%'}
           >
@@ -127,7 +127,7 @@ function GradingBar({ breakdown }) {
               </div>
               <div className="mt-1 flex items-baseline gap-2">
                 <span className={'text-lg font-bold ' + colors.text}>{group.group_weight}%</span>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-text-tertiary">
                   {group.assignment_count} {group.assignment_count === 1 ? 'assignment' : 'assignments'}
                 </span>
               </div>
@@ -135,13 +135,13 @@ function GradingBar({ breakdown }) {
           );
         })}
         {remaining > 0 && (
-          <div className="rounded-lg border px-3 py-2 bg-gray-50 border-gray-200">
+          <div className="rounded-lg border px-3 py-2 bg-surface-1 border-border-default">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-gray-300"></span>
-              <span className="text-sm font-medium text-gray-500">Unassigned</span>
+              <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-border-strong"></span>
+              <span className="text-sm font-medium text-text-tertiary">Unassigned</span>
             </div>
             <div className="mt-1">
-              <span className="text-lg font-bold text-gray-400">{remaining.toFixed(1)}%</span>
+              <span className="text-lg font-bold text-text-disabled">{remaining.toFixed(1)}%</span>
             </div>
           </div>
         )}
@@ -156,23 +156,23 @@ function TimelineItem({ item, isStudent }) {
   const colors = item.group_color ? getColorClasses(item.group_color) : null;
 
   return (
-    <div className="flex gap-4 py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors group">
+    <div className="flex gap-4 py-3 px-4 rounded-lg hover:bg-surface-1 transition-colors group">
       {/* Date column */}
       <div className="w-20 flex-shrink-0 text-right pt-0.5">
         {date ? (
           <div>
-            <div className="text-sm font-medium text-gray-700">{formatDate(date)}</div>
-            <div className="text-xs text-gray-400">{formatTime(date)}</div>
+            <div className="text-sm font-medium text-text-secondary">{formatDate(date)}</div>
+            <div className="text-xs text-text-disabled">{formatTime(date)}</div>
           </div>
         ) : (
-          <span className="text-xs text-gray-400 italic">No date</span>
+          <span className="text-xs text-text-disabled italic">No date</span>
         )}
       </div>
 
       {/* Timeline dot and line */}
       <div className="flex flex-col items-center flex-shrink-0">
-        <div className={'w-3 h-3 rounded-full mt-1.5 border-2 ' + (isAssignment ? 'border-blue-400 bg-blue-100' : 'border-gray-300 bg-white')}></div>
-        <div className="w-0.5 flex-1 bg-gray-200 mt-1"></div>
+        <div className={'w-3 h-3 rounded-full mt-1.5 border-2 ' + (isAssignment ? 'border-brand-400 bg-brand-100' : 'border-border-strong bg-surface-0')}></div>
+        <div className="w-0.5 flex-1 bg-border-default mt-1"></div>
       </div>
 
       {/* Content */}
@@ -181,11 +181,11 @@ function TimelineItem({ item, isStudent }) {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               {isAssignment ? (
-                <BookOpen className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                <BookOpen className="w-4 h-4 text-brand-500 flex-shrink-0" />
               ) : (
-                <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <Calendar className="w-4 h-4 text-text-disabled flex-shrink-0" />
               )}
-              <span className="font-medium text-gray-900 truncate">{item.title}</span>
+              <span className="font-medium text-text-primary truncate">{item.title}</span>
               {colors && item.group_name && (
                 <span className={'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ' + colors.bg + ' ' + colors.text}>
                   <span className={'w-1.5 h-1.5 rounded-full ' + colors.dot}></span>
@@ -194,7 +194,7 @@ function TimelineItem({ item, isStudent }) {
               )}
             </div>
             {isAssignment && item.points_possible != null && (
-              <div className="mt-1 text-sm text-gray-500">
+              <div className="mt-1 text-sm text-text-tertiary">
                 {item.points_possible} {item.points_possible === 1 ? 'point' : 'points'}
               </div>
             )}
@@ -295,8 +295,8 @@ const SyllabusPage = () => {
       <Layout>
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-500">Loading syllabus...</p>
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-600 mx-auto"></div>
+            <p className="mt-4 text-text-tertiary">Loading syllabus...</p>
           </div>
         </div>
       </Layout>
@@ -306,10 +306,10 @@ const SyllabusPage = () => {
   if (error) {
     return (
       <Layout>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-          <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-2" />
-          <h2 className="text-lg font-semibold text-red-800">Failed to load syllabus</h2>
-          <p className="text-red-600 mt-1">{error}</p>
+        <div className="bg-accent-danger/10 border border-accent-danger/30 rounded-lg p-6 text-center">
+          <AlertTriangle className="w-8 h-8 text-accent-danger mx-auto mb-2" />
+          <h2 className="text-lg font-semibold text-accent-danger">Failed to load syllabus</h2>
+          <p className="text-accent-danger mt-1">{error}</p>
         </div>
       </Layout>
     );
@@ -325,22 +325,22 @@ const SyllabusPage = () => {
       <CourseNav />
       <div className="max-w-4xl mx-auto space-y-8 print:space-y-6">
         {/* Header */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-surface-0 rounded-xl shadow-sm border border-border-default overflow-hidden">
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-8 sm:px-8">
             <h1 className="text-2xl sm:text-3xl font-bold text-white">{course.name}</h1>
             {course.course_code && (
-              <p className="mt-1 text-blue-100 text-sm font-medium">{course.course_code}</p>
+              <p className="mt-1 text-brand-100 text-sm font-medium">{course.course_code}</p>
             )}
-            <p className="mt-2 text-blue-200 text-sm">
+            <p className="mt-2 text-brand-200 text-sm">
               {formatDateRange(course.start_at, course.end_at)}
             </p>
           </div>
 
           {/* Custom syllabus content */}
           {course.syllabus_body && (
-            <div className="px-6 py-6 sm:px-8 border-t border-gray-100">
+            <div className="px-6 py-6 sm:px-8 border-t border-border-subtle">
               <div
-                className="prose prose-sm max-w-none text-gray-700 prose-headings:text-gray-900 prose-a:text-blue-600"
+                className="prose prose-sm max-w-none text-text-secondary prose-headings:text-text-primary prose-a:text-brand-600"
                 dangerouslySetInnerHTML={{ __html: sanitizeHTML(course.syllabus_body) }}
               />
             </div>
@@ -350,30 +350,30 @@ const SyllabusPage = () => {
         {/* Student Progress Stats */}
         {isStudent && stats && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="bg-white rounded-lg border border-gray-200 p-4 text-center shadow-sm">
-              <div className="text-2xl font-bold text-green-600">{stats.submitted}</div>
-              <div className="text-xs text-gray-500 mt-1">Submitted</div>
+            <div className="bg-surface-0 rounded-lg border border-border-default p-4 text-center shadow-sm">
+              <div className="text-2xl font-bold text-accent-success">{stats.submitted}</div>
+              <div className="text-xs text-text-tertiary mt-1">Submitted</div>
             </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-4 text-center shadow-sm">
-              <div className="text-2xl font-bold text-amber-500">{stats.graded}</div>
-              <div className="text-xs text-gray-500 mt-1">Graded</div>
+            <div className="bg-surface-0 rounded-lg border border-border-default p-4 text-center shadow-sm">
+              <div className="text-2xl font-bold text-accent-warning">{stats.graded}</div>
+              <div className="text-xs text-text-tertiary mt-1">Graded</div>
             </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-4 text-center shadow-sm">
-              <div className="text-2xl font-bold text-blue-500">{stats.upcoming}</div>
-              <div className="text-xs text-gray-500 mt-1">Upcoming</div>
+            <div className="bg-surface-0 rounded-lg border border-border-default p-4 text-center shadow-sm">
+              <div className="text-2xl font-bold text-brand-500">{stats.upcoming}</div>
+              <div className="text-xs text-text-tertiary mt-1">Upcoming</div>
             </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-4 text-center shadow-sm">
-              <div className={'text-2xl font-bold ' + (stats.missing > 0 ? 'text-red-500' : 'text-gray-300')}>{stats.missing}</div>
-              <div className="text-xs text-gray-500 mt-1">Overdue</div>
+            <div className="bg-surface-0 rounded-lg border border-border-default p-4 text-center shadow-sm">
+              <div className={'text-2xl font-bold ' + (stats.missing > 0 ? 'text-accent-danger' : 'text-text-disabled')}>{stats.missing}</div>
+              <div className="text-xs text-text-tertiary mt-1">Overdue</div>
             </div>
           </div>
         )}
 
         {/* Grading Breakdown */}
         {grading_breakdown && grading_breakdown.length > 0 && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <div className="w-1 h-5 bg-blue-500 rounded-full"></div>
+          <div className="bg-surface-0 rounded-xl shadow-sm border border-border-default p-6 sm:p-8">
+            <h2 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+              <div className="w-1 h-5 bg-brand-500 rounded-full"></div>
               Grading Breakdown
             </h2>
             <GradingBar breakdown={grading_breakdown} />
@@ -381,12 +381,12 @@ const SyllabusPage = () => {
         )}
 
         {/* Assignment Timeline */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 sm:px-8 border-b border-gray-100 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+        <div className="bg-surface-0 rounded-xl shadow-sm border border-border-default overflow-hidden">
+          <div className="px-6 py-4 sm:px-8 border-b border-border-subtle flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-text-primary flex items-center gap-2">
               <div className="w-1 h-5 bg-indigo-500 rounded-full"></div>
               Assignment Timeline
-              <span className="text-sm font-normal text-gray-400 ml-2">
+              <span className="text-sm font-normal text-text-disabled ml-2">
                 {filteredTimeline.length} {filteredTimeline.length === 1 ? 'item' : 'items'}
               </span>
             </h2>
@@ -395,20 +395,20 @@ const SyllabusPage = () => {
             <div className="relative print:hidden">
               <button
                 onClick={() => setFilterOpen(!filterOpen)}
-                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
+                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-text-secondary bg-surface-1 border border-border-default rounded-lg hover:bg-surface-2 transition-colors"
               >
                 <Filter className="w-3.5 h-3.5" />
                 {currentFilter?.label || 'Filter'}
                 <ChevronDown className={'w-3.5 h-3.5 transition-transform ' + (filterOpen ? 'rotate-180' : '')} />
               </button>
               {filterOpen && (
-                <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-10 py-1">
+                <div className="absolute right-0 mt-1 w-44 bg-surface-0 border border-border-default rounded-lg shadow-lg z-10 py-1">
                   {FILTER_OPTIONS.map(opt => (
                     <button
                       key={opt.value}
                       onClick={() => { setFilter(opt.value); setFilterOpen(false); }}
-                      className={'w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ' +
-                        (filter === opt.value ? 'text-blue-600 font-medium bg-blue-50' : 'text-gray-700')}
+                      className={'w-full text-left px-4 py-2 text-sm hover:bg-surface-1 transition-colors ' +
+                        (filter === opt.value ? 'text-brand-600 font-medium bg-brand-50' : 'text-text-secondary')}
                     >
                       {opt.label}
                     </button>
@@ -420,7 +420,7 @@ const SyllabusPage = () => {
 
           <div className="px-2 sm:px-4 py-2">
             {groupedTimeline.length === 0 ? (
-              <div className="text-center py-12 text-gray-400">
+              <div className="text-center py-12 text-text-disabled">
                 <Calendar className="w-10 h-10 mx-auto mb-3 opacity-50" />
                 <p className="font-medium">No items to display</p>
                 <p className="text-sm mt-1">
@@ -430,8 +430,8 @@ const SyllabusPage = () => {
             ) : (
               groupedTimeline.map((group, gIdx) => (
                 <div key={gIdx} className="mb-2">
-                  <div className="sticky top-0 bg-white z-[5] px-4 py-2">
-                    <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{group.label}</h3>
+                  <div className="sticky top-0 bg-surface-0 z-[5] px-4 py-2">
+                    <h3 className="text-xs font-semibold text-text-disabled uppercase tracking-wider">{group.label}</h3>
                   </div>
                   {group.items.map((item, iIdx) => (
                     <TimelineItem key={item.type + '-' + item.id + '-' + iIdx} item={item} isStudent={isStudent} />

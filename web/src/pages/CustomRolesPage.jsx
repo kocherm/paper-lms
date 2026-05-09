@@ -4,18 +4,18 @@ import Layout from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
 
 const PERMISSION_CATEGORIES = {
-  'Course Management': 'bg-blue-100 text-blue-800',
-  'User Management': 'bg-green-100 text-green-800',
+  'Course Management': 'bg-brand-100 text-brand-800',
+  'User Management': 'bg-accent-success/20 text-accent-success',
   'Administration': 'bg-purple-100 text-purple-800',
   'Grading & Submissions': 'bg-orange-100 text-orange-800',
 };
 
 const BASE_ROLE_TYPES = [
-  { value: 'teacher', label: 'Teacher', color: 'bg-blue-100 text-blue-800' },
-  { value: 'ta', label: 'Teaching Assistant', color: 'bg-teal-100 text-teal-800' },
-  { value: 'student', label: 'Student', color: 'bg-green-100 text-green-800' },
-  { value: 'observer', label: 'Observer', color: 'bg-gray-100 text-gray-700' },
-  { value: 'admin', label: 'Admin', color: 'bg-red-100 text-red-800' },
+  { value: 'teacher', label: 'Teacher', color: 'bg-brand-100 text-brand-800' },
+  { value: 'ta', label: 'Teaching Assistant', color: 'bg-accent-success/20 text-accent-success' },
+  { value: 'student', label: 'Student', color: 'bg-accent-success/20 text-accent-success' },
+  { value: 'observer', label: 'Observer', color: 'bg-surface-2 text-text-secondary' },
+  { value: 'admin', label: 'Admin', color: 'bg-accent-danger/20 text-accent-danger' },
 ];
 
 const CustomRolesPage = () => {
@@ -328,7 +328,7 @@ const CustomRolesPage = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="text-center py-12 text-gray-500" role="status" aria-live="polite">
+        <div className="text-center py-12 text-text-tertiary" role="status" aria-live="polite">
           Loading custom roles...
         </div>
       </Layout>
@@ -341,26 +341,26 @@ const CustomRolesPage = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Shield className="w-6 h-6 text-indigo-600" aria-hidden="true" />
-            <h1 className="text-2xl font-bold text-gray-900">Custom Roles & Permissions</h1>
+            <h1 className="text-2xl font-bold text-text-primary">Custom Roles & Permissions</h1>
           </div>
           <button
             onClick={() => { resetForm(); setShowCreateForm(!showCreateForm); }}
-            className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="flex items-center space-x-2 bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
             aria-expanded={showCreateForm}
           >
             <Plus className="w-4 h-4" aria-hidden="true" />
             <span>New Role</span>
           </button>
         </div>
-        <p className="mt-2 text-sm text-gray-500">
+        <p className="mt-2 text-sm text-text-tertiary">
           Create and manage custom roles with granular permissions. Start from a preset template or build from scratch.
         </p>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-md mb-4" role="alert">
+        <div className="bg-accent-danger/10 border border-accent-danger/30 text-accent-danger p-3 rounded-md mb-4" role="alert">
           {error}
-          <button onClick={() => setError(null)} className="ml-2 text-red-500 hover:text-red-700 text-sm" aria-label="Dismiss error">
+          <button onClick={() => setError(null)} className="ml-2 text-accent-danger hover:text-accent-danger text-sm" aria-label="Dismiss error">
             Dismiss
           </button>
         </div>
@@ -369,15 +369,15 @@ const CustomRolesPage = () => {
       {/* Clone Modal */}
       {showCloneModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-label="Clone role">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+          <div className="bg-surface-0 rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Clone Role: {showCloneModal.name}</h3>
-              <button onClick={() => setShowCloneModal(null)} className="text-gray-400 hover:text-gray-600" aria-label="Close dialog">
+              <button onClick={() => setShowCloneModal(null)} className="text-text-disabled hover:text-text-secondary" aria-label="Close dialog">
                 <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
             <div className="mb-4">
-              <label htmlFor="clone-name" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="clone-name" className="block text-sm font-medium text-text-secondary mb-1">
                 New Role Name
               </label>
               <input
@@ -385,7 +385,7 @@ const CustomRolesPage = () => {
                 type="text"
                 value={cloneName}
                 onChange={(e) => setCloneName(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                 placeholder={`${showCloneModal.name} (Copy)`}
                 autoFocus
               />
@@ -393,13 +393,13 @@ const CustomRolesPage = () => {
             <div className="flex items-center justify-end space-x-3">
               <button
                 onClick={() => setShowCloneModal(null)}
-                className="text-gray-600 hover:text-gray-800 text-sm px-4 py-2"
+                className="text-text-secondary hover:text-text-primary text-sm px-4 py-2"
               >
                 Cancel
               </button>
               <button
                 onClick={handleClone}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="bg-brand-600 text-white px-4 py-2 rounded-md text-sm hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
               >
                 Clone Role
               </button>
@@ -410,35 +410,35 @@ const CustomRolesPage = () => {
 
       {/* Create/Edit Form */}
       {showCreateForm && (
-        <div className="bg-white rounded-lg shadow p-6 mb-6" role="region" aria-label={editingRole ? 'Edit role' : 'Create role'}>
+        <div className="bg-surface-0 rounded-lg shadow p-6 mb-6" role="region" aria-label={editingRole ? 'Edit role' : 'Create role'}>
           <h2 className="text-lg font-semibold mb-4">{editingRole ? 'Edit Role' : 'Create New Role'}</h2>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Info */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label htmlFor="role-name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Role Name <span className="text-red-500">*</span>
+                <label htmlFor="role-name" className="block text-sm font-medium text-text-secondary mb-1">
+                  Role Name <span className="text-accent-danger">*</span>
                 </label>
                 <input
                   id="role-name"
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                   placeholder="e.g. Department Chair"
                   required
                   aria-required="true"
                 />
               </div>
               <div>
-                <label htmlFor="role-base-type" className="block text-sm font-medium text-gray-700 mb-1">
-                  Base Role Type <span className="text-red-500">*</span>
+                <label htmlFor="role-base-type" className="block text-sm font-medium text-text-secondary mb-1">
+                  Base Role Type <span className="text-accent-danger">*</span>
                 </label>
                 <select
                   id="role-base-type"
                   value={formData.base_role_type}
                   onChange={(e) => setFormData({ ...formData, base_role_type: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                   aria-required="true"
                 >
                   {BASE_ROLE_TYPES.map((rt) => (
@@ -447,7 +447,7 @@ const CustomRolesPage = () => {
                 </select>
               </div>
               <div>
-                <label htmlFor="role-label" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="role-label" className="block text-sm font-medium text-text-secondary mb-1">
                   Display Label
                 </label>
                 <input
@@ -455,7 +455,7 @@ const CustomRolesPage = () => {
                   type="text"
                   value={formData.label}
                   onChange={(e) => setFormData({ ...formData, label: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                   placeholder="Optional display label"
                 />
               </div>
@@ -464,14 +464,14 @@ const CustomRolesPage = () => {
             {/* Preset Selector */}
             {!editingRole && presets.length > 0 && (
               <div>
-                <label htmlFor="role-preset" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="role-preset" className="block text-sm font-medium text-text-secondary mb-1">
                   Start from Preset Template
                 </label>
                 <select
                   id="role-preset"
                   value={selectedPreset}
                   onChange={(e) => handlePresetSelect(e.target.value)}
-                  className="w-full md:w-1/2 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full md:w-1/2 border border-border-strong rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                 >
                   <option value="">-- Select a preset (optional) --</option>
                   {presets.map((p) => (
@@ -484,25 +484,25 @@ const CustomRolesPage = () => {
             {/* Permission Search */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-gray-700">Permissions</h3>
-                <span className="text-xs text-gray-500">
+                <h3 className="text-sm font-medium text-text-secondary">Permissions</h3>
+                <span className="text-xs text-text-tertiary">
                   {Object.values(formData.permissions).filter(Boolean).length} of {permissionDefs.length} enabled
                 </span>
               </div>
               <div className="relative mb-3">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-disabled" aria-hidden="true" />
                 <input
                   type="text"
                   value={permSearch}
                   onChange={(e) => setPermSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full pl-10 pr-4 py-2 border border-border-strong rounded-md text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                   placeholder="Search permissions..."
                   aria-label="Search permissions"
                 />
                 {permSearch && (
                   <button
                     onClick={() => setPermSearch('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-disabled hover:text-text-secondary"
                     aria-label="Clear search"
                   >
                     <X className="w-4 h-4" aria-hidden="true" />
@@ -511,26 +511,26 @@ const CustomRolesPage = () => {
               </div>
 
               {/* Permission Categories */}
-              <div className="border border-gray-200 rounded-lg divide-y divide-gray-200">
+              <div className="border border-border-default rounded-lg divide-y divide-border-default">
                 {Object.entries(permissionsByCategory).map(([category, perms]) => (
                   <div key={category}>
                     <button
                       type="button"
                       onClick={() => toggleCategory(category)}
-                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-surface-1 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-500"
                       aria-expanded={expandedCategories[category] || false}
                     >
                       <div className="flex items-center space-x-3">
                         {expandedCategories[category] ? (
-                          <ChevronDown className="w-4 h-4 text-gray-500" aria-hidden="true" />
+                          <ChevronDown className="w-4 h-4 text-text-tertiary" aria-hidden="true" />
                         ) : (
-                          <ChevronRight className="w-4 h-4 text-gray-500" aria-hidden="true" />
+                          <ChevronRight className="w-4 h-4 text-text-tertiary" aria-hidden="true" />
                         )}
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${PERMISSION_CATEGORIES[category] || 'bg-gray-100 text-gray-700'}`}>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${PERMISSION_CATEGORIES[category] || 'bg-surface-2 text-text-secondary'}`}>
                           {category}
                         </span>
                       </div>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-text-tertiary">
                         {perms.filter((p) => formData.permissions[p.name]).length}/{perms.length}
                       </span>
                     </button>
@@ -539,26 +539,26 @@ const CustomRolesPage = () => {
                         {perms.map((perm) => (
                           <div
                             key={perm.name}
-                            className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-gray-50"
+                            className="flex items-center justify-between py-2 px-3 rounded-md hover:bg-surface-1"
                           >
                             <div className="flex items-center space-x-3 flex-1 min-w-0">
                               <button
                                 type="button"
                                 onClick={() => togglePermission(perm.name)}
-                                className="flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                                className="flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-brand-500 rounded"
                                 role="switch"
                                 aria-checked={!!formData.permissions[perm.name]}
                                 aria-label={`Toggle ${perm.label}`}
                               >
                                 {formData.permissions[perm.name] ? (
-                                  <ToggleRight className="w-8 h-5 text-blue-600" aria-hidden="true" />
+                                  <ToggleRight className="w-8 h-5 text-brand-600" aria-hidden="true" />
                                 ) : (
-                                  <ToggleLeft className="w-8 h-5 text-gray-400" aria-hidden="true" />
+                                  <ToggleLeft className="w-8 h-5 text-text-disabled" aria-hidden="true" />
                                 )}
                               </button>
                               <div className="min-w-0">
-                                <span className="text-sm font-medium text-gray-900">{perm.label}</span>
-                                <span className="ml-2 text-xs text-gray-400 font-mono">{perm.name}</span>
+                                <span className="text-sm font-medium text-text-primary">{perm.label}</span>
+                                <span className="ml-2 text-xs text-text-disabled font-mono">{perm.name}</span>
                               </div>
                             </div>
                             <div className="relative flex-shrink-0">
@@ -568,14 +568,14 @@ const CustomRolesPage = () => {
                                 onMouseLeave={() => setTooltipPerm(null)}
                                 onFocus={() => setTooltipPerm(perm.name)}
                                 onBlur={() => setTooltipPerm(null)}
-                                className="text-gray-400 hover:text-gray-600 p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                                className="text-text-disabled hover:text-text-secondary p-1 focus:outline-none focus:ring-2 focus:ring-brand-500 rounded"
                                 aria-label={`Info about ${perm.label}`}
                               >
                                 <Info className="w-4 h-4" aria-hidden="true" />
                               </button>
                               {tooltipPerm === perm.name && (
                                 <div
-                                  className="absolute right-0 bottom-full mb-2 w-64 bg-gray-900 text-white text-xs rounded-md px-3 py-2 shadow-lg z-10"
+                                  className="absolute right-0 bottom-full mb-2 w-64 bg-surface-2 text-white text-xs rounded-md px-3 py-2 shadow-lg z-10"
                                   role="tooltip"
                                 >
                                   {perm.description}
@@ -596,14 +596,14 @@ const CustomRolesPage = () => {
             <div className="flex items-center space-x-3">
               <button
                 type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="bg-brand-600 text-white px-4 py-2 rounded-md text-sm hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
               >
                 {editingRole ? 'Update Role' : 'Create Role'}
               </button>
               <button
                 type="button"
                 onClick={resetForm}
-                className="text-gray-600 hover:text-gray-800 text-sm"
+                className="text-text-secondary hover:text-text-primary text-sm"
               >
                 Cancel
               </button>
@@ -614,32 +614,32 @@ const CustomRolesPage = () => {
 
       {/* Roles List */}
       {roles.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
-          <Shield className="w-12 h-12 text-gray-300 mx-auto mb-4" aria-hidden="true" />
-          <h3 className="text-lg font-medium text-gray-900 mb-1">No custom roles</h3>
-          <p className="text-gray-500 text-sm">Create your first custom role to grant granular permissions beyond the default Canvas roles.</p>
+        <div className="bg-surface-0 rounded-lg shadow p-12 text-center">
+          <Shield className="w-12 h-12 text-text-disabled mx-auto mb-4" aria-hidden="true" />
+          <h3 className="text-lg font-medium text-text-primary mb-1">No custom roles</h3>
+          <p className="text-text-tertiary text-sm">Create your first custom role to grant granular permissions beyond the default Canvas roles.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200" role="table" aria-label="Custom roles">
-            <thead className="bg-gray-50">
+        <div className="bg-surface-0 rounded-lg shadow overflow-hidden">
+          <table className="min-w-full divide-y divide-border-default" role="table" aria-label="Custom roles">
+            <thead className="bg-surface-1">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Base Type</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Permissions</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">State</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Role</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Base Type</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Permissions</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">State</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Created</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-text-tertiary uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-surface-0 divide-y divide-border-default">
               {roles.map((role) => (
-                <tr key={role.id} className="hover:bg-gray-50">
+                <tr key={role.id} className="hover:bg-surface-1">
                   <td className="px-4 py-3 whitespace-nowrap">
                     <div>
-                      <span className="text-sm font-medium text-gray-900">{role.name}</span>
+                      <span className="text-sm font-medium text-text-primary">{role.name}</span>
                       {role.label && role.label !== role.name && (
-                        <span className="ml-2 text-xs text-gray-500">({role.label})</span>
+                        <span className="ml-2 text-xs text-text-tertiary">({role.label})</span>
                       )}
                     </div>
                   </td>
@@ -653,21 +653,21 @@ const CustomRolesPage = () => {
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                      role.workflow_state === 'active' ? 'bg-green-100 text-green-800' :
-                      role.workflow_state === 'inactive' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
+                      role.workflow_state === 'active' ? 'bg-accent-success/20 text-accent-success' :
+                      role.workflow_state === 'inactive' ? 'bg-accent-warning/20 text-accent-warning' :
+                      'bg-accent-danger/20 text-accent-danger'
                     }`}>
                       {role.workflow_state}
                     </span>
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-text-tertiary">
                     {role.created_at ? new Date(role.created_at).toLocaleDateString() : '--'}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-right">
                     <div className="flex items-center justify-end space-x-2">
                       <button
                         onClick={() => handleEdit(role)}
-                        className="text-gray-400 hover:text-blue-600 p-1 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="text-text-disabled hover:text-brand-600 p-1 rounded focus:outline-none focus:ring-2 focus:ring-brand-500"
                         aria-label={`Edit ${role.name}`}
                         title="Edit role"
                       >
@@ -675,7 +675,7 @@ const CustomRolesPage = () => {
                       </button>
                       <button
                         onClick={() => { setShowCloneModal(role); setCloneName(role.name + ' (Copy)'); }}
-                        className="text-gray-400 hover:text-indigo-600 p-1 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="text-text-disabled hover:text-indigo-600 p-1 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         aria-label={`Clone ${role.name}`}
                         title="Clone role"
                       >
@@ -683,7 +683,7 @@ const CustomRolesPage = () => {
                       </button>
                       <button
                         onClick={() => handleDelete(role.id)}
-                        className="text-gray-400 hover:text-red-600 p-1 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+                        className="text-text-disabled hover:text-accent-danger p-1 rounded focus:outline-none focus:ring-2 focus:ring-accent-danger"
                         aria-label={`Delete ${role.name}`}
                         title="Delete role"
                       >

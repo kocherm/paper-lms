@@ -40,15 +40,15 @@ const QuizReviewPage = () => {
   }, [courseId, quizId, submissionId]);
 
   if (loading) {
-    return <Layout><div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+    return <Layout><div className="flex items-center justify-center py-12 gap-2 text-text-tertiary">
       <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
       Loading quiz review...
     </div></Layout>;
   }
   if (error) {
     return <Layout><div className="text-center py-12">
-  <p className="text-red-600 mb-3">{error}</p>
-  <button onClick={() => window.location.reload()} className="text-blue-600 hover:text-blue-800 text-sm font-medium">Try Again</button>
+  <p className="text-accent-danger mb-3">{error}</p>
+  <button onClick={() => window.location.reload()} className="text-brand-600 hover:text-brand-800 text-sm font-medium">Try Again</button>
 </div></Layout>;
   }
 
@@ -59,10 +59,10 @@ const QuizReviewPage = () => {
   }
 
   const getAnswerIcon = (answer) => {
-    if (!answer) return <MinusCircle className="w-5 h-5 text-gray-400" />;
-    if (answer.correct === true) return <CheckCircle className="w-5 h-5 text-green-500" />;
-    if (answer.correct === false) return <XCircle className="w-5 h-5 text-red-500" />;
-    return <HelpCircle className="w-5 h-5 text-yellow-500" />;
+    if (!answer) return <MinusCircle className="w-5 h-5 text-text-disabled" />;
+    if (answer.correct === true) return <CheckCircle className="w-5 h-5 text-accent-success" />;
+    if (answer.correct === false) return <XCircle className="w-5 h-5 text-accent-danger" />;
+    return <HelpCircle className="w-5 h-5 text-accent-warning" />;
   };
 
   const getAnswerLabel = (answer) => {
@@ -97,25 +97,25 @@ const QuizReviewPage = () => {
       <CourseNav />
       <div className="max-w-3xl mx-auto">
         <div className="mb-4">
-          <Link to={`/courses/${courseId}/quizzes`} className="text-blue-600 hover:underline text-sm">
+          <Link to={`/courses/${courseId}/quizzes`} className="text-brand-600 hover:underline text-sm">
             &larr; Back to Quizzes
           </Link>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-surface-0 rounded-lg shadow p-6 mb-6">
           <h2 className="text-2xl font-bold mb-2">{quiz?.title} — Review</h2>
-          <div className="flex items-center gap-4 text-sm text-gray-600">
+          <div className="flex items-center gap-4 text-sm text-text-secondary">
             {submission?.score !== null && submission?.score !== undefined && (
               <span>
-                Score: <span className="font-semibold text-gray-900">{submission.score}</span>
+                Score: <span className="font-semibold text-text-primary">{submission.score}</span>
                 {quiz?.points_possible ? ` / ${quiz.points_possible}` : ''}
               </span>
             )}
             <span>
-              Points earned: <span className="font-semibold text-gray-900">{totalPoints}</span> / {maxPoints}
+              Points earned: <span className="font-semibold text-text-primary">{totalPoints}</span> / {maxPoints}
             </span>
             {submission?.workflow_state === 'pending_review' && (
-              <span className="text-yellow-600 font-medium">Some questions pending review</span>
+              <span className="text-accent-warning font-medium">Some questions pending review</span>
             )}
           </div>
         </div>
@@ -124,28 +124,28 @@ const QuizReviewPage = () => {
           {questions.map((question, idx) => {
             const answer = answerMap[question.id];
             return (
-              <div key={question.id} className="bg-white rounded-lg shadow p-6">
+              <div key={question.id} className="bg-surface-0 rounded-lg shadow p-6">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
                     {getAnswerIcon(answer)}
-                    <span className="text-sm font-medium text-gray-500">
+                    <span className="text-sm font-medium text-text-tertiary">
                       Question {idx + 1}
                     </span>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      answer?.correct === true ? 'bg-green-100 text-green-700' :
-                      answer?.correct === false ? 'bg-red-100 text-red-700' :
-                      'bg-yellow-100 text-yellow-700'
+                      answer?.correct === true ? 'bg-accent-success/20 text-accent-success' :
+                      answer?.correct === false ? 'bg-accent-danger/20 text-accent-danger' :
+                      'bg-accent-warning/20 text-accent-warning'
                     }`}>
                       {getAnswerLabel(answer)}
                     </span>
                   </div>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-text-tertiary">
                     {answer ? `${answer.points || 0}` : '0'} / {question.points_possible || 0} pts
                   </span>
                 </div>
 
                 <div
-                  className="text-gray-800 mb-4 prose max-w-none"
+                  className="text-text-primary mb-4 prose max-w-none"
                   dangerouslySetInnerHTML={{ __html: sanitizeHTML(question.question_text) }}
                 />
 
@@ -158,17 +158,17 @@ const QuizReviewPage = () => {
                       {options.map(opt => {
                         const isSelected = answer && String(answer.answer) === String(opt.id);
                         const isCorrect = opt.weight > 0;
-                        let borderClass = 'border-gray-200';
+                        let borderClass = 'border-border-default';
                         let bgClass = '';
                         if (isSelected && answer?.correct === true) {
-                          borderClass = 'border-green-400';
-                          bgClass = 'bg-green-50';
+                          borderClass = 'border-accent-success/60';
+                          bgClass = 'bg-accent-success/10';
                         } else if (isSelected && answer?.correct === false) {
-                          borderClass = 'border-red-400';
-                          bgClass = 'bg-red-50';
+                          borderClass = 'border-accent-danger/60';
+                          bgClass = 'bg-accent-danger/10';
                         } else if (isCorrect) {
-                          borderClass = 'border-green-300';
-                          bgClass = 'bg-green-50/50';
+                          borderClass = 'border-accent-success/40';
+                          bgClass = 'bg-accent-success/10/50';
                         }
                         return (
                           <div
@@ -176,13 +176,13 @@ const QuizReviewPage = () => {
                             className={`flex items-center gap-3 p-3 rounded border ${borderClass} ${bgClass}`}
                           >
                             <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 ${
-                              isSelected ? 'border-blue-500 bg-blue-500' : 'border-gray-300'
+                              isSelected ? 'border-brand-500 bg-brand-500' : 'border-border-strong'
                             }`}>
                               {isSelected && <div className="w-full h-full rounded-full" />}
                             </div>
                             <span className="text-sm">{opt.text}</span>
                             {isCorrect && !isSelected && (
-                              <span className="text-xs text-green-600 ml-auto">Correct answer</span>
+                              <span className="text-xs text-accent-success ml-auto">Correct answer</span>
                             )}
                           </div>
                         );
@@ -194,11 +194,11 @@ const QuizReviewPage = () => {
                 {/* Show text answers for short answer / essay / numerical */}
                 {(question.question_type === 'short_answer' || question.question_type === 'essay' || question.question_type === 'numerical_question') && (
                   <div className="mb-3">
-                    <p className="text-sm font-medium text-gray-500 mb-1">Your answer:</p>
+                    <p className="text-sm font-medium text-text-tertiary mb-1">Your answer:</p>
                     <div className={`p-3 rounded border text-sm ${
-                      answer?.correct === true ? 'border-green-300 bg-green-50' :
-                      answer?.correct === false ? 'border-red-300 bg-red-50' :
-                      'border-gray-200 bg-gray-50'
+                      answer?.correct === true ? 'border-accent-success/40 bg-accent-success/10' :
+                      answer?.correct === false ? 'border-accent-danger/40 bg-accent-danger/10' :
+                      'border-border-default bg-surface-1'
                     }`}>
                       {formatStudentAnswer(question, answer)}
                     </div>
@@ -212,7 +212,7 @@ const QuizReviewPage = () => {
         <div className="mt-6 text-center">
           <Link
             to={`/courses/${courseId}`}
-            className="text-blue-600 hover:underline"
+            className="text-brand-600 hover:underline"
           >
             Back to Course
           </Link>

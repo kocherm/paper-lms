@@ -16,8 +16,8 @@ const HomeEngine = () => {
       .catch(() => setLoading(false));
   }, [courseId]);
 
-  if (loading) return <div className="text-center py-12 text-gray-500">Loading...</div>;
-  if (!homeData) return <div className="text-center py-12 text-gray-500">No home data available.</div>;
+  if (loading) return <div className="text-center py-12 text-text-tertiary">Loading...</div>;
+  if (!homeData) return <div className="text-center py-12 text-text-tertiary">No home data available.</div>;
 
   // Grid layout varies by mode
   const gridClass = isK2

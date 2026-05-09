@@ -163,12 +163,12 @@ const CourseNav = () => {
     const tabClass35 = (active) =>
       `px-4 py-2 text-base font-semibold border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${
         active
-          ? 'border-blue-600 text-blue-600'
-          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          ? 'border-brand-600 text-brand-600'
+          : 'border-transparent text-text-tertiary hover:text-text-secondary hover:border-border-strong'
       }`;
 
     return (
-      <div className="border-b border-gray-200 bg-white -mx-6 px-6 mb-6">
+      <div className="border-b border-border-default bg-surface-0 -mx-6 px-6 mb-6">
         <div className="flex items-center">
           <nav className="flex items-center space-x-2" aria-label="Course navigation">
             {simplifiedTabs.map((tab) => (
@@ -197,7 +197,7 @@ const CourseNav = () => {
     }`;
 
   return (
-    <div className="border-b border-gray-200 bg-white -mx-6 px-6 mb-6">
+    <div className="border-b border-border-default bg-surface-0 -mx-6 px-6 mb-6">
       <div className="flex items-center">
         <nav className="flex items-center space-x-1" aria-label="Course navigation">
           {primaryTabs.map((tab) => (
@@ -222,7 +222,7 @@ const CourseNav = () => {
               </button>
 
               {moreOpen && (
-                <div className="absolute start-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-40">
+                <div className="absolute start-0 top-full mt-1 w-48 bg-surface-0 rounded-md shadow-lg border border-border-default py-1 z-40">
                   {moreTabs.map((tab) => (
                     <Link
                       key={tab.path}
@@ -230,8 +230,8 @@ const CourseNav = () => {
                       onClick={() => setMoreOpen(false)}
                       className={`block px-4 py-2 text-sm ${
                         isTabActive(tab.path)
-                          ? 'bg-blue-50 text-blue-600 font-medium'
-                          : 'text-gray-700 hover:bg-gray-50'
+                          ? 'bg-brand-50 text-brand-600 font-medium'
+                          : 'text-text-primary hover:bg-surface-1'
                       }`}
                     >
                       {tab.label}

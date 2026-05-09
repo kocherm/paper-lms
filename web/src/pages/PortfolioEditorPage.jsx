@@ -60,10 +60,10 @@ const THEMES = [
     label: 'Clean Modern',
     desc: 'White & blue, sans-serif elegance',
     preview: 'bg-gradient-to-br from-white to-blue-50',
-    headerBg: 'bg-white',
-    textClass: 'font-sans text-gray-900',
-    accentClass: 'text-blue-600',
-    cardClass: 'bg-white border border-gray-200 shadow-sm',
+    headerBg: 'bg-surface-0',
+    textClass: 'font-sans text-text-primary',
+    accentClass: 'text-brand-600',
+    cardClass: 'bg-surface-0 border border-border-default shadow-sm',
     heroBg: 'bg-gradient-to-br from-blue-50 via-white to-indigo-50',
   },
   {
@@ -82,10 +82,10 @@ const THEMES = [
     label: 'Academic Classic',
     desc: 'Serif fonts, warm cream tones',
     preview: 'bg-gradient-to-br from-amber-50 to-orange-50',
-    headerBg: 'bg-amber-50',
-    textClass: 'font-serif text-gray-800',
-    accentClass: 'text-amber-700',
-    cardClass: 'bg-white border border-amber-200 shadow-sm',
+    headerBg: 'bg-accent-warning/10',
+    textClass: 'font-serif text-text-primary',
+    accentClass: 'text-accent-warning',
+    cardClass: 'bg-surface-0 border border-accent-warning/30 shadow-sm',
     heroBg: 'bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50',
   },
   {
@@ -95,7 +95,7 @@ const THEMES = [
     preview: 'bg-gradient-to-br from-gray-950 to-gray-800',
     headerBg: 'bg-gray-950',
     textClass: 'font-mono text-gray-200',
-    accentClass: 'text-gray-400',
+    accentClass: 'text-text-disabled',
     cardClass: 'bg-gray-900 border border-gray-800',
     heroBg: 'bg-gradient-to-br from-gray-950 to-gray-900',
   },
@@ -427,9 +427,9 @@ const PortfolioEditorPage = () => {
         <div className="flex flex-col items-center justify-center py-24" role="status" aria-label="Loading editor">
           <div className="relative w-16 h-16 mb-6">
             <div className="absolute inset-0 rounded-full border-4 border-blue-100" />
-            <div className="absolute inset-0 rounded-full border-4 border-blue-500 border-t-transparent animate-spin" />
+            <div className="absolute inset-0 rounded-full border-4 border-brand-500 border-t-transparent animate-spin" />
           </div>
-          <p className="text-gray-500 text-lg font-medium">Loading portfolio editor...</p>
+          <p className="text-text-tertiary text-lg font-medium">Loading portfolio editor...</p>
         </div>
       </Layout>
     );
@@ -440,12 +440,12 @@ const PortfolioEditorPage = () => {
     return (
       <Layout>
         <div className="text-center py-16">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-50 mb-4">
-            <X className="w-8 h-8 text-red-500" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent-danger/10 mb-4">
+            <X className="w-8 h-8 text-accent-danger" />
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Could not load portfolio</h2>
-          <p className="text-gray-500 mb-6">{error}</p>
-          <Link to="/portfolios" className="text-blue-600 hover:underline font-medium">Back to Portfolios</Link>
+          <h2 className="text-xl font-semibold text-text-primary mb-2">Could not load portfolio</h2>
+          <p className="text-text-tertiary mb-6">{error}</p>
+          <Link to="/portfolios" className="text-brand-600 hover:underline font-medium">Back to Portfolios</Link>
         </div>
       </Layout>
     );
@@ -457,31 +457,31 @@ const PortfolioEditorPage = () => {
   const sections = portfolio.sections || [];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-surface-1 flex flex-col">
       {/* ═══════ Top Toolbar ═══════ */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-40" role="banner">
+      <header className="bg-surface-0 border-b border-border-default sticky top-0 z-40" role="banner">
         <div className="flex items-center justify-between px-4 h-14">
           {/* Left */}
           <div className="flex items-center gap-3">
             <Link
               to="/portfolios"
-              className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="p-2 rounded-lg text-text-disabled hover:text-text-secondary hover:bg-surface-2 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500"
               aria-label="Back to portfolios"
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
-            <div className="h-6 w-px bg-gray-200" aria-hidden="true" />
-            <span className="text-sm font-medium text-gray-500 hidden sm:inline">Portfolio Editor</span>
+            <div className="h-6 w-px bg-border-default" aria-hidden="true" />
+            <span className="text-sm font-medium text-text-tertiary hidden sm:inline">Portfolio Editor</span>
           </div>
 
           {/* Center -- Save status */}
-          <div className="flex items-center gap-2 text-xs text-gray-400" aria-live="polite">
+          <div className="flex items-center gap-2 text-xs text-text-disabled" aria-live="polite">
             {saving ? (
               <><div className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" aria-hidden="true" /> Saving...</>
             ) : hasUnsavedChanges ? (
               <><div className="w-2 h-2 rounded-full bg-amber-400" aria-hidden="true" /> Unsaved changes</>
             ) : lastSaved ? (
-              <><Check className="w-3.5 h-3.5 text-green-500" aria-hidden="true" /> Saved</>
+              <><Check className="w-3.5 h-3.5 text-accent-success" aria-hidden="true" /> Saved</>
             ) : null}
           </div>
 
@@ -490,8 +490,8 @@ const PortfolioEditorPage = () => {
             <button
               onClick={() => setShowPreview(!showPreview)}
               className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                showPreview ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-100'
-              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                showPreview ? 'bg-brand-50 text-brand-700' : 'text-text-tertiary hover:bg-surface-2'
+              } focus:outline-none focus:ring-2 focus:ring-brand-500`}
               aria-pressed={showPreview}
               aria-label="Toggle live preview"
             >
@@ -501,19 +501,19 @@ const PortfolioEditorPage = () => {
             <button
               onClick={() => setActivePanel(activePanel === 'settings' ? null : 'settings')}
               className={`p-2 rounded-lg transition-colors ${
-                activePanel === 'settings' ? 'bg-gray-100 text-gray-900' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
-              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                activePanel === 'settings' ? 'bg-surface-2 text-text-primary' : 'text-text-disabled hover:text-text-secondary hover:bg-surface-2'
+              } focus:outline-none focus:ring-2 focus:ring-brand-500`}
               aria-label="Portfolio settings"
               aria-pressed={activePanel === 'settings'}
             >
               <Settings className="w-5 h-5" />
             </button>
-            <div className="h-6 w-px bg-gray-200 hidden sm:block" aria-hidden="true" />
+            <div className="h-6 w-px bg-border-default hidden sm:block" aria-hidden="true" />
 
             {/* Export dropdown */}
             <div className="relative group">
               <button
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-text-tertiary hover:bg-surface-2 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500"
                 aria-haspopup="true"
                 aria-label="Export portfolio"
               >
@@ -521,20 +521,20 @@ const PortfolioEditorPage = () => {
                 <span className="hidden sm:inline">Export</span>
                 <ChevronDown className="w-3 h-3" aria-hidden="true" />
               </button>
-              <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 hidden group-focus-within:block group-hover:block z-30" role="menu">
+              <div className="absolute right-0 top-full mt-1 w-48 bg-surface-0 rounded-xl shadow-xl border border-border-subtle py-1.5 hidden group-focus-within:block group-hover:block z-30" role="menu">
                 <button
                   onClick={handleExportHTML}
-                  className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                  className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-text-secondary hover:bg-surface-1 transition-colors text-left"
                   role="menuitem"
                 >
-                  <Code className="w-4 h-4 text-gray-400" aria-hidden="true" /> Export as Website (ZIP)
+                  <Code className="w-4 h-4 text-text-disabled" aria-hidden="true" /> Export as Website (ZIP)
                 </button>
                 <button
                   onClick={handleExportPDF}
-                  className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                  className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-text-secondary hover:bg-surface-1 transition-colors text-left"
                   role="menuitem"
                 >
-                  <FileText className="w-4 h-4 text-gray-400" aria-hidden="true" /> Export as PDF
+                  <FileText className="w-4 h-4 text-text-disabled" aria-hidden="true" /> Export as PDF
                 </button>
               </div>
             </div>
@@ -545,7 +545,7 @@ const PortfolioEditorPage = () => {
                 href={`/p/${portfolio.slug || portfolio.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-text-tertiary hover:bg-surface-2 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500"
                 aria-label="Open public portfolio in new tab"
               >
                 <ExternalLink className="w-4 h-4" aria-hidden="true" />
@@ -557,7 +557,7 @@ const PortfolioEditorPage = () => {
             {isPublished ? (
               <button
                 onClick={handleUnpublish}
-                className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-semibold bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-semibold bg-accent-success/10 text-accent-success border border-accent-success/30 hover:bg-accent-success/20 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
               >
                 <Globe className="w-4 h-4" aria-hidden="true" />
                 Published
@@ -565,7 +565,7 @@ const PortfolioEditorPage = () => {
             ) : (
               <button
                 onClick={handlePublish}
-                className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md shadow-blue-500/25 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md shadow-blue-500/25 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
               >
                 <Globe className="w-4 h-4" aria-hidden="true" />
                 Publish
@@ -577,10 +577,10 @@ const PortfolioEditorPage = () => {
 
       {/* ── Error banner ── */}
       {error && (
-        <div className="bg-red-50 border-b border-red-200 px-4 py-2.5 flex items-center gap-3" role="alert">
-          <X className="w-4 h-4 text-red-500 shrink-0" aria-hidden="true" />
-          <p className="text-sm text-red-700 flex-1">{error}</p>
-          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600" aria-label="Dismiss error">
+        <div className="bg-accent-danger/10 border-b border-accent-danger/30 px-4 py-2.5 flex items-center gap-3" role="alert">
+          <X className="w-4 h-4 text-accent-danger shrink-0" aria-hidden="true" />
+          <p className="text-sm text-accent-danger flex-1">{error}</p>
+          <button onClick={() => setError(null)} className="text-red-400 hover:text-accent-danger" aria-label="Dismiss error">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -601,8 +601,8 @@ const PortfolioEditorPage = () => {
                   <img src={portfolio.cover_image_url} alt="Portfolio cover" className="w-full h-full object-cover" />
                 ) : (
                   <div className="text-center">
-                    <Camera className="w-10 h-10 text-gray-400/50 mx-auto mb-2" aria-hidden="true" />
-                    <p className="text-sm text-gray-400">Add a cover image</p>
+                    <Camera className="w-10 h-10 text-text-disabled/50 mx-auto mb-2" aria-hidden="true" />
+                    <p className="text-sm text-text-disabled">Add a cover image</p>
                   </div>
                 )}
                 <button
@@ -610,13 +610,13 @@ const PortfolioEditorPage = () => {
                   className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100"
                   aria-label="Change cover image"
                 >
-                  <span className="px-4 py-2 bg-white rounded-lg text-sm font-medium shadow-lg">Change Cover</span>
+                  <span className="px-4 py-2 bg-surface-0 rounded-lg text-sm font-medium shadow-lg">Change Cover</span>
                 </button>
               </div>
 
               {/* Avatar */}
               <div className="absolute -bottom-8 left-6">
-                <div className="w-20 h-20 rounded-2xl border-4 border-white bg-gray-100 shadow-lg flex items-center justify-center overflow-hidden group/avatar">
+                <div className="w-20 h-20 rounded-2xl border-4 border-white bg-surface-2 shadow-lg flex items-center justify-center overflow-hidden group/avatar">
                   {portfolio.avatar_url ? (
                     <img src={portfolio.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
@@ -640,7 +640,7 @@ const PortfolioEditorPage = () => {
                 value={portfolio.title || ''}
                 onChange={(e) => updateField('title', e.target.value)}
                 placeholder="Portfolio Title"
-                className="w-full text-3xl font-bold text-gray-900 bg-transparent border-none outline-none placeholder-gray-300 focus:ring-0"
+                className="w-full text-3xl font-bold text-text-primary bg-transparent border-none outline-none placeholder-gray-300 focus:ring-0"
                 aria-label="Portfolio title"
               />
               <input
@@ -648,15 +648,15 @@ const PortfolioEditorPage = () => {
                 value={portfolio.tagline || ''}
                 onChange={(e) => updateField('tagline', e.target.value)}
                 placeholder="Your tagline -- describe who you are in one line"
-                className="w-full mt-2 text-lg text-gray-500 bg-transparent border-none outline-none placeholder-gray-300 focus:ring-0"
+                className="w-full mt-2 text-lg text-text-tertiary bg-transparent border-none outline-none placeholder-gray-300 focus:ring-0"
                 aria-label="Portfolio tagline"
               />
             </section>
 
             {/* ── Theme Selector ── */}
-            <section aria-labelledby="theme-selector-label" className="bg-white rounded-2xl border border-gray-100 p-5">
-              <h2 id="theme-selector-label" className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                <Palette className="w-4 h-4 text-gray-400" aria-hidden="true" />
+            <section aria-labelledby="theme-selector-label" className="bg-surface-0 rounded-2xl border border-border-subtle p-5">
+              <h2 id="theme-selector-label" className="text-sm font-semibold text-text-secondary mb-3 flex items-center gap-2">
+                <Palette className="w-4 h-4 text-text-disabled" aria-hidden="true" />
                 Theme
               </h2>
               <div className="grid grid-cols-5 gap-2" role="radiogroup" aria-label="Select theme">
@@ -669,16 +669,16 @@ const PortfolioEditorPage = () => {
                     aria-label={theme.label}
                     className={`relative rounded-xl overflow-hidden aspect-[4/3] border-2 transition-all ${
                       portfolio.theme === theme.id
-                        ? 'border-blue-500 ring-2 ring-blue-200 scale-105'
-                        : 'border-gray-200 hover:border-gray-300 opacity-70 hover:opacity-100'
+                        ? 'border-brand-500 ring-2 ring-blue-200 scale-105'
+                        : 'border-border-default hover:border-border-strong opacity-70 hover:opacity-100'
                     }`}
                   >
                     <div className={`absolute inset-0 ${theme.preview}`} />
-                    <div className="absolute inset-x-0 bottom-0 bg-white/90 backdrop-blur-sm px-1.5 py-1">
-                      <span className="text-[10px] font-medium text-gray-700 leading-tight block truncate">{theme.label}</span>
+                    <div className="absolute inset-x-0 bottom-0 bg-surface-0/90 backdrop-blur-sm px-1.5 py-1">
+                      <span className="text-[10px] font-medium text-text-secondary leading-tight block truncate">{theme.label}</span>
                     </div>
                     {portfolio.theme === theme.id && (
-                      <div className="absolute top-1 right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                      <div className="absolute top-1 right-1 w-4 h-4 bg-brand-500 rounded-full flex items-center justify-center">
                         <Check className="w-2.5 h-2.5 text-white" aria-hidden="true" />
                       </div>
                     )}
@@ -689,10 +689,10 @@ const PortfolioEditorPage = () => {
 
             {/* ══════ Sections Manager ══════ */}
             <section aria-labelledby="sections-label">
-              <h2 id="sections-label" className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                <Layers className="w-4 h-4 text-gray-400" aria-hidden="true" />
+              <h2 id="sections-label" className="text-sm font-semibold text-text-secondary mb-3 flex items-center gap-2">
+                <Layers className="w-4 h-4 text-text-disabled" aria-hidden="true" />
                 Sections
-                <span className="text-xs text-gray-400 font-normal ml-1">({sections.length})</span>
+                <span className="text-xs text-text-disabled font-normal ml-1">({sections.length})</span>
               </h2>
 
               <div className="space-y-3" role="list" aria-label="Portfolio sections">
@@ -704,17 +704,17 @@ const PortfolioEditorPage = () => {
                     <div
                       key={section.id}
                       role="listitem"
-                      className={`bg-white rounded-xl border transition-all ${
-                        isEditing ? 'border-blue-300 shadow-lg ring-2 ring-blue-100' : 'border-gray-100 shadow-sm hover:shadow-md'
+                      className={`bg-surface-0 rounded-xl border transition-all ${
+                        isEditing ? 'border-blue-300 shadow-lg ring-2 ring-blue-100' : 'border-border-subtle shadow-sm hover:shadow-md'
                       }`}
                     >
                       {/* Section header */}
                       <div className="flex items-center gap-2 p-3">
                         <GripVertical className="w-4 h-4 text-gray-300 shrink-0 cursor-grab" aria-hidden="true" />
-                        <SectionIcon className="w-4 h-4 text-gray-400 shrink-0" aria-hidden="true" />
+                        <SectionIcon className="w-4 h-4 text-text-disabled shrink-0" aria-hidden="true" />
                         <button
                           onClick={() => setEditingSectionId(isEditing ? null : section.id)}
-                          className="flex-1 text-left text-sm font-medium text-gray-800 hover:text-blue-600 transition-colors truncate focus:outline-none focus:underline"
+                          className="flex-1 text-left text-sm font-medium text-text-primary hover:text-brand-600 transition-colors truncate focus:outline-none focus:underline"
                           aria-expanded={isEditing}
                           aria-controls={`section-editor-${section.id}`}
                         >
@@ -726,8 +726,8 @@ const PortfolioEditorPage = () => {
                           <button
                             onClick={() => updateSection(section.id, { visible: !section.visible })}
                             className={`p-1.5 rounded-lg transition-colors ${
-                              section.visible ? 'text-gray-400 hover:text-gray-600' : 'text-red-400 hover:text-red-500'
-                            } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                              section.visible ? 'text-text-disabled hover:text-text-secondary' : 'text-red-400 hover:text-accent-danger'
+                            } focus:outline-none focus:ring-2 focus:ring-brand-500`}
                             aria-label={section.visible ? 'Hide section' : 'Show section'}
                             title={section.visible ? 'Visible' : 'Hidden'}
                           >
@@ -737,7 +737,7 @@ const PortfolioEditorPage = () => {
                           <button
                             onClick={() => moveSection(section.id, 'up')}
                             disabled={idx === 0}
-                            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="p-1.5 rounded-lg text-text-disabled hover:text-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500"
                             aria-label="Move section up"
                           >
                             <MoveUp className="w-4 h-4" />
@@ -746,7 +746,7 @@ const PortfolioEditorPage = () => {
                           <button
                             onClick={() => moveSection(section.id, 'down')}
                             disabled={idx === sections.length - 1}
-                            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="p-1.5 rounded-lg text-text-disabled hover:text-text-secondary disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500"
                             aria-label="Move section down"
                           >
                             <MoveDown className="w-4 h-4" />
@@ -754,7 +754,7 @@ const PortfolioEditorPage = () => {
                           {/* Delete */}
                           <button
                             onClick={() => deleteSection(section.id)}
-                            className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
+                            className="p-1.5 rounded-lg text-text-disabled hover:text-accent-danger transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
                             aria-label={`Delete ${section.title} section`}
                           >
                             <Trash2 className="w-4 h-4" />
@@ -764,10 +764,10 @@ const PortfolioEditorPage = () => {
 
                       {/* Expanded section editor */}
                       {isEditing && (
-                        <div id={`section-editor-${section.id}`} className="border-t border-gray-100 p-4 space-y-4">
+                        <div id={`section-editor-${section.id}`} className="border-t border-border-subtle p-4 space-y-4">
                           {/* Title */}
                           <div>
-                            <label htmlFor={`sec-title-${section.id}`} className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                            <label htmlFor={`sec-title-${section.id}`} className="block text-xs font-semibold text-text-tertiary uppercase tracking-wide mb-1">
                               Section Title
                             </label>
                             <input
@@ -775,20 +775,20 @@ const PortfolioEditorPage = () => {
                               type="text"
                               value={section.title || ''}
                               onChange={(e) => updateSection(section.id, { title: e.target.value })}
-                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              className="w-full px-3 py-2 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                             />
                           </div>
 
                           {/* Type */}
                           <div>
-                            <label htmlFor={`sec-type-${section.id}`} className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                            <label htmlFor={`sec-type-${section.id}`} className="block text-xs font-semibold text-text-tertiary uppercase tracking-wide mb-1">
                               Section Type
                             </label>
                             <select
                               id={`sec-type-${section.id}`}
                               value={section.type}
                               onChange={(e) => updateSection(section.id, { type: e.target.value })}
-                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              className="w-full px-3 py-2 border border-border-default rounded-lg text-sm bg-surface-0 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                             >
                               {SECTION_TYPES.map((t) => (
                                 <option key={t.id} value={t.id}>{t.label}</option>
@@ -798,7 +798,7 @@ const PortfolioEditorPage = () => {
 
                           {/* Layout */}
                           <div>
-                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                            <label className="block text-xs font-semibold text-text-tertiary uppercase tracking-wide mb-2">
                               Layout
                             </label>
                             <div className="flex gap-2" role="radiogroup" aria-label="Section layout">
@@ -812,8 +812,8 @@ const PortfolioEditorPage = () => {
                                     aria-checked={section.layout === lo.id}
                                     className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-all ${
                                       section.layout === lo.id
-                                        ? 'border-blue-500 bg-blue-50 text-blue-700'
-                                        : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                                        ? 'border-brand-500 bg-brand-50 text-brand-700'
+                                        : 'border-border-default text-text-tertiary hover:border-border-strong'
                                     }`}
                                   >
                                     <LoIcon className="w-3.5 h-3.5" aria-hidden="true" />
@@ -826,7 +826,7 @@ const PortfolioEditorPage = () => {
 
                           {/* Content */}
                           <div>
-                            <label htmlFor={`sec-content-${section.id}`} className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                            <label htmlFor={`sec-content-${section.id}`} className="block text-xs font-semibold text-text-tertiary uppercase tracking-wide mb-1">
                               Content
                             </label>
                             <textarea
@@ -835,7 +835,7 @@ const PortfolioEditorPage = () => {
                               onChange={(e) => updateSection(section.id, { content: e.target.value })}
                               rows={6}
                               placeholder="Write your content here... Markdown is supported."
-                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              className="w-full px-3 py-2 border border-border-default rounded-lg text-sm resize-y focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                             />
                           </div>
 
@@ -845,7 +845,7 @@ const PortfolioEditorPage = () => {
                               setArtifactData((prev) => ({ ...prev, section_id: section.id }));
                               setArtifactModal(true);
                             }}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-brand-600 bg-brand-50 rounded-lg hover:bg-brand-100 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500"
                           >
                             <Plus className="w-4 h-4" aria-hidden="true" />
                             Add Artifact to Section
@@ -854,16 +854,16 @@ const PortfolioEditorPage = () => {
                           {/* Section artifacts preview */}
                           {(portfolio.artifacts || []).filter((a) => a.section_id === section.id).length > 0 && (
                             <div className="mt-2">
-                              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Artifacts in this section</p>
+                              <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wide mb-2">Artifacts in this section</p>
                               <div className="space-y-1.5">
                                 {(portfolio.artifacts || []).filter((a) => a.section_id === section.id).map((artifact) => (
-                                  <div key={artifact.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg text-sm">
+                                  <div key={artifact.id} className="flex items-center gap-2 p-2 bg-surface-1 rounded-lg text-sm">
                                     {artifact.featured && <Star className="w-3.5 h-3.5 text-amber-500 shrink-0" aria-label="Featured" />}
-                                    <span className="flex-1 truncate text-gray-700">{artifact.title}</span>
+                                    <span className="flex-1 truncate text-text-secondary">{artifact.title}</span>
                                     {artifact.tags?.length > 0 && (
                                       <div className="flex gap-1 shrink-0">
                                         {artifact.tags.slice(0, 2).map((tag) => (
-                                          <span key={tag} className="px-1.5 py-0.5 bg-gray-200 text-gray-500 rounded text-[10px]">{tag}</span>
+                                          <span key={tag} className="px-1.5 py-0.5 bg-border-default text-text-tertiary rounded text-[10px]">{tag}</span>
                                         ))}
                                       </div>
                                     )}
@@ -883,7 +883,7 @@ const PortfolioEditorPage = () => {
               <div className="mt-4 relative">
                 <button
                   onClick={() => setShowAddSection(!showAddSection)}
-                  className="w-full flex items-center justify-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50/50 transition-all font-medium text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full flex items-center justify-center gap-2 p-4 border-2 border-dashed border-border-default rounded-xl text-text-disabled hover:text-brand-600 hover:border-blue-300 hover:bg-brand-50/50 transition-all font-medium text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   aria-expanded={showAddSection}
                   aria-haspopup="true"
                 >
@@ -892,17 +892,17 @@ const PortfolioEditorPage = () => {
                 </button>
 
                 {showAddSection && (
-                  <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl shadow-xl border border-gray-100 p-3 z-20 grid grid-cols-2 gap-2" role="menu">
+                  <div className="absolute left-0 right-0 top-full mt-2 bg-surface-0 rounded-xl shadow-xl border border-border-subtle p-3 z-20 grid grid-cols-2 gap-2" role="menu">
                     {SECTION_TYPES.map((st) => {
                       const StIcon = st.icon;
                       return (
                         <button
                           key={st.id}
                           onClick={() => addSection(st.id)}
-                          className="flex items-center gap-2.5 p-3 rounded-xl hover:bg-blue-50 transition-colors text-sm text-gray-700 font-medium text-left focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="flex items-center gap-2.5 p-3 rounded-xl hover:bg-brand-50 transition-colors text-sm text-text-secondary font-medium text-left focus:outline-none focus:ring-2 focus:ring-brand-500"
                           role="menuitem"
                         >
-                          <StIcon className="w-5 h-5 text-gray-400" aria-hidden="true" />
+                          <StIcon className="w-5 h-5 text-text-disabled" aria-hidden="true" />
                           {st.label}
                         </button>
                       );
@@ -913,16 +913,16 @@ const PortfolioEditorPage = () => {
             </section>
 
             {/* ── General Artifacts ── */}
-            <section aria-labelledby="artifacts-label" className="bg-white rounded-2xl border border-gray-100 p-5">
+            <section aria-labelledby="artifacts-label" className="bg-surface-0 rounded-2xl border border-border-subtle p-5">
               <div className="flex items-center justify-between mb-3">
-                <h2 id="artifacts-label" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <FolderOpen className="w-4 h-4 text-gray-400" aria-hidden="true" />
+                <h2 id="artifacts-label" className="text-sm font-semibold text-text-secondary flex items-center gap-2">
+                  <FolderOpen className="w-4 h-4 text-text-disabled" aria-hidden="true" />
                   All Artifacts
-                  <span className="text-xs text-gray-400 font-normal">({(portfolio.artifacts || []).length})</span>
+                  <span className="text-xs text-text-disabled font-normal">({(portfolio.artifacts || []).length})</span>
                 </h2>
                 <button
                   onClick={() => { setArtifactData((p) => ({ ...p, section_id: null })); setArtifactModal(true); }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-brand-600 hover:bg-brand-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500"
                 >
                   <Plus className="w-4 h-4" aria-hidden="true" />
                   Add
@@ -932,24 +932,24 @@ const PortfolioEditorPage = () => {
               {(portfolio.artifacts || []).length === 0 ? (
                 <div className="text-center py-8">
                   <Upload className="w-8 h-8 text-gray-300 mx-auto mb-2" aria-hidden="true" />
-                  <p className="text-sm text-gray-400">No artifacts yet. Upload files, link external work, or import from your courses.</p>
+                  <p className="text-sm text-text-disabled">No artifacts yet. Upload files, link external work, or import from your courses.</p>
                 </div>
               ) : (
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {(portfolio.artifacts || []).map((artifact) => (
-                    <div key={artifact.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                      <div className="w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center shrink-0">
+                    <div key={artifact.id} className="flex items-center gap-3 p-3 bg-surface-1 rounded-xl hover:bg-surface-2 transition-colors">
+                      <div className="w-10 h-10 rounded-lg bg-surface-0 border border-border-default flex items-center justify-center shrink-0">
                         {artifact.type === 'link' ? (
-                          <LinkIcon className="w-4 h-4 text-blue-500" aria-hidden="true" />
+                          <LinkIcon className="w-4 h-4 text-brand-500" aria-hidden="true" />
                         ) : artifact.type === 'course_submission' ? (
                           <BookOpen className="w-4 h-4 text-purple-500" aria-hidden="true" />
                         ) : (
-                          <FileText className="w-4 h-4 text-gray-400" aria-hidden="true" />
+                          <FileText className="w-4 h-4 text-text-disabled" aria-hidden="true" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-800 truncate">{artifact.title}</p>
-                        <p className="text-xs text-gray-400 truncate">{artifact.description || artifact.url || 'No description'}</p>
+                        <p className="text-sm font-medium text-text-primary truncate">{artifact.title}</p>
+                        <p className="text-xs text-text-disabled truncate">{artifact.description || artifact.url || 'No description'}</p>
                       </div>
                       {artifact.featured && <Star className="w-4 h-4 text-amber-500 shrink-0" aria-label="Featured artifact" />}
                     </div>
@@ -962,15 +962,15 @@ const PortfolioEditorPage = () => {
 
         {/* ──────── RIGHT: Live Preview ──────── */}
         {showPreview && (
-          <div className="hidden lg:block lg:w-1/2 border-l border-gray-200 overflow-y-auto bg-gray-100" aria-label="Live portfolio preview">
-            <div className="sticky top-0 bg-gray-100 border-b border-gray-200 px-4 py-2 flex items-center justify-between z-10">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Live Preview</span>
-              <span className="text-[10px] text-gray-400">{currentTheme.label}</span>
+          <div className="hidden lg:block lg:w-1/2 border-l border-border-default overflow-y-auto bg-surface-2" aria-label="Live portfolio preview">
+            <div className="sticky top-0 bg-surface-2 border-b border-border-default px-4 py-2 flex items-center justify-between z-10">
+              <span className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">Live Preview</span>
+              <span className="text-[10px] text-text-disabled">{currentTheme.label}</span>
             </div>
             <div className={`min-h-full ${currentTheme.heroBg}`}>
               {/* Preview: Hero */}
               <div className="relative px-8 pt-16 pb-12 text-center">
-                <div className="w-20 h-20 rounded-2xl bg-white/80 shadow-lg mx-auto mb-4 flex items-center justify-center overflow-hidden">
+                <div className="w-20 h-20 rounded-2xl bg-surface-0/80 shadow-lg mx-auto mb-4 flex items-center justify-center overflow-hidden">
                   {portfolio.avatar_url ? (
                     <img src={portfolio.avatar_url} alt="" className="w-full h-full object-cover" />
                   ) : (
@@ -980,14 +980,14 @@ const PortfolioEditorPage = () => {
                 <h2 className={`text-2xl font-bold ${
                   currentTheme.id === 'creative_bold' || currentTheme.id === 'minimal_dark' || currentTheme.id === 'developer_portfolio'
                     ? 'text-white'
-                    : 'text-gray-900'
+                    : 'text-text-primary'
                 }`}>
                   {portfolio.title || 'Your Portfolio Title'}
                 </h2>
                 <p className={`mt-2 text-sm ${
                   currentTheme.id === 'creative_bold' || currentTheme.id === 'minimal_dark' || currentTheme.id === 'developer_portfolio'
                     ? 'text-gray-300'
-                    : 'text-gray-500'
+                    : 'text-text-tertiary'
                 }`}>
                   {portfolio.tagline || 'Your tagline goes here'}
                 </p>
@@ -999,28 +999,28 @@ const PortfolioEditorPage = () => {
                   const isDark = currentTheme.id === 'creative_bold' || currentTheme.id === 'minimal_dark' || currentTheme.id === 'developer_portfolio';
                   return (
                     <div key={section.id} className={`${currentTheme.cardClass} rounded-xl p-6`}>
-                      <h3 className={`text-lg font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                      <h3 className={`text-lg font-bold mb-3 ${isDark ? 'text-white' : 'text-text-primary'}`}>
                         {section.title}
                       </h3>
                       {section.content ? (
-                        <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                        <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-300' : 'text-text-secondary'}`}>
                           {section.content}
                         </p>
                       ) : (
-                        <p className={`text-sm italic ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                        <p className={`text-sm italic ${isDark ? 'text-text-tertiary' : 'text-text-disabled'}`}>
                           No content yet. Click to edit this section.
                         </p>
                       )}
 
                       {/* Preview: Section artifacts */}
                       {(portfolio.artifacts || []).filter((a) => a.section_id === section.id).length > 0 && (
-                        <div className={`mt-4 pt-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-100'}`}>
+                        <div className={`mt-4 pt-4 border-t ${isDark ? 'border-gray-700' : 'border-border-subtle'}`}>
                           <div className={`grid ${section.layout === 'grid' || section.layout === 'masonry' ? 'grid-cols-2' : 'grid-cols-1'} gap-3`}>
                             {(portfolio.artifacts || []).filter((a) => a.section_id === section.id).map((artifact) => (
-                              <div key={artifact.id} className={`p-3 rounded-lg ${isDark ? 'bg-gray-800/50 hover:bg-gray-800' : 'bg-gray-50 hover:bg-gray-100'} transition-colors`}>
-                                <p className={`text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{artifact.title}</p>
+                              <div key={artifact.id} className={`p-3 rounded-lg ${isDark ? 'bg-gray-800/50 hover:bg-gray-800' : 'bg-surface-1 hover:bg-surface-2'} transition-colors`}>
+                                <p className={`text-sm font-medium ${isDark ? 'text-gray-200' : 'text-text-primary'}`}>{artifact.title}</p>
                                 {artifact.description && (
-                                  <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{artifact.description}</p>
+                                  <p className={`text-xs mt-1 ${isDark ? 'text-text-disabled' : 'text-text-tertiary'}`}>{artifact.description}</p>
                                 )}
                               </div>
                             ))}
@@ -1028,7 +1028,7 @@ const PortfolioEditorPage = () => {
                         </div>
                       )}
 
-                      <div className={`mt-3 text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                      <div className={`mt-3 text-xs ${isDark ? 'text-text-tertiary' : 'text-text-disabled'}`}>
                         {LAYOUT_OPTIONS.find((l) => l.id === section.layout)?.label || 'Standard'} layout
                       </div>
                     </div>
@@ -1038,8 +1038,8 @@ const PortfolioEditorPage = () => {
                 {sections.filter((s) => s.visible !== false).length === 0 && (
                   <div className={`text-center py-12 ${
                     currentTheme.id === 'creative_bold' || currentTheme.id === 'minimal_dark' || currentTheme.id === 'developer_portfolio'
-                      ? 'text-gray-500'
-                      : 'text-gray-400'
+                      ? 'text-text-tertiary'
+                      : 'text-text-disabled'
                   }`}>
                     <Layers className="w-10 h-10 mx-auto mb-3 opacity-50" aria-hidden="true" />
                     <p className="text-sm">Add sections to build your portfolio</p>
@@ -1050,8 +1050,8 @@ const PortfolioEditorPage = () => {
               {/* Preview: Footer */}
               <div className={`border-t px-6 py-4 text-center text-xs ${
                 currentTheme.id === 'creative_bold' || currentTheme.id === 'minimal_dark' || currentTheme.id === 'developer_portfolio'
-                  ? 'border-gray-800 text-gray-600'
-                  : 'border-gray-200 text-gray-400'
+                  ? 'border-gray-800 text-text-secondary'
+                  : 'border-border-default text-text-disabled'
               }`}>
                 Powered by Paper LMS
               </div>
@@ -1064,12 +1064,12 @@ const PortfolioEditorPage = () => {
       {activePanel === 'settings' && (
         <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="settings-title">
           <div className="absolute inset-0 bg-black/30" onClick={() => setActivePanel(null)} aria-hidden="true" />
-          <div className="absolute right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-2xl flex flex-col">
-            <div className="flex items-center justify-between p-5 border-b border-gray-100">
-              <h2 id="settings-title" className="text-lg font-bold text-gray-900">Portfolio Settings</h2>
+          <div className="absolute right-0 top-0 bottom-0 w-full max-w-md bg-surface-0 shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b border-border-subtle">
+              <h2 id="settings-title" className="text-lg font-bold text-text-primary">Portfolio Settings</h2>
               <button
                 onClick={() => setActivePanel(null)}
-                className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="p-2 rounded-lg text-text-disabled hover:text-text-secondary hover:bg-surface-2 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500"
                 aria-label="Close settings"
               >
                 <X className="w-5 h-5" />
@@ -1079,8 +1079,8 @@ const PortfolioEditorPage = () => {
             <div className="flex-1 overflow-y-auto p-5 space-y-5">
               {/* Contact email */}
               <div>
-                <label htmlFor="settings-email" className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
-                  <Mail className="w-4 h-4 text-gray-400" aria-hidden="true" />
+                <label htmlFor="settings-email" className="flex items-center gap-2 text-sm font-semibold text-text-secondary mb-1.5">
+                  <Mail className="w-4 h-4 text-text-disabled" aria-hidden="true" />
                   Contact Email
                 </label>
                 <input
@@ -1089,14 +1089,14 @@ const PortfolioEditorPage = () => {
                   value={settings.contact_email}
                   onChange={(e) => setSettings((s) => ({ ...s, contact_email: e.target.value }))}
                   placeholder="your@email.com"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 border border-border-default rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                 />
               </div>
 
               {/* LinkedIn */}
               <div>
-                <label htmlFor="settings-linkedin" className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
-                  <Linkedin className="w-4 h-4 text-gray-400" aria-hidden="true" />
+                <label htmlFor="settings-linkedin" className="flex items-center gap-2 text-sm font-semibold text-text-secondary mb-1.5">
+                  <Linkedin className="w-4 h-4 text-text-disabled" aria-hidden="true" />
                   LinkedIn URL
                 </label>
                 <input
@@ -1105,14 +1105,14 @@ const PortfolioEditorPage = () => {
                   value={settings.linkedin_url}
                   onChange={(e) => setSettings((s) => ({ ...s, linkedin_url: e.target.value }))}
                   placeholder="https://linkedin.com/in/yourprofile"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 border border-border-default rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                 />
               </div>
 
               {/* Website */}
               <div>
-                <label htmlFor="settings-website" className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
-                  <Globe2 className="w-4 h-4 text-gray-400" aria-hidden="true" />
+                <label htmlFor="settings-website" className="flex items-center gap-2 text-sm font-semibold text-text-secondary mb-1.5">
+                  <Globe2 className="w-4 h-4 text-text-disabled" aria-hidden="true" />
                   Personal Website
                 </label>
                 <input
@@ -1121,14 +1121,14 @@ const PortfolioEditorPage = () => {
                   value={settings.website_url}
                   onChange={(e) => setSettings((s) => ({ ...s, website_url: e.target.value }))}
                   placeholder="https://yourwebsite.com"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 border border-border-default rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                 />
               </div>
 
               {/* Custom CSS */}
               <div>
-                <label htmlFor="settings-css" className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5">
-                  <Code className="w-4 h-4 text-gray-400" aria-hidden="true" />
+                <label htmlFor="settings-css" className="flex items-center gap-2 text-sm font-semibold text-text-secondary mb-1.5">
+                  <Code className="w-4 h-4 text-text-disabled" aria-hidden="true" />
                   Custom CSS
                 </label>
                 <textarea
@@ -1137,22 +1137,22 @@ const PortfolioEditorPage = () => {
                   onChange={(e) => setSettings((s) => ({ ...s, custom_css: e.target.value }))}
                   rows={8}
                   placeholder="/* Add custom styles to your public portfolio */&#10;.portfolio-hero { }&#10;.portfolio-section { }"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
+                  className="w-full px-4 py-2.5 border border-border-default rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-y"
                 />
-                <p className="text-xs text-gray-400 mt-1">These styles will be applied to your public portfolio page only.</p>
+                <p className="text-xs text-text-disabled mt-1">These styles will be applied to your public portfolio page only.</p>
               </div>
 
               {/* Public URL info */}
               {portfolio.status === 'published' && (
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                  <p className="text-sm font-semibold text-green-800 mb-1">Public URL</p>
+                <div className="bg-accent-success/10 border border-accent-success/30 rounded-xl p-4">
+                  <p className="text-sm font-semibold text-accent-success mb-1">Public URL</p>
                   <div className="flex items-center gap-2">
-                    <code className="text-xs text-green-700 bg-green-100 px-2 py-1 rounded flex-1 truncate">
+                    <code className="text-xs text-accent-success bg-accent-success/20 px-2 py-1 rounded flex-1 truncate">
                       {window.location.origin}/p/{portfolio.slug || portfolio.id}
                     </code>
                     <button
                       onClick={() => navigator.clipboard.writeText(`${window.location.origin}/p/${portfolio.slug || portfolio.id}`)}
-                      className="p-1.5 text-green-600 hover:bg-green-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="p-1.5 text-accent-success hover:bg-accent-success/20 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
                       aria-label="Copy public URL"
                     >
                       <Copy className="w-4 h-4" />
@@ -1162,10 +1162,10 @@ const PortfolioEditorPage = () => {
               )}
             </div>
 
-            <div className="p-5 border-t border-gray-100 bg-gray-50/50">
+            <div className="p-5 border-t border-border-subtle bg-surface-1/50">
               <button
                 onClick={handleSaveSettings}
-                className="w-full px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium text-sm hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/25 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="w-full px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium text-sm hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/25 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
               >
                 Save Settings
               </button>
@@ -1178,12 +1178,12 @@ const PortfolioEditorPage = () => {
       {artifactModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="artifact-title">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setArtifactModal(false)} aria-hidden="true" />
-          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between p-5 border-b border-gray-100">
-              <h2 id="artifact-title" className="text-lg font-bold text-gray-900">Add Artifact</h2>
+          <div className="relative w-full max-w-lg bg-surface-0 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between p-5 border-b border-border-subtle">
+              <h2 id="artifact-title" className="text-lg font-bold text-text-primary">Add Artifact</h2>
               <button
                 onClick={() => setArtifactModal(false)}
-                className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="p-2 rounded-lg text-text-disabled hover:text-text-secondary hover:bg-surface-2 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500"
                 aria-label="Close"
               >
                 <X className="w-5 h-5" />
@@ -1192,7 +1192,7 @@ const PortfolioEditorPage = () => {
 
             <form onSubmit={handleAddArtifact} className="p-5 space-y-4">
               {/* Type tabs */}
-              <div className="flex gap-1 p-1 bg-gray-100 rounded-xl" role="tablist" aria-label="Artifact source">
+              <div className="flex gap-1 p-1 bg-surface-2 rounded-xl" role="tablist" aria-label="Artifact source">
                 {[
                   { value: 'file', label: 'Upload File', icon: Upload },
                   { value: 'link', label: 'External Link', icon: LinkIcon },
@@ -1208,8 +1208,8 @@ const PortfolioEditorPage = () => {
                       aria-selected={artifactData.type === tab.value}
                       className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg transition-all ${
                         artifactData.type === tab.value
-                          ? 'bg-white text-gray-900 shadow-sm'
-                          : 'text-gray-500 hover:text-gray-700'
+                          ? 'bg-surface-0 text-text-primary shadow-sm'
+                          : 'text-text-tertiary hover:text-text-secondary'
                       }`}
                     >
                       <TabIcon className="w-3.5 h-3.5" aria-hidden="true" />
@@ -1221,54 +1221,54 @@ const PortfolioEditorPage = () => {
 
               {/* Title */}
               <div>
-                <label htmlFor="artifact-name" className="block text-sm font-semibold text-gray-700 mb-1">Title</label>
+                <label htmlFor="artifact-name" className="block text-sm font-semibold text-text-secondary mb-1">Title</label>
                 <input
                   id="artifact-name"
                   type="text"
                   value={artifactData.title}
                   onChange={(e) => setArtifactData((p) => ({ ...p, title: e.target.value }))}
                   placeholder="Artifact title"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 border border-border-default rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                   required
                 />
               </div>
 
               {/* Description */}
               <div>
-                <label htmlFor="artifact-desc" className="block text-sm font-semibold text-gray-700 mb-1">Description</label>
+                <label htmlFor="artifact-desc" className="block text-sm font-semibold text-text-secondary mb-1">Description</label>
                 <textarea
                   id="artifact-desc"
                   value={artifactData.description}
                   onChange={(e) => setArtifactData((p) => ({ ...p, description: e.target.value }))}
                   placeholder="Brief description of this work"
                   rows={3}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 border border-border-default rounded-xl text-sm resize-y focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                 />
               </div>
 
               {/* Type-specific field */}
               {artifactData.type === 'file' && (
                 <div>
-                  <label htmlFor="artifact-file" className="block text-sm font-semibold text-gray-700 mb-1">File</label>
+                  <label htmlFor="artifact-file" className="block text-sm font-semibold text-text-secondary mb-1">File</label>
                   <input
                     id="artifact-file"
                     type="file"
                     onChange={(e) => setArtifactData((p) => ({ ...p, file: e.target.files[0] || null }))}
-                    className="w-full text-sm text-gray-500 file:mr-3 file:px-4 file:py-2 file:rounded-xl file:border-0 file:bg-blue-50 file:text-blue-700 file:font-medium file:text-sm hover:file:bg-blue-100 file:cursor-pointer file:transition-colors"
+                    className="w-full text-sm text-text-tertiary file:mr-3 file:px-4 file:py-2 file:rounded-xl file:border-0 file:bg-brand-50 file:text-brand-700 file:font-medium file:text-sm hover:file:bg-brand-100 file:cursor-pointer file:transition-colors"
                   />
                 </div>
               )}
 
               {artifactData.type === 'link' && (
                 <div>
-                  <label htmlFor="artifact-url" className="block text-sm font-semibold text-gray-700 mb-1">URL</label>
+                  <label htmlFor="artifact-url" className="block text-sm font-semibold text-text-secondary mb-1">URL</label>
                   <input
                     id="artifact-url"
                     type="url"
                     value={artifactData.url}
                     onChange={(e) => setArtifactData((p) => ({ ...p, url: e.target.value }))}
                     placeholder="https://..."
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2.5 border border-border-default rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                     required
                   />
                 </div>
@@ -1276,23 +1276,23 @@ const PortfolioEditorPage = () => {
 
               {artifactData.type === 'course_submission' && (
                 <div>
-                  <label htmlFor="artifact-submission" className="block text-sm font-semibold text-gray-700 mb-1">Submission ID</label>
+                  <label htmlFor="artifact-submission" className="block text-sm font-semibold text-text-secondary mb-1">Submission ID</label>
                   <input
                     id="artifact-submission"
                     type="text"
                     value={artifactData.course_submission_id}
                     onChange={(e) => setArtifactData((p) => ({ ...p, course_submission_id: e.target.value }))}
                     placeholder="Enter course submission ID"
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2.5 border border-border-default rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                   />
                 </div>
               )}
 
               {/* Tags */}
               <div>
-                <label htmlFor="artifact-tags" className="block text-sm font-semibold text-gray-700 mb-1">
+                <label htmlFor="artifact-tags" className="block text-sm font-semibold text-text-secondary mb-1">
                   Tags
-                  <span className="text-xs text-gray-400 font-normal ml-1">(comma separated)</span>
+                  <span className="text-xs text-text-disabled font-normal ml-1">(comma separated)</span>
                 </label>
                 <input
                   id="artifact-tags"
@@ -1300,14 +1300,14 @@ const PortfolioEditorPage = () => {
                   value={artifactData.tags}
                   onChange={(e) => setArtifactData((p) => ({ ...p, tags: e.target.value }))}
                   placeholder="react, design, capstone"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 border border-border-default rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                 />
               </div>
 
               {/* Reflection (for course submissions) */}
               {artifactData.type === 'course_submission' && (
                 <div>
-                  <label htmlFor="artifact-reflection" className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1">
+                  <label htmlFor="artifact-reflection" className="flex items-center gap-2 text-sm font-semibold text-text-secondary mb-1">
                     <Lightbulb className="w-4 h-4 text-amber-500" aria-hidden="true" />
                     Reflection
                   </label>
@@ -1317,9 +1317,9 @@ const PortfolioEditorPage = () => {
                     onChange={(e) => setArtifactData((p) => ({ ...p, reflection: e.target.value }))}
                     placeholder="What did you learn from this project? How did it challenge you?"
                     rows={4}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2.5 border border-border-default rounded-xl text-sm resize-y focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                   />
-                  <p className="text-xs text-gray-400 mt-1">Adding a reflection helps viewers understand the context and your growth.</p>
+                  <p className="text-xs text-text-disabled mt-1">Adding a reflection helps viewers understand the context and your growth.</p>
                 </div>
               )}
 
@@ -1329,11 +1329,11 @@ const PortfolioEditorPage = () => {
                   type="checkbox"
                   checked={artifactData.featured}
                   onChange={(e) => setArtifactData((p) => ({ ...p, featured: e.target.checked }))}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-brand-600 border-border-strong rounded focus:ring-brand-500"
                 />
                 <div>
-                  <span className="text-sm font-medium text-gray-700">Featured artifact</span>
-                  <p className="text-xs text-gray-400">Featured artifacts are highlighted prominently in your portfolio</p>
+                  <span className="text-sm font-medium text-text-secondary">Featured artifact</span>
+                  <p className="text-xs text-text-disabled">Featured artifacts are highlighted prominently in your portfolio</p>
                 </div>
               </label>
 
@@ -1342,13 +1342,13 @@ const PortfolioEditorPage = () => {
                 <button
                   type="button"
                   onClick={() => setArtifactModal(false)}
-                  className="px-5 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300"
+                  className="px-5 py-2.5 text-sm font-medium text-text-secondary hover:bg-surface-2 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium text-sm hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/25 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium text-sm hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/25 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
                 >
                   Add Artifact
                 </button>

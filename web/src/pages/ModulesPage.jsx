@@ -72,7 +72,7 @@ const ITEM_TYPE_OPTIONS = [
 const MAX_INDENT = 5;
 const INDENT_REM = 1.5;
 
-const renderItemIcon = (type, className = 'w-4 h-4 text-gray-500 flex-shrink-0') => {
+const renderItemIcon = (type, className = 'w-4 h-4 text-text-tertiary flex-shrink-0') => {
   const Icon = ITEM_ICONS[type] || Book;
   return <Icon className={className} />;
 };
@@ -95,7 +95,7 @@ const DragHandle = memo(function DragHandle({ size = 'md', className, ...props }
   return (
     <button
       className={cn(
-        'flex-shrink-0 text-gray-300 hover:text-gray-700 cursor-grab active:cursor-grabbing touch-none transition-colors',
+        'flex-shrink-0 text-gray-300 hover:text-text-secondary cursor-grab active:cursor-grabbing touch-none transition-colors',
         className
       )}
       aria-label="Drag to reorder"
@@ -172,7 +172,7 @@ const ModuleItemRow = memo(function ModuleItemRow({
 
   if (isEditing) {
     return (
-      <div className="flex items-center py-2 px-4 bg-blue-50" style={{ paddingLeft: padLeft }}>
+      <div className="flex items-center py-2 px-4 bg-brand-50" style={{ paddingLeft: padLeft }}>
         {renderItemIcon(item.type)}
         <input
           type="text"
@@ -182,13 +182,13 @@ const ModuleItemRow = memo(function ModuleItemRow({
             if (e.key === 'Enter') onSaveEdit();
             if (e.key === 'Escape') onCancelEdit();
           }}
-          className="flex-1 mx-2 border border-blue-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 mx-2 border border-blue-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
           autoFocus
         />
-        <IconTooltipButton label="Save" onClick={onSaveEdit} className="p-1 text-green-600 hover:bg-green-50 rounded">
+        <IconTooltipButton label="Save" onClick={onSaveEdit} className="p-1 text-accent-success hover:bg-accent-success/10 rounded">
           <Check className="w-3.5 h-3.5" />
         </IconTooltipButton>
-        <IconTooltipButton label="Cancel" onClick={onCancelEdit} className="p-1 text-gray-600 hover:bg-gray-100 rounded">
+        <IconTooltipButton label="Cancel" onClick={onCancelEdit} className="p-1 text-text-secondary hover:bg-surface-2 rounded">
           <X className="w-3.5 h-3.5" />
         </IconTooltipButton>
       </div>
@@ -200,7 +200,7 @@ const ModuleItemRow = memo(function ModuleItemRow({
       {renderItemIcon(item.type)}
       <span className={cn(
         'text-sm flex-1 truncate',
-        isHeader ? 'font-semibold text-gray-700' : 'text-gray-900'
+        isHeader ? 'font-semibold text-text-secondary' : 'text-text-primary'
       )}>
         {item.title}
       </span>
@@ -216,12 +216,12 @@ const ModuleItemRow = memo(function ModuleItemRow({
         href={itemLink}
         target={item.new_tab ? '_blank' : '_self'}
         rel={item.new_tab ? 'noopener noreferrer' : undefined}
-        className="flex items-center gap-3 flex-1 min-w-0 hover:text-blue-600"
+        className="flex items-center gap-3 flex-1 min-w-0 hover:text-brand-600"
       >
         {titleNode}
       </a>
     ) : (
-      <Link to={itemLink} className="flex items-center gap-3 flex-1 min-w-0 hover:text-blue-600">
+      <Link to={itemLink} className="flex items-center gap-3 flex-1 min-w-0 hover:text-brand-600">
         {titleNode}
       </Link>
     )
@@ -231,7 +231,7 @@ const ModuleItemRow = memo(function ModuleItemRow({
 
   return (
     <div
-      className="group relative flex items-center py-2 px-4 hover:bg-gray-50"
+      className="group relative flex items-center py-2 px-4 hover:bg-surface-1"
       style={{ paddingLeft: padLeft }}
     >
       {/* Indent rail (Notion-style): vertical line + horizontal tick */}
@@ -239,12 +239,12 @@ const ModuleItemRow = memo(function ModuleItemRow({
         <>
           <span
             aria-hidden
-            className="absolute top-0 bottom-0 w-px bg-gray-200"
+            className="absolute top-0 bottom-0 w-px bg-border-default"
             style={{ left: `${1 + (indent - 1) * INDENT_REM + 0.4}rem` }}
           />
           <span
             aria-hidden
-            className="absolute top-1/2 h-px bg-gray-200"
+            className="absolute top-1/2 h-px bg-border-default"
             style={{
               left: `${1 + (indent - 1) * INDENT_REM + 0.4}rem`,
               width: `${INDENT_REM - 0.4}rem`,
@@ -270,8 +270,8 @@ const ModuleItemRow = memo(function ModuleItemRow({
           className={cn(
             'p-1.5 flex-shrink-0 rounded transition-colors',
             item.published
-              ? 'text-green-600 hover:bg-green-50'
-              : 'text-gray-400 hover:bg-gray-100'
+              ? 'text-accent-success hover:bg-accent-success/10'
+              : 'text-text-disabled hover:bg-surface-2'
           )}
         >
           {item.published ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
@@ -284,7 +284,7 @@ const ModuleItemRow = memo(function ModuleItemRow({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 flex-shrink-0 text-gray-500 hover:text-gray-900"
+              className="h-7 w-7 flex-shrink-0 text-text-tertiary hover:text-text-primary"
               aria-label="Item actions"
             >
               <MoreHorizontal className="w-4 h-4" />
@@ -320,7 +320,7 @@ const ModuleItemRow = memo(function ModuleItemRow({
                   <ArrowRight className="w-4 h-4" /> Move to…
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="max-h-72 overflow-y-auto">
-                  <DropdownMenuLabel className="text-xs text-gray-500">Module</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-xs text-text-tertiary">Module</DropdownMenuLabel>
                   {otherModules.map((m) => (
                     <DropdownMenuItem key={m.id} onClick={() => onMoveTo(item, m.id)}>
                       {m.name}
@@ -332,7 +332,7 @@ const ModuleItemRow = memo(function ModuleItemRow({
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => onDelete(module.id, item.id)}
-              className="text-red-600 focus:text-red-700 focus:bg-red-50"
+              className="text-accent-danger focus:text-accent-danger focus:bg-accent-danger/10"
             >
               <Trash2 className="w-4 h-4" /> Delete
             </DropdownMenuItem>
@@ -377,13 +377,13 @@ const ModuleRow = memo(function ModuleRow({
               if (e.key === 'Enter') onSaveRename();
               if (e.key === 'Escape') onCancelRename();
             }}
-            className="flex-1 border border-blue-300 rounded-md px-3 py-1.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 border border-blue-300 rounded-md px-3 py-1.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500"
             autoFocus
           />
-          <IconTooltipButton label="Save" onClick={onSaveRename} className="p-1.5 text-green-600 hover:bg-green-50 rounded">
+          <IconTooltipButton label="Save" onClick={onSaveRename} className="p-1.5 text-accent-success hover:bg-accent-success/10 rounded">
             <Check className="w-4 h-4" />
           </IconTooltipButton>
-          <IconTooltipButton label="Cancel" onClick={onCancelRename} className="p-1.5 text-gray-600 hover:bg-gray-100 rounded">
+          <IconTooltipButton label="Cancel" onClick={onCancelRename} className="p-1.5 text-text-secondary hover:bg-surface-2 rounded">
             <X className="w-4 h-4" />
           </IconTooltipButton>
         </div>
@@ -395,15 +395,15 @@ const ModuleRow = memo(function ModuleRow({
     <div className="flex items-center border-b">
       {isTeacher && <DragHandle size="lg" className="pl-3 pr-1 py-3" {...dragHandleProps} />}
       <button
-        className="flex items-center gap-3 flex-1 px-4 py-3 text-left hover:bg-gray-50"
+        className="flex items-center gap-3 flex-1 px-4 py-3 text-left hover:bg-surface-1"
         onClick={onToggleExpand}
         aria-expanded={!!expanded}
       >
         {expanded
-          ? <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
-          : <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />}
-        <span className="font-semibold text-gray-900">{module.name}</span>
-        <span className="text-xs text-gray-600 ml-2">
+          ? <ChevronDown className="w-5 h-5 text-text-disabled flex-shrink-0" />
+          : <ChevronRight className="w-5 h-5 text-text-disabled flex-shrink-0" />}
+        <span className="font-semibold text-text-primary">{module.name}</span>
+        <span className="text-xs text-text-secondary ml-2">
           {itemCount} {itemCount === 1 ? 'item' : 'items'}
         </span>
         {!module.published && (
@@ -419,8 +419,8 @@ const ModuleRow = memo(function ModuleRow({
             className={cn(
               'p-1.5 rounded transition-colors',
               module.published
-                ? 'text-green-600 hover:bg-green-50'
-                : 'text-gray-400 hover:bg-gray-100'
+                ? 'text-accent-success hover:bg-accent-success/10'
+                : 'text-text-disabled hover:bg-surface-2'
             )}
             aria-label={module.published ? 'Unpublish module' : 'Publish module'}
           >
@@ -432,7 +432,7 @@ const ModuleRow = memo(function ModuleRow({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-gray-500 hover:text-gray-900"
+                className="h-8 w-8 text-text-tertiary hover:text-text-primary"
                 aria-label="Module actions"
               >
                 <MoreHorizontal className="w-4 h-4" />
@@ -463,7 +463,7 @@ const ModuleRow = memo(function ModuleRow({
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={onDelete}
-                className="text-red-600 focus:text-red-700 focus:bg-red-50"
+                className="text-accent-danger focus:text-accent-danger focus:bg-accent-danger/10"
               >
                 <Trash2 className="w-4 h-4" /> Delete module
               </DropdownMenuItem>
@@ -878,11 +878,11 @@ const ModulesPage = () => {
     <Layout>
       <CourseNav />
       <div className="mb-6">
-        <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm">
+        <Link to={`/courses/${courseId}`} className="text-brand-600 hover:underline text-sm">
           &larr; Back to Course
         </Link>
         <div className="flex items-center justify-between mt-2">
-          <h2 className="text-2xl font-bold text-gray-900">Modules</h2>
+          <h2 className="text-2xl font-bold text-text-primary">Modules</h2>
           {isTeacher && (
             <Button onClick={() => setShowCreateModule(v => !v)} size="sm">
               {showCreateModule ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
@@ -893,21 +893,21 @@ const ModulesPage = () => {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-md p-3 mb-4 text-sm">
+        <div className="bg-accent-danger/10 border border-accent-danger/30 text-accent-danger rounded-md p-3 mb-4 text-sm">
           {error}
-          <button onClick={() => setError(null)} className="ml-2 text-red-500 hover:text-red-700 font-bold">&times;</button>
+          <button onClick={() => setError(null)} className="ml-2 text-accent-danger hover:text-accent-danger font-bold">&times;</button>
         </div>
       )}
 
       {showCreateModule && (
-        <div className="bg-white rounded-lg shadow p-4 mb-4">
+        <div className="bg-surface-0 rounded-lg shadow p-4 mb-4">
           <form onSubmit={handleCreateModule} className="flex items-center gap-3">
             <input
               type="text"
               value={newModuleName}
               onChange={(e) => setNewModuleName(e.target.value)}
               placeholder="Module name..."
-              className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               autoFocus
             />
             <Button type="submit" size="sm" disabled={creating || !newModuleName.trim()}>
@@ -918,11 +918,11 @@ const ModulesPage = () => {
       )}
 
       {modules.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
+        <div className="bg-surface-0 rounded-lg shadow p-12 text-center">
           <Book className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 text-lg mb-1">No modules yet</p>
+          <p className="text-text-tertiary text-lg mb-1">No modules yet</p>
           {isTeacher && (
-            <p className="text-gray-600 text-sm">
+            <p className="text-text-secondary text-sm">
               Click &quot;+ Module&quot; above to create your first module.
             </p>
           )}
@@ -954,7 +954,7 @@ const ModulesPage = () => {
                     disabled={!isTeacher || dragType === 'item'}
                   >
                     {({ dragHandleProps }) => (
-                      <div className="bg-white rounded-lg shadow overflow-hidden">
+                      <div className="bg-surface-0 rounded-lg shadow overflow-hidden">
                         <ModuleRow
                           module={module}
                           isTeacher={isTeacher}
@@ -975,9 +975,9 @@ const ModulesPage = () => {
                         />
 
                         {showPrereqRow && (
-                          <div className="border-b bg-gray-50 px-4 py-2 flex items-center gap-3 flex-wrap">
+                          <div className="border-b bg-surface-1 px-4 py-2 flex items-center gap-3 flex-wrap">
                             {prerequisites[module.id]?.length > 0 && (
-                              <div className="flex items-center gap-2 text-xs text-gray-500">
+                              <div className="flex items-center gap-2 text-xs text-text-tertiary">
                                 <Lock className="w-3.5 h-3.5 flex-shrink-0" />
                                 <span>
                                   Requires: {prerequisites[module.id].map(id => getModuleName(id)).join(', ')}
@@ -985,7 +985,7 @@ const ModulesPage = () => {
                               </div>
                             )}
                             {module.require_sequential_progress && (
-                              <Badge variant="secondary" className="text-xs font-medium bg-amber-50 text-amber-700 hover:bg-amber-50">
+                              <Badge variant="secondary" className="text-xs font-medium bg-accent-warning/10 text-accent-warning hover:bg-accent-warning/10">
                                 Sequential
                               </Badge>
                             )}
@@ -995,8 +995,8 @@ const ModulesPage = () => {
                         {isExpanded && (
                           <div>
                             {items.length === 0 ? (
-                              <div className="m-4 rounded-md border border-dashed border-gray-300 px-4 py-6 text-center">
-                                <p className="text-sm text-gray-500 mb-2">
+                              <div className="m-4 rounded-md border border-dashed border-border-strong px-4 py-6 text-center">
+                                <p className="text-sm text-text-tertiary mb-2">
                                   Drop items here, or click below to add
                                 </p>
                                 {isTeacher && (
@@ -1054,13 +1054,13 @@ const ModulesPage = () => {
                             )}
 
                             {addingItemTo === module.id && (
-                              <div className="border-t bg-gray-50 p-4">
+                              <div className="border-t bg-surface-1 p-4">
                                 <form onSubmit={(e) => handleAddItem(e, module.id)} className="space-y-3">
                                   <div className="flex items-center gap-3">
                                     <select
                                       value={newItem.type}
                                       onChange={(e) => setNewItem({ ...newItem, type: e.target.value })}
-                                      className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                      className="border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                                     >
                                       {ITEM_TYPE_OPTIONS.map(opt => (
                                         <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -1071,7 +1071,7 @@ const ModulesPage = () => {
                                       value={newItem.title}
                                       onChange={(e) => setNewItem({ ...newItem, title: e.target.value })}
                                       placeholder="Item title..."
-                                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                      className="flex-1 border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                                       autoFocus
                                     />
                                   </div>
@@ -1082,14 +1082,14 @@ const ModulesPage = () => {
                                         value={newItem.external_url}
                                         onChange={(e) => setNewItem({ ...newItem, external_url: e.target.value })}
                                         placeholder="https://..."
-                                        className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="flex-1 border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                                       />
-                                      <label className="flex items-center gap-2 text-sm text-gray-600 whitespace-nowrap">
+                                      <label className="flex items-center gap-2 text-sm text-text-secondary whitespace-nowrap">
                                         <input
                                           type="checkbox"
                                           checked={newItem.new_tab}
                                           onChange={(e) => setNewItem({ ...newItem, new_tab: e.target.checked })}
-                                          className="rounded border-gray-300"
+                                          className="rounded border-border-strong"
                                         />
                                         New tab
                                       </label>
@@ -1127,20 +1127,20 @@ const ModulesPage = () => {
 
           <DragOverlay>
             {activeId && activeDragItem && dragType === 'module' ? (
-              <div className="bg-white rounded-lg shadow-lg border-2 border-blue-400 overflow-hidden opacity-90">
+              <div className="bg-surface-0 rounded-lg shadow-lg border-2 border-blue-400 overflow-hidden opacity-90">
                 <div className="flex items-center gap-3 px-4 py-3">
                   <GripVertical className="w-5 h-5 text-blue-400" />
-                  <span className="font-semibold text-gray-900">{activeDragItem.name}</span>
-                  <span className="text-xs text-gray-600 ml-2">
+                  <span className="font-semibold text-text-primary">{activeDragItem.name}</span>
+                  <span className="text-xs text-text-secondary ml-2">
                     {activeDragItem.items_count || activeDragItem.items?.length || 0} items
                   </span>
                 </div>
               </div>
             ) : activeId && activeDragItem && dragType === 'item' ? (
-              <div className="bg-white shadow-lg border-2 border-blue-400 rounded px-4 py-2 flex items-center gap-3 opacity-90">
+              <div className="bg-surface-0 shadow-lg border-2 border-blue-400 rounded px-4 py-2 flex items-center gap-3 opacity-90">
                 <GripVertical className="w-4 h-4 text-blue-400" />
                 {renderItemIcon(activeDragItem.type)}
-                <span className="text-sm text-gray-900">{activeDragItem.title}</span>
+                <span className="text-sm text-text-primary">{activeDragItem.title}</span>
               </div>
             ) : null}
           </DragOverlay>

@@ -331,14 +331,14 @@ const DocumentViewer = ({
               )}
             </div>
             {isSelected && annotation.content && (
-              <div className="absolute left-8 top-0 bg-white border border-gray-200 rounded-lg shadow-lg p-3 min-w-48 max-w-72 z-30">
+              <div className="absolute left-8 top-0 bg-surface-0 border border-border-default rounded-lg shadow-lg p-3 min-w-48 max-w-72 z-30">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-medium text-gray-600">
+                  <span className="text-xs font-medium text-text-secondary">
                     {annotation.user?.name || `User ${annotation.user_id}`}
                   </span>
-                  <span className="text-xs text-gray-400">{formatTimestamp(annotation.created_at)}</span>
+                  <span className="text-xs text-text-disabled">{formatTimestamp(annotation.created_at)}</span>
                 </div>
-                <p className="text-sm text-gray-800">{annotation.content}</p>
+                <p className="text-sm text-text-primary">{annotation.content}</p>
               </div>
             )}
           </div>
@@ -376,7 +376,7 @@ const DocumentViewer = ({
   // Render text highlights inline
   const renderHighlightedContent = () => {
     if (!documentContent) {
-      return <p className="text-gray-400 italic text-center py-8">No document content available</p>;
+      return <p className="text-text-disabled italic text-center py-8">No document content available</p>;
     }
 
     // For simplicity, we render the document content as HTML with highlight markers
@@ -393,7 +393,7 @@ const DocumentViewer = ({
     // since inserting markers into HTML is complex
     return (
       <div
-        className="prose max-w-none text-gray-700 leading-relaxed"
+        className="prose max-w-none text-text-secondary leading-relaxed"
         dangerouslySetInnerHTML={{ __html: sanitizeHTML(content) }}
       />
     );
@@ -404,7 +404,7 @@ const DocumentViewer = ({
     if (readOnly) return null;
 
     return (
-      <div className="flex items-center gap-1 p-2 bg-gray-50 border-b border-gray-200 flex-wrap">
+      <div className="flex items-center gap-1 p-2 bg-surface-1 border-b border-border-default flex-wrap">
         {Object.entries(ANNOTATION_TYPES).map(([type, config]) => {
           const Icon = config.icon;
           const isActive = activeTool === type;
@@ -418,8 +418,8 @@ const DocumentViewer = ({
               }}
               className={`flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-medium transition-colors ${
                 isActive
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                  ? 'bg-brand-600 text-white shadow-sm'
+                  : 'bg-surface-0 text-text-secondary hover:bg-surface-2 border border-border-default'
               }`}
               title={`${config.label} (${type})`}
             >
@@ -435,16 +435,16 @@ const DocumentViewer = ({
         <div className="relative">
           <button
             onClick={() => setShowColorPicker(!showColorPicker)}
-            className="flex items-center gap-1 px-2 py-1.5 rounded text-xs font-medium bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+            className="flex items-center gap-1 px-2 py-1.5 rounded text-xs font-medium bg-surface-0 text-text-secondary hover:bg-surface-2 border border-border-default"
           >
             <div
-              className="w-4 h-4 rounded-sm border border-gray-300"
+              className="w-4 h-4 rounded-sm border border-border-strong"
               style={{ backgroundColor: activeColor }}
             />
             <ChevronDown className="w-3 h-3" />
           </button>
           {showColorPicker && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-50 grid grid-cols-4 gap-1">
+            <div className="absolute top-full left-0 mt-1 bg-surface-0 border border-border-default rounded-lg shadow-lg p-2 z-50 grid grid-cols-4 gap-1">
               {DEFAULT_COLORS.map(color => (
                 <button
                   key={color}
@@ -453,7 +453,7 @@ const DocumentViewer = ({
                     setShowColorPicker(false);
                   }}
                   className={`w-6 h-6 rounded-sm border-2 transition-all ${
-                    activeColor === color ? 'border-blue-500 scale-110' : 'border-gray-200 hover:border-gray-400'
+                    activeColor === color ? 'border-brand-500 scale-110' : 'border-border-default hover:border-border-strong'
                   }`}
                   style={{ backgroundColor: color }}
                 />
@@ -465,7 +465,7 @@ const DocumentViewer = ({
         {activeTool && (
           <>
             <div className="w-px h-6 bg-gray-300 mx-1" />
-            <span className="text-xs text-blue-600 font-medium">
+            <span className="text-xs text-brand-600 font-medium">
               {activeTool === 'highlight' || activeTool === 'strikethrough'
                 ? 'Select text to annotate'
                 : activeTool === 'freehand'
@@ -477,7 +477,7 @@ const DocumentViewer = ({
                 setActiveTool(null);
                 setPendingAnnotation(null);
               }}
-              className="text-xs text-gray-500 hover:text-red-500 ml-1"
+              className="text-xs text-text-tertiary hover:text-accent-danger ml-1"
               title="Cancel (Esc)"
             >
               <X className="w-3.5 h-3.5" />
@@ -493,9 +493,9 @@ const DocumentViewer = ({
     if (!pendingAnnotation) return null;
 
     return (
-      <div className="absolute bottom-4 left-4 right-4 bg-white border border-gray-200 rounded-lg shadow-xl p-4 z-50">
+      <div className="absolute bottom-4 left-4 right-4 bg-surface-0 border border-border-default rounded-lg shadow-xl p-4 z-50">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-text-secondary">
             {ANNOTATION_TYPES[pendingAnnotation.annotation_type]?.label || 'Annotation'}
           </span>
           <button
@@ -503,13 +503,13 @@ const DocumentViewer = ({
               setPendingAnnotation(null);
               setCommentText('');
             }}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-text-disabled hover:text-text-secondary"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
         {pendingAnnotation.selected_text && (
-          <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded mb-2 italic truncate">
+          <div className="text-xs text-text-tertiary bg-surface-1 p-2 rounded mb-2 italic truncate">
             &ldquo;{pendingAnnotation.selected_text}&rdquo;
           </div>
         )}
@@ -518,7 +518,7 @@ const DocumentViewer = ({
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
             placeholder="Add a comment..."
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2 resize-none"
+            className="w-full border border-border-strong rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 mb-2 resize-none"
             rows={2}
             autoFocus
           />
@@ -529,13 +529,13 @@ const DocumentViewer = ({
               setPendingAnnotation(null);
               setCommentText('');
             }}
-            className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded"
+            className="px-3 py-1.5 text-xs text-text-secondary hover:bg-surface-2 rounded"
           >
             Cancel
           </button>
           <button
             onClick={handleSaveAnnotation}
-            className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="px-3 py-1.5 text-xs bg-brand-600 text-white rounded hover:bg-brand-700"
           >
             Save
           </button>
@@ -549,14 +549,14 @@ const DocumentViewer = ({
     return (
       <div ref={sidebarRef} className="flex flex-col h-full">
         {/* Sidebar header with filters */}
-        <div className="p-3 border-b bg-gray-50">
+        <div className="p-3 border-b bg-surface-1">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-sm text-gray-700">
+            <h3 className="font-semibold text-sm text-text-secondary">
               Annotations ({filteredAnnotations.length})
             </h3>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`p-1 rounded transition-colors ${showFilters ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+              className={`p-1 rounded transition-colors ${showFilters ? 'bg-brand-100 text-brand-600' : 'text-text-disabled hover:text-text-secondary'}`}
             >
               <Filter className="w-4 h-4" />
             </button>
@@ -565,11 +565,11 @@ const DocumentViewer = ({
           {showFilters && (
             <div className="mt-2 space-y-2">
               <div>
-                <label className="text-xs text-gray-500 block mb-1">Type</label>
+                <label className="text-xs text-text-tertiary block mb-1">Type</label>
                 <select
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value)}
-                  className="w-full text-xs border border-gray-200 rounded px-2 py-1"
+                  className="w-full text-xs border border-border-default rounded px-2 py-1"
                 >
                   <option value="all">All types</option>
                   {Object.entries(ANNOTATION_TYPES).map(([type, config]) => (
@@ -578,11 +578,11 @@ const DocumentViewer = ({
                 </select>
               </div>
               <div>
-                <label className="text-xs text-gray-500 block mb-1">Author</label>
+                <label className="text-xs text-text-tertiary block mb-1">Author</label>
                 <select
                   value={filterAuthor}
                   onChange={(e) => setFilterAuthor(e.target.value)}
-                  className="w-full text-xs border border-gray-200 rounded px-2 py-1"
+                  className="w-full text-xs border border-border-default rounded px-2 py-1"
                 >
                   <option value="all">All authors</option>
                   {Object.entries(authors).map(([id, name]) => (
@@ -592,7 +592,7 @@ const DocumentViewer = ({
               </div>
               <button
                 onClick={() => setShowResolved(!showResolved)}
-                className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
+                className="flex items-center gap-1 text-xs text-text-tertiary hover:text-text-secondary"
               >
                 {showResolved ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
                 {showResolved ? 'Showing resolved' : 'Hiding resolved'}
@@ -604,9 +604,9 @@ const DocumentViewer = ({
         {/* Annotation list */}
         <div className="flex-1 overflow-y-auto">
           {loading ? (
-            <div className="p-4 text-center text-gray-400 text-sm">Loading annotations...</div>
+            <div className="p-4 text-center text-text-disabled text-sm">Loading annotations...</div>
           ) : filteredAnnotations.length === 0 ? (
-            <div className="p-4 text-center text-gray-400 text-sm">
+            <div className="p-4 text-center text-text-disabled text-sm">
               {annotations.length === 0
                 ? 'No annotations yet'
                 : 'No annotations match filters'}
@@ -620,8 +620,8 @@ const DocumentViewer = ({
               return (
                 <div
                   key={annotation.id}
-                  className={`border-b border-gray-100 transition-colors ${
-                    isSelected ? 'bg-blue-50' : 'hover:bg-gray-50'
+                  className={`border-b border-border-subtle transition-colors ${
+                    isSelected ? 'bg-brand-50' : 'hover:bg-surface-1'
                   } ${isResolved ? 'opacity-60' : ''}`}
                 >
                   {/* Annotation header */}
@@ -638,31 +638,31 @@ const DocumentViewer = ({
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-0.5">
-                          <span className="text-xs font-medium text-gray-700 truncate">
+                          <span className="text-xs font-medium text-text-secondary truncate">
                             {annotation.user?.name || `User ${annotation.user_id}`}
                           </span>
-                          <span className="text-xs text-gray-400 flex-shrink-0 ml-2">
+                          <span className="text-xs text-text-disabled flex-shrink-0 ml-2">
                             {formatTimestamp(annotation.created_at)}
                           </span>
                         </div>
                         {annotation.content && (
-                          <p className="text-sm text-gray-600 line-clamp-2">{annotation.content}</p>
+                          <p className="text-sm text-text-secondary line-clamp-2">{annotation.content}</p>
                         )}
                         {!annotation.content && annotation.annotation_type === 'highlight' && (
-                          <p className="text-xs text-gray-400 italic">Text highlight</p>
+                          <p className="text-xs text-text-disabled italic">Text highlight</p>
                         )}
                         {!annotation.content && annotation.annotation_type === 'strikethrough' && (
-                          <p className="text-xs text-gray-400 italic">Strikethrough</p>
+                          <p className="text-xs text-text-disabled italic">Strikethrough</p>
                         )}
                         {!annotation.content && annotation.annotation_type === 'freehand' && (
-                          <p className="text-xs text-gray-400 italic">Freehand drawing</p>
+                          <p className="text-xs text-text-disabled italic">Freehand drawing</p>
                         )}
                         <div className="flex items-center gap-2 mt-1.5">
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-text-disabled">
                             p.{annotation.page_number}
                           </span>
                           {isResolved && (
-                            <span className="text-xs text-green-600 flex items-center gap-0.5">
+                            <span className="text-xs text-accent-success flex items-center gap-0.5">
                               <Check className="w-3 h-3" /> Resolved
                             </span>
                           )}
@@ -673,7 +673,7 @@ const DocumentViewer = ({
 
                   {/* Expanded view with replies and actions */}
                   {isSelected && (
-                    <div className="px-3 pb-3 border-t border-gray-100">
+                    <div className="px-3 pb-3 border-t border-border-subtle">
                       {/* Actions */}
                       {!readOnly && (
                         <div className="flex items-center gap-2 py-2">
@@ -681,8 +681,8 @@ const DocumentViewer = ({
                             onClick={() => handleToggleResolve(annotation)}
                             className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors ${
                               isResolved
-                                ? 'text-yellow-600 hover:bg-yellow-50'
-                                : 'text-green-600 hover:bg-green-50'
+                                ? 'text-accent-warning hover:bg-accent-warning/10'
+                                : 'text-accent-success hover:bg-accent-success/10'
                             }`}
                           >
                             {isResolved ? (
@@ -698,7 +698,7 @@ const DocumentViewer = ({
                           {(annotation.user_id === user?.id || !readOnly) && (
                             <button
                               onClick={() => handleDeleteAnnotation(annotation.id)}
-                              className="flex items-center gap-1 text-xs text-red-500 hover:bg-red-50 px-2 py-1 rounded"
+                              className="flex items-center gap-1 text-xs text-accent-danger hover:bg-accent-danger/10 px-2 py-1 rounded"
                             >
                               <X className="w-3 h-3" /> Delete
                             </button>
@@ -708,18 +708,18 @@ const DocumentViewer = ({
 
                       {/* Replies */}
                       {annotation.replies && annotation.replies.length > 0 && (
-                        <div className="space-y-2 ml-4 border-l-2 border-gray-200 pl-3 mb-2">
+                        <div className="space-y-2 ml-4 border-l-2 border-border-default pl-3 mb-2">
                           {annotation.replies.map(reply => (
                             <div key={reply.id} className="text-sm">
                               <div className="flex items-center justify-between">
-                                <span className="text-xs font-medium text-gray-600">
+                                <span className="text-xs font-medium text-text-secondary">
                                   {reply.user?.name || `User ${reply.user_id}`}
                                 </span>
-                                <span className="text-xs text-gray-400">
+                                <span className="text-xs text-text-disabled">
                                   {formatTimestamp(reply.created_at)}
                                 </span>
                               </div>
-                              <p className="text-xs text-gray-700 mt-0.5">{reply.content}</p>
+                              <p className="text-xs text-text-secondary mt-0.5">{reply.content}</p>
                             </div>
                           ))}
                         </div>
@@ -739,12 +739,12 @@ const DocumentViewer = ({
                               }
                             }}
                             placeholder="Reply..."
-                            className="flex-1 text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="flex-1 text-xs border border-border-default rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500"
                           />
                           <button
                             onClick={() => handleReply(annotation.id)}
                             disabled={!replyText.trim()}
-                            className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                            className="text-xs bg-brand-600 text-white px-2 py-1 rounded hover:bg-brand-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
                           >
                             Reply
                           </button>
@@ -762,7 +762,7 @@ const DocumentViewer = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-lg shadow overflow-hidden">
+    <div className="flex flex-col h-full bg-surface-0 rounded-lg shadow overflow-hidden">
       {/* Toolbar */}
       {renderToolbar()}
 
@@ -778,7 +778,7 @@ const DocumentViewer = ({
           >
             {/* Document title */}
             {documentTitle && (
-              <h2 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-text-primary mb-4 pb-2 border-b border-border-default">
                 {documentTitle}
               </h2>
             )}
@@ -819,7 +819,7 @@ const DocumentViewer = ({
         </div>
 
         {/* Annotation sidebar */}
-        <div className="w-72 border-l border-gray-200 flex-shrink-0 overflow-hidden flex flex-col bg-white">
+        <div className="w-72 border-l border-border-default flex-shrink-0 overflow-hidden flex flex-col bg-surface-0">
           {renderSidebar()}
         </div>
       </div>

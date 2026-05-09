@@ -293,19 +293,19 @@ const QuizTakePage = () => {
   const renderQuestion = (q, idx) => (
     <div
       key={q.id}
-      className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+      className="bg-surface-0 rounded-lg shadow-sm border border-border-default p-6"
       aria-labelledby={`q-${q.id}-label`}
     >
       <div className="flex items-center justify-between mb-3">
-        <span id={`q-${q.id}-label`} className="text-sm text-gray-500 font-medium">
+        <span id={`q-${q.id}-label`} className="text-sm text-text-tertiary font-medium">
           Question {idx + 1} of {questions.length}
         </span>
         {q.points_possible != null && (
-          <span className="text-xs text-gray-500">{q.points_possible} pts</span>
+          <span className="text-xs text-text-tertiary">{q.points_possible} pts</span>
         )}
       </div>
       <div
-        className="prose prose-sm max-w-prose mb-5 text-gray-900"
+        className="prose prose-sm max-w-prose mb-5 text-text-primary"
         dangerouslySetInnerHTML={{ __html: sanitizeHTML(q.question_text) }}
       />
       {(q.question_type === 'multiple_choice' || q.question_type === 'true_false') && (
@@ -316,7 +316,7 @@ const QuizTakePage = () => {
               <label
                 key={opt.id}
                 className={`flex items-center gap-3 p-3 rounded border cursor-pointer transition-colors ${
-                  checked ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'
+                  checked ? 'border-brand-500 bg-brand-50' : 'border-border-default hover:bg-surface-1'
                 }`}
               >
                 <input
@@ -324,9 +324,9 @@ const QuizTakePage = () => {
                   name={`q-${q.id}`}
                   checked={checked}
                   onChange={() => handleAnswer(q.id, opt.id)}
-                  className="text-blue-600"
+                  className="text-brand-600"
                 />
-                <span className="text-gray-800">{opt.text}</span>
+                <span className="text-text-primary">{opt.text}</span>
               </label>
             );
           })}
@@ -334,7 +334,7 @@ const QuizTakePage = () => {
       )}
       {(q.question_type === 'short_answer' || q.question_type === 'essay') && (
         <textarea
-          className="w-full max-w-prose border border-gray-300 rounded p-3 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full max-w-prose border border-border-strong rounded p-3 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
           placeholder="Type your answer..."
           value={answers[q.id] || ''}
           onChange={e => handleAnswer(q.id, e.target.value)}
@@ -345,7 +345,7 @@ const QuizTakePage = () => {
       {q.question_type === 'numerical_question' && (
         <input
           type="number"
-          className="w-full max-w-xs border border-gray-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full max-w-xs border border-border-strong rounded p-3 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
           placeholder="Enter a number..."
           value={answers[q.id] || ''}
           onChange={e => handleAnswer(q.id, e.target.value)}
@@ -361,14 +361,14 @@ const QuizTakePage = () => {
   );
 
   const wrap = (content) => (focusMode ? (
-    <div className="min-h-screen bg-gray-50">{content}</div>
+    <div className="min-h-screen bg-surface-1">{content}</div>
   ) : (
     <Layout>{content}</Layout>
   ));
 
   if (loading) {
     return wrap(
-      <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+      <div className="flex items-center justify-center py-12 gap-2 text-text-tertiary">
         <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
         Loading quiz...
       </div>
@@ -377,8 +377,8 @@ const QuizTakePage = () => {
   if (error && !quiz) {
     return wrap(
       <div className="text-center py-12">
-        <p className="text-red-600 mb-3">{error}</p>
-        <button onClick={() => window.location.reload()} className="text-blue-600 hover:text-blue-800 text-sm font-medium">Try Again</button>
+        <p className="text-accent-danger mb-3">{error}</p>
+        <button onClick={() => window.location.reload()} className="text-brand-600 hover:text-brand-800 text-sm font-medium">Try Again</button>
       </div>
     );
   }
@@ -386,30 +386,30 @@ const QuizTakePage = () => {
   if (completed) {
     return wrap(
       <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-lg shadow p-8 text-center">
-          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+        <div className="bg-surface-0 rounded-lg shadow p-8 text-center">
+          <CheckCircle className="w-16 h-16 text-accent-success mx-auto mb-4" />
           <h2 className="text-2xl font-bold mb-2">Quiz Submitted</h2>
           {submission?.score !== null && submission?.score !== undefined && (
-            <p className="text-lg text-gray-700 mb-4">
+            <p className="text-lg text-text-secondary mb-4">
               Score: <span className="font-semibold">{submission.score}</span>
               {quiz?.points_possible && ` / ${quiz.points_possible}`}
             </p>
           )}
           {submission?.workflow_state === 'pending_review' && (
-            <p className="text-gray-500 mb-4">Some questions require manual grading.</p>
+            <p className="text-text-tertiary mb-4">Some questions require manual grading.</p>
           )}
           <div className="flex items-center justify-center gap-4">
             {submission?.id && (
               <Link
                 to={`/courses/${courseId}/quizzes/${quizId}/submissions/${submission.id}/review`}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium"
+                className="bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 text-sm font-medium"
               >
                 Review Answers
               </Link>
             )}
             <Link
               to={`/courses/${courseId}`}
-              className="text-blue-600 hover:underline text-sm"
+              className="text-brand-600 hover:underline text-sm"
             >
               Back to Course
             </Link>
@@ -426,15 +426,15 @@ const QuizTakePage = () => {
     return wrap(
       <div className="max-w-2xl mx-auto">
         <div className="mb-4">
-          <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm">
+          <Link to={`/courses/${courseId}`} className="text-brand-600 hover:underline text-sm">
             &larr; Back to Course
           </Link>
         </div>
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="bg-blue-600 px-6 py-5">
+        <div className="bg-surface-0 rounded-lg shadow overflow-hidden">
+          <div className="bg-brand-600 px-6 py-5">
             <h2 className="text-2xl font-bold text-white">{quiz?.title}</h2>
             {quiz?.quiz_type && (
-              <span className="text-blue-100 text-sm capitalize">{quiz.quiz_type.replace('_', ' ')}</span>
+              <span className="text-brand-100 text-sm capitalize">{quiz.quiz_type.replace('_', ' ')}</span>
             )}
           </div>
           <div className="p-6">
@@ -442,35 +442,35 @@ const QuizTakePage = () => {
               <RichContentViewer content={quiz.description} className="mb-6" />
             )}
             <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="text-xs text-gray-500 uppercase tracking-wide font-medium">Points</div>
-                <div className="text-lg font-semibold text-gray-900 mt-1">{quiz?.points_possible ?? 0}</div>
+              <div className="bg-surface-1 rounded-lg p-4">
+                <div className="text-xs text-text-tertiary uppercase tracking-wide font-medium">Points</div>
+                <div className="text-lg font-semibold text-text-primary mt-1">{quiz?.points_possible ?? 0}</div>
               </div>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="text-xs text-gray-500 uppercase tracking-wide font-medium">Time Limit</div>
-                <div className="text-lg font-semibold text-gray-900 mt-1">
+              <div className="bg-surface-1 rounded-lg p-4">
+                <div className="text-xs text-text-tertiary uppercase tracking-wide font-medium">Time Limit</div>
+                <div className="text-lg font-semibold text-text-primary mt-1">
                   {quiz?.time_limit ? `${quiz.time_limit} minutes` : 'None'}
                 </div>
               </div>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="text-xs text-gray-500 uppercase tracking-wide font-medium">Questions</div>
-                <div className="text-lg font-semibold text-gray-900 mt-1">{quiz?.question_count || '—'}</div>
+              <div className="bg-surface-1 rounded-lg p-4">
+                <div className="text-xs text-text-tertiary uppercase tracking-wide font-medium">Questions</div>
+                <div className="text-lg font-semibold text-text-primary mt-1">{quiz?.question_count || '—'}</div>
               </div>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="text-xs text-gray-500 uppercase tracking-wide font-medium">Attempts</div>
-                <div className="text-lg font-semibold text-gray-900 mt-1">
+              <div className="bg-surface-1 rounded-lg p-4">
+                <div className="text-xs text-text-tertiary uppercase tracking-wide font-medium">Attempts</div>
+                <div className="text-lg font-semibold text-text-primary mt-1">
                   {previousAttempts > 0 && (
-                    <span className="text-sm text-gray-500 font-normal mr-1">{previousAttempts} used /</span>
+                    <span className="text-sm text-text-tertiary font-normal mr-1">{previousAttempts} used /</span>
                   )}
                   {allowedAttempts === -1 ? 'Unlimited' : `${attemptsRemaining} remaining`}
                 </div>
               </div>
             </div>
             {lastSubmission && lastSubmission.workflow_state === 'complete' && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 flex items-center justify-between">
+              <div className="bg-accent-success/10 border border-accent-success/30 rounded-lg p-4 mb-6 flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-medium text-green-800">Previous Attempt</div>
-                  <div className="text-xs text-green-600 mt-0.5">
+                  <div className="text-sm font-medium text-accent-success">Previous Attempt</div>
+                  <div className="text-xs text-accent-success mt-0.5">
                     Score: {lastSubmission.score !== null && lastSubmission.score !== undefined
                       ? `${lastSubmission.score}/${quiz?.points_possible ?? 0}`
                       : 'Pending review'}
@@ -479,7 +479,7 @@ const QuizTakePage = () => {
                 {lastSubmission.id && (
                   <Link
                     to={`/courses/${courseId}/quizzes/${quizId}/submissions/${lastSubmission.id}/review`}
-                    className="text-sm text-green-700 hover:underline font-medium"
+                    className="text-sm text-accent-success hover:underline font-medium"
                   >
                     Review Answers
                   </Link>
@@ -487,7 +487,7 @@ const QuizTakePage = () => {
               </div>
             )}
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm text-red-700 flex items-center gap-2">
+              <div className="bg-accent-danger/10 border border-accent-danger/30 rounded-lg p-3 mb-4 text-sm text-accent-danger flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
                 {error}
               </div>
@@ -495,7 +495,7 @@ const QuizTakePage = () => {
             {canStart ? (
               <div className="text-center">
                 {quiz?.time_limit && (
-                  <p className="text-sm text-amber-600 mb-3 flex items-center justify-center gap-1">
+                  <p className="text-sm text-accent-warning mb-3 flex items-center justify-center gap-1">
                     <AlertCircle className="w-4 h-4" />
                     Once you begin, the {quiz.time_limit}-minute timer will start and cannot be paused.
                   </p>
@@ -504,13 +504,13 @@ const QuizTakePage = () => {
                   <button
                     onClick={handleBeginQuiz}
                     disabled={starting}
-                    className="inline-flex items-center gap-2 bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 text-lg font-semibold transition-colors"
+                    className="inline-flex items-center gap-2 bg-brand-600 text-white px-8 py-3 rounded-lg hover:bg-brand-700 disabled:opacity-50 text-lg font-semibold transition-colors"
                   >
                     {starting ? <>Starting...</> : previousAttempts > 0 ? <><RotateCcw className="w-5 h-5" /> Retake Quiz</> : <><FileText className="w-5 h-5" /> Begin Quiz</>}
                   </button>
                   <button
                     onClick={toggleFocusMode}
-                    className="inline-flex items-center gap-2 px-4 py-3 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-sm font-medium text-gray-700"
+                    className="inline-flex items-center gap-2 px-4 py-3 rounded-lg border border-border-strong bg-surface-0 hover:bg-surface-1 text-sm font-medium text-text-secondary"
                     aria-pressed={focusMode}
                   >
                     <Focus className="w-4 h-4" />
@@ -519,7 +519,7 @@ const QuizTakePage = () => {
                 </div>
               </div>
             ) : (
-              <div className="text-center text-gray-500">
+              <div className="text-center text-text-tertiary">
                 <p className="font-medium">No attempts remaining.</p>
                 <p className="text-sm mt-1">You have used all {allowedAttempts} allowed attempt{allowedAttempts !== 1 ? 's' : ''}.</p>
               </div>
@@ -535,11 +535,11 @@ const QuizTakePage = () => {
   return wrap(
     <>
       {/* Sticky header: timer + autosave + progress */}
-      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-gray-200 -mx-4 sm:-mx-6 px-4 sm:px-6 mb-4">
+      <div className="sticky top-0 z-20 bg-surface-0/95 backdrop-blur border-b border-border-default -mx-4 sm:-mx-6 px-4 sm:px-6 mb-4">
         <div className="max-w-5xl mx-auto py-2 flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3 min-w-0">
-            <h1 className="text-sm font-semibold text-gray-900 truncate">{quiz?.title}</h1>
-            <span className="text-xs text-gray-500 whitespace-nowrap">
+            <h1 className="text-sm font-semibold text-text-primary truncate">{quiz?.title}</h1>
+            <span className="text-xs text-text-tertiary whitespace-nowrap">
               {answeredCount}/{questions.length} answered
             </span>
           </div>
@@ -553,7 +553,7 @@ const QuizTakePage = () => {
             <button
               type="button"
               onClick={() => setAllOnePage(v => !v)}
-              className="hidden sm:inline-flex items-center gap-1 text-xs px-2 py-1 rounded border border-gray-300 hover:bg-gray-50"
+              className="hidden sm:inline-flex items-center gap-1 text-xs px-2 py-1 rounded border border-border-strong hover:bg-surface-1"
               aria-pressed={allOnePage}
               title={allOnePage ? 'Single question view' : 'All questions on one page'}
             >
@@ -564,7 +564,7 @@ const QuizTakePage = () => {
               type="button"
               onClick={toggleFocusMode}
               aria-pressed={focusMode}
-              className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border border-gray-300 hover:bg-gray-50"
+              className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border border-border-strong hover:bg-surface-1"
               title="Toggle focus mode"
             >
               <Focus className="w-3.5 h-3.5" />
@@ -573,7 +573,7 @@ const QuizTakePage = () => {
             <button
               type="button"
               onClick={() => setShortcutsOpen(true)}
-              className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border border-gray-300 hover:bg-gray-50"
+              className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border border-border-strong hover:bg-surface-1"
               aria-label="Show keyboard shortcuts"
             >
               <Keyboard className="w-3.5 h-3.5" />
@@ -598,7 +598,7 @@ const QuizTakePage = () => {
               <button
                 onClick={goPrev}
                 disabled={currentIdx === 0}
-                className="flex items-center gap-1 px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50 text-sm font-medium"
+                className="flex items-center gap-1 px-4 py-2 bg-surface-2 rounded hover:bg-border-default disabled:opacity-50 text-sm font-medium"
               >
                 <ChevronLeft className="w-4 h-4" />
                 Previous
@@ -606,7 +606,7 @@ const QuizTakePage = () => {
               {currentIdx < questions.length - 1 ? (
                 <button
                   onClick={goNext}
-                  className="flex items-center gap-1 px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 text-sm font-medium"
+                  className="flex items-center gap-1 px-4 py-2 bg-surface-2 rounded hover:bg-border-default text-sm font-medium"
                 >
                   Next
                   <ChevronRight className="w-4 h-4" />
@@ -615,7 +615,7 @@ const QuizTakePage = () => {
                 <button
                   onClick={handleSubmit}
                   disabled={submitting}
-                  className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-sm font-semibold"
+                  className="px-6 py-2 bg-brand-600 text-white rounded hover:bg-brand-700 disabled:opacity-50 text-sm font-semibold"
                 >
                   {submitting ? 'Submitting...' : 'Submit Quiz'}
                 </button>
@@ -628,7 +628,7 @@ const QuizTakePage = () => {
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-sm font-semibold"
+                className="px-6 py-2 bg-brand-600 text-white rounded hover:bg-brand-700 disabled:opacity-50 text-sm font-semibold"
               >
                 {submitting ? 'Submitting...' : 'Submit Quiz'}
               </button>

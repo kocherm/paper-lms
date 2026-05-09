@@ -54,7 +54,7 @@ const HomeButton = ({ button, uiMode, todaysLesson, continueData, courseId }) =>
     : button.label;
 
   // Style varies by mode
-  const bgColor = button.color || '#0374B5';
+  const bgColor = button.color || 'rgb(var(--color-brand-600))';
 
   const buttonPadding = isK2 ? 'p-10 min-h-[160px]' : is35 ? 'p-8' : 'p-6';
   const iconSize = isK2 ? 'w-20 h-20' : is35 ? 'w-12 h-12' : 'w-8 h-8';
@@ -66,12 +66,12 @@ const HomeButton = ({ button, uiMode, todaysLesson, continueData, courseId }) =>
     : { backgroundColor: bgColor + '15' };
 
   const iconColor = isK2 || is35 ? 'text-white' : '';
-  const textColor = isK2 || is35 ? 'text-white' : 'text-gray-800';
+  const textColor = isK2 || is35 ? 'text-white' : 'text-text-primary';
 
   return (
     <button
       onClick={handleClick}
-      className={`${buttonPadding} rounded-xl flex flex-col items-center justify-center gap-3 transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+      className={`${buttonPadding} rounded-xl flex flex-col items-center justify-center gap-3 transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500`}
       style={bgStyle}
       aria-label={label}
     >

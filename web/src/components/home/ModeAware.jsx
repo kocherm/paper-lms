@@ -18,5 +18,5 @@ export const ModeCard = ({ children, className = '' }) => {
   const { isK2, is35 } = useCourseUI();
   const padding = isK2 ? 'p-8' : is35 ? 'p-6' : 'p-4';
   const rounded = isK2 ? 'rounded-2xl' : 'rounded-lg';
-  return <div className={`bg-white shadow ${rounded} ${padding} ${className}`}>{children}</div>;
+  return <div className={`bg-surface-0 shadow ${rounded} ${padding} ${className}`}>{children}</div>;
 };

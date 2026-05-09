@@ -23,7 +23,7 @@ const K2Layout = ({ children }) => {
       <header className="w-full flex items-center justify-center py-4">
         <Link
           to={`/courses/${courseId}`}
-          className="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center shadow-lg hover:bg-blue-600 transition-colors"
+          className="w-16 h-16 rounded-full bg-brand-500 flex items-center justify-center shadow-lg hover:bg-brand-600 transition-colors"
           aria-label="Home"
         >
           <Home className="w-8 h-8 text-white" />
@@ -49,21 +49,21 @@ const K2Layout = ({ children }) => {
         <Link
           to="/"
           aria-label="My Classes"
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl px-3 py-1 text-white hover:bg-white/10 transition-colors"
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl px-3 py-1 text-white hover:bg-surface-0/10 transition-colors"
         >
           <PictureCue type="classes" label="My Classes" />
         </Link>
         <Link
           to={`/courses/${courseId}`}
           aria-label="Home"
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl px-3 py-1 bg-white/15 text-white transition-colors"
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl px-3 py-1 bg-surface-0/15 text-white transition-colors"
         >
           <PictureCue type="home" label="Home" />
         </Link>
         <Link
           to="/inbox"
           aria-label="Messages"
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl px-3 py-1 text-white hover:bg-white/10 transition-colors"
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl px-3 py-1 text-white hover:bg-surface-0/10 transition-colors"
         >
           <PictureCue type="messages" label="Messages" />
         </Link>
@@ -71,7 +71,7 @@ const K2Layout = ({ children }) => {
           type="button"
           onClick={handleLogout}
           aria-label="Log Out"
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl px-3 py-1 text-white hover:bg-white/10 transition-colors"
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl px-3 py-1 text-white hover:bg-surface-0/10 transition-colors"
         >
           <PictureCue type="logout" label="Log Out" />
         </button>

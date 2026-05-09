@@ -21,19 +21,19 @@ const TYPE_META = {
   announcement: {
     label: 'Announcement',
     Icon: Megaphone,
-    color: 'bg-amber-50 text-amber-700 ring-amber-200',
+    color: 'bg-accent-warning/10 text-accent-warning ring-amber-200',
     href: (courseId, id) => `/courses/${courseId}/announcements`,
   },
   assignment: {
     label: 'Assignment',
     Icon: FileText,
-    color: 'bg-blue-50 text-blue-700 ring-blue-200',
+    color: 'bg-brand-50 text-brand-700 ring-blue-200',
     href: (courseId, id) => `/courses/${courseId}/assignments/${id}`,
   },
   page: {
     label: 'Page',
     Icon: BookOpen,
-    color: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+    color: 'bg-accent-success/10 text-emerald-700 ring-emerald-200',
     href: (courseId, id) => `/courses/${courseId}/pages`,
   },
   discussion_topic: {
@@ -175,16 +175,16 @@ const SmartSearchPage = () => {
         )}
 
         {error && !loading && (
-          <Card className="p-4 border-red-200 bg-red-50">
+          <Card className="p-4 border-accent-danger/30 bg-accent-danger/10">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5" aria-hidden="true" />
+              <AlertTriangle className="h-5 w-5 text-accent-danger mt-0.5" aria-hidden="true" />
               <div className="flex-1">
-                <div className="text-sm font-medium text-red-800">Search failed</div>
-                <div className="text-sm text-red-700 mt-1">{error}</div>
+                <div className="text-sm font-medium text-accent-danger">Search failed</div>
+                <div className="text-sm text-accent-danger mt-1">{error}</div>
                 <button
                   type="button"
                   onClick={retry}
-                  className="mt-2 text-sm font-medium text-red-700 underline hover:text-red-900"
+                  className="mt-2 text-sm font-medium text-accent-danger underline hover:text-red-900"
                 >
                   Try Again
                 </button>

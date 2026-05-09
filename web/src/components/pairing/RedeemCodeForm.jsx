@@ -97,7 +97,7 @@ const RedeemCodeForm = ({ onSuccess, onError, autoFocus = true }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">
+        <label className="mb-1 block text-sm font-medium text-text-secondary">
           Pairing code
         </label>
         <div className="flex items-center gap-2">
@@ -117,26 +117,26 @@ const RedeemCodeForm = ({ onSuccess, onError, autoFocus = true }) => {
                 onPaste={(e) => handlePaste(i, e)}
                 autoFocus={autoFocus && i === 0}
                 aria-label={`Pairing code segment ${i + 1} of 3`}
-                className="w-20 rounded-md border border-gray-300 bg-white px-2 py-2 text-center font-mono text-lg font-semibold uppercase tracking-widest text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-20 rounded-md border border-border-strong bg-surface-0 px-2 py-2 text-center font-mono text-lg font-semibold uppercase tracking-widest text-text-primary focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
                 placeholder="XXX"
               />
-              {i < 2 && <span className="text-gray-400">-</span>}
+              {i < 2 && <span className="text-text-disabled">-</span>}
             </React.Fragment>
           ))}
         </div>
-        <p className="mt-1 text-xs text-gray-500">
+        <p className="mt-1 text-xs text-text-tertiary">
           Enter the 9-character code your student shared with you.
         </p>
       </div>
 
       {error && (
-        <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div className="rounded-md border border-accent-danger/30 bg-accent-danger/10 px-3 py-2 text-sm text-accent-danger">
           {error}
         </div>
       )}
 
       {success && (
-        <div className="flex items-start gap-2 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
+        <div className="flex items-start gap-2 rounded-md border border-accent-success/30 bg-accent-success/10 px-3 py-2 text-sm text-accent-success">
           <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0" />
           <span>Successfully linked. Your student will appear in your dashboard.</span>
         </div>
@@ -145,7 +145,7 @@ const RedeemCodeForm = ({ onSuccess, onError, autoFocus = true }) => {
       <button
         type="submit"
         disabled={!ready || loading}
-        className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex items-center gap-2 rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <Link2 className="h-4 w-4" />
         {loading ? 'Linking…' : 'Link account'}

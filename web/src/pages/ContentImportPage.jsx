@@ -15,10 +15,10 @@ const STATUS_ICONS = {
 };
 
 const STATUS_COLORS = {
-  created: 'text-gray-500 bg-gray-100',
-  running: 'text-blue-600 bg-blue-50',
-  completed: 'text-green-600 bg-green-50',
-  failed: 'text-red-600 bg-red-50',
+  created: 'text-text-tertiary bg-surface-2',
+  running: 'text-brand-600 bg-brand-50',
+  completed: 'text-accent-success bg-accent-success/10',
+  failed: 'text-accent-danger bg-accent-danger/10',
 };
 
 const ContentImportPage = () => {
@@ -113,7 +113,7 @@ const ContentImportPage = () => {
   };
 
   if (isTeacher === false) return <Navigate to={`/courses/${courseId}`} replace />;
-  if (isTeacher === null) return <Layout><div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  if (isTeacher === null) return <Layout><div className="flex items-center justify-center py-12 gap-2 text-text-tertiary">
   <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
   Loading...
 </div></Layout>;
@@ -122,33 +122,33 @@ const ContentImportPage = () => {
     <Layout>
       <CourseNav />
       <div className="mb-6">
-        <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm">
+        <Link to={`/courses/${courseId}`} className="text-brand-600 hover:underline text-sm">
           &larr; Back to Course
         </Link>
-        <h2 className="text-2xl font-bold text-gray-900 mt-2">Import Content</h2>
-        <p className="text-gray-500 text-sm mt-1">
+        <h2 className="text-2xl font-bold text-text-primary mt-2">Import Content</h2>
+        <p className="text-text-tertiary text-sm mt-1">
           Import course content from Canvas exports (.imscc), Common Cartridge packages, or QTI quiz files.
         </p>
       </div>
 
       {/* Upload Area */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-surface-0 rounded-lg shadow p-6 mb-6">
         <div
           className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-            uploading ? 'border-blue-300 bg-blue-50' : 'border-gray-300 hover:border-blue-400'
+            uploading ? 'border-blue-300 bg-brand-50' : 'border-border-strong hover:border-blue-400'
           }`}
         >
-          <FileArchive className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-700 font-medium mb-1">
+          <FileArchive className="w-12 h-12 text-text-disabled mx-auto mb-3" />
+          <p className="text-text-secondary font-medium mb-1">
             {uploading ? 'Uploading...' : 'Upload a course package'}
           </p>
-          <p className="text-gray-500 text-sm mb-4">
+          <p className="text-text-tertiary text-sm mb-4">
             Supported formats: .imscc (Canvas export), .zip (Common Cartridge), .xml (QTI)
           </p>
           <label className={`inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium cursor-pointer transition-colors ${
             uploading
-              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              : 'bg-blue-600 text-white hover:bg-blue-700'
+              ? 'bg-gray-300 text-text-tertiary cursor-not-allowed'
+              : 'bg-brand-600 text-white hover:bg-brand-700'
           }`}>
             <Upload className="w-4 h-4" />
             {uploading ? 'Uploading...' : 'Choose File'}
@@ -164,13 +164,13 @@ const ContentImportPage = () => {
         </div>
 
         {error && (
-          <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-md text-sm flex items-center gap-2">
+          <div className="mt-4 p-3 bg-accent-danger/10 text-accent-danger rounded-md text-sm flex items-center gap-2">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             {error}
           </div>
         )}
         {success && (
-          <div className="mt-4 p-3 bg-green-50 text-green-700 rounded-md text-sm flex items-center gap-2">
+          <div className="mt-4 p-3 bg-accent-success/10 text-accent-success rounded-md text-sm flex items-center gap-2">
             <CheckCircle className="w-4 h-4 flex-shrink-0" />
             {success}
           </div>
@@ -178,14 +178,14 @@ const ContentImportPage = () => {
       </div>
 
       {/* Migration History */}
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-surface-0 rounded-lg shadow">
         <div className="p-4 border-b">
-          <h3 className="font-semibold text-gray-900">Import History</h3>
+          <h3 className="font-semibold text-text-primary">Import History</h3>
         </div>
         {loading ? (
-          <div className="p-6 text-center text-gray-500">Loading...</div>
+          <div className="p-6 text-center text-text-tertiary">Loading...</div>
         ) : migrations.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">No imports yet.</div>
+          <div className="p-6 text-center text-text-tertiary">No imports yet.</div>
         ) : (
           <div className="divide-y">
             {migrations.map((m) => {
@@ -199,10 +199,10 @@ const ContentImportPage = () => {
                       <StatusIcon className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-medium text-text-primary">
                         {formatType(m.migration_type)}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-text-tertiary">
                         {formatDate(m.created_at)}
                       </div>
                     </div>
@@ -216,9 +216,9 @@ const ContentImportPage = () => {
                        m.workflow_state}
                     </span>
                     {m.workflow_state === 'running' && m.progress_url && (
-                      <div className="mt-1 w-32 bg-gray-200 rounded-full h-1.5">
+                      <div className="mt-1 w-32 bg-border-default rounded-full h-1.5">
                         <div
-                          className="bg-blue-600 h-1.5 rounded-full transition-all"
+                          className="bg-brand-600 h-1.5 rounded-full transition-all"
                           style={{ width: `${m.completion || 0}%` }}
                         />
                       </div>

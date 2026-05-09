@@ -30,11 +30,11 @@ import Layout from '../components/Layout';
 
 /* ───────── Theme meta (shared with editor) ───────── */
 const THEME_META = {
-  clean_modern:       { label: 'Clean Modern',       color: 'bg-blue-500',   accent: 'text-blue-600',  ring: 'ring-blue-300' },
+  clean_modern:       { label: 'Clean Modern',       color: 'bg-brand-500',   accent: 'text-brand-600',  ring: 'ring-blue-300' },
   creative_bold:      { label: 'Creative Bold',      color: 'bg-purple-600', accent: 'text-purple-600', ring: 'ring-purple-300' },
-  academic_classic:   { label: 'Academic Classic',    color: 'bg-amber-600',  accent: 'text-amber-700', ring: 'ring-amber-300' },
-  minimal_dark:       { label: 'Minimal Dark',        color: 'bg-gray-800',   accent: 'text-gray-400',  ring: 'ring-gray-500' },
-  developer_portfolio:{ label: 'Developer Portfolio', color: 'bg-emerald-600', accent: 'text-emerald-600', ring: 'ring-emerald-300' },
+  academic_classic:   { label: 'Academic Classic',    color: 'bg-amber-600',  accent: 'text-accent-warning', ring: 'ring-amber-300' },
+  minimal_dark:       { label: 'Minimal Dark',        color: 'bg-gray-800',   accent: 'text-text-disabled',  ring: 'ring-gray-500' },
+  developer_portfolio:{ label: 'Developer Portfolio', color: 'bg-emerald-600', accent: 'text-accent-success', ring: 'ring-emerald-300' },
 };
 
 const STATUS_OPTIONS = [
@@ -236,9 +236,9 @@ const PortfoliosPage = () => {
         <div className="flex flex-col items-center justify-center py-24" role="status" aria-label="Loading portfolios">
           <div className="relative w-16 h-16 mb-6">
             <div className="absolute inset-0 rounded-full border-4 border-blue-100" />
-            <div className="absolute inset-0 rounded-full border-4 border-blue-500 border-t-transparent animate-spin" />
+            <div className="absolute inset-0 rounded-full border-4 border-brand-500 border-t-transparent animate-spin" />
           </div>
-          <p className="text-gray-500 text-lg font-medium">Loading your portfolios...</p>
+          <p className="text-text-tertiary text-lg font-medium">Loading your portfolios...</p>
         </div>
       </Layout>
     );
@@ -249,14 +249,14 @@ const PortfoliosPage = () => {
     return (
       <Layout>
         <div className="text-center py-16">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-50 mb-4">
-            <X className="w-8 h-8 text-red-500" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent-danger/10 mb-4">
+            <X className="w-8 h-8 text-accent-danger" />
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Something went wrong</h2>
-          <p className="text-gray-500 mb-6">{error}</p>
+          <h2 className="text-xl font-semibold text-text-primary mb-2">Something went wrong</h2>
+          <p className="text-text-tertiary mb-6">{error}</p>
           <button
             onClick={() => { setError(null); setLoading(true); fetchPortfolios(); }}
-            className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            className="px-5 py-2.5 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors font-medium"
           >
             Try Again
           </button>
@@ -271,16 +271,16 @@ const PortfoliosPage = () => {
       <section className="mb-8" aria-labelledby="portfolios-heading">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 id="portfolios-heading" className="text-3xl font-bold text-gray-900 tracking-tight">
+            <h1 id="portfolios-heading" className="text-3xl font-bold text-text-primary tracking-tight">
               ePortfolios
             </h1>
-            <p className="text-gray-500 mt-1">
+            <p className="text-text-tertiary mt-1">
               Showcase your best work, reflect on your learning, and share with the world.
             </p>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/25 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/25 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
             aria-label="Create a new portfolio"
           >
             <Plus className="w-4 h-4" aria-hidden="true" />
@@ -293,18 +293,18 @@ const PortfoliosPage = () => {
           <div className="mt-6 flex flex-col sm:flex-row gap-3">
             {/* Search */}
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" aria-hidden="true" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-disabled" aria-hidden="true" />
               <input
                 type="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search portfolios..."
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                className="w-full pl-10 pr-4 py-2.5 border border-border-default rounded-xl text-sm bg-surface-0 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-shadow"
                 aria-label="Search portfolios"
               />
             </div>
             {/* Status filter */}
-            <div className="flex gap-1 p-1 bg-gray-100 rounded-xl" role="tablist" aria-label="Filter portfolios by status">
+            <div className="flex gap-1 p-1 bg-surface-2 rounded-xl" role="tablist" aria-label="Filter portfolios by status">
               {STATUS_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
@@ -313,8 +313,8 @@ const PortfoliosPage = () => {
                   aria-selected={statusFilter === opt.value}
                   className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                     statusFilter === opt.value
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? 'bg-surface-0 text-text-primary shadow-sm'
+                      : 'text-text-tertiary hover:text-text-secondary'
                   }`}
                 >
                   {opt.label}
@@ -327,10 +327,10 @@ const PortfoliosPage = () => {
 
       {/* ── Inline error banner ── */}
       {error && portfolios.length > 0 && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3" role="alert">
-          <X className="w-5 h-5 text-red-500 shrink-0" aria-hidden="true" />
-          <p className="text-sm text-red-700 flex-1">{error}</p>
-          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600" aria-label="Dismiss error">
+        <div className="mb-6 p-4 bg-accent-danger/10 border border-accent-danger/30 rounded-xl flex items-center gap-3" role="alert">
+          <X className="w-5 h-5 text-accent-danger shrink-0" aria-hidden="true" />
+          <p className="text-sm text-accent-danger flex-1">{error}</p>
+          <button onClick={() => setError(null)} className="text-red-400 hover:text-accent-danger" aria-label="Dismiss error">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -341,24 +341,24 @@ const PortfoliosPage = () => {
         <div className="text-center py-20 px-6">
           <div className="relative inline-block mb-8">
             <div className="w-28 h-28 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-3xl flex items-center justify-center rotate-3 shadow-sm">
-              <Sparkles className="w-14 h-14 text-blue-500" aria-hidden="true" />
+              <Sparkles className="w-14 h-14 text-brand-500" aria-hidden="true" />
             </div>
             <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl flex items-center justify-center -rotate-6 shadow-md">
               <Star className="w-5 h-5 text-white" aria-hidden="true" />
             </div>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">Your story starts here</h2>
-          <p className="text-gray-500 max-w-lg mx-auto mb-2 text-lg">
+          <h2 className="text-2xl font-bold text-text-primary mb-3">Your story starts here</h2>
+          <p className="text-text-tertiary max-w-lg mx-auto mb-2 text-lg">
             An ePortfolio is more than a collection of work -- it is a living testament to your growth,
             creativity, and unique perspective.
           </p>
-          <p className="text-gray-400 max-w-md mx-auto mb-8">
+          <p className="text-text-disabled max-w-md mx-auto mb-8">
             Curate your best projects, reflect on what you have learned, and share a professional
             portfolio that makes employers and collaborators take notice.
           </p>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/25 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/25 font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
           >
             <Plus className="w-5 h-5" aria-hidden="true" />
             Create Your First Portfolio
@@ -368,8 +368,8 @@ const PortfoliosPage = () => {
         /* No results for current filter */
         <div className="text-center py-16">
           <Filter className="w-12 h-12 text-gray-300 mx-auto mb-4" aria-hidden="true" />
-          <h3 className="text-lg font-semibold text-gray-700 mb-1">No portfolios found</h3>
-          <p className="text-gray-400">
+          <h3 className="text-lg font-semibold text-text-secondary mb-1">No portfolios found</h3>
+          <p className="text-text-disabled">
             {searchQuery ? 'Try a different search term.' : 'No portfolios match this filter.'}
           </p>
         </div>
@@ -389,7 +389,7 @@ const PortfoliosPage = () => {
               <article
                 key={portfolio.id}
                 role="listitem"
-                className="group relative bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:border-gray-200 transition-all duration-300 overflow-hidden flex flex-col"
+                className="group relative bg-surface-0 rounded-2xl shadow-sm border border-border-subtle hover:shadow-xl hover:border-border-default transition-all duration-300 overflow-hidden flex flex-col"
               >
                 {/* Card thumbnail / cover */}
                 <div className="relative h-40 overflow-hidden">
@@ -415,12 +415,12 @@ const PortfoliosPage = () => {
                         <FileText className={`w-10 h-10 mx-auto mb-2 ${
                           portfolio.theme === 'minimal_dark' || portfolio.theme === 'developer_portfolio' || portfolio.theme === 'creative_bold'
                             ? 'text-white/40'
-                            : 'text-gray-400/60'
+                            : 'text-text-disabled/60'
                         }`} aria-hidden="true" />
                         <span className={`text-xs font-medium ${
                           portfolio.theme === 'minimal_dark' || portfolio.theme === 'developer_portfolio' || portfolio.theme === 'creative_bold'
                             ? 'text-white/30'
-                            : 'text-gray-400/50'
+                            : 'text-text-disabled/50'
                         }`}>
                           {theme.label}
                         </span>
@@ -432,10 +432,10 @@ const PortfoliosPage = () => {
                   <div className="absolute top-3 left-3">
                     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-sm ${
                       isPublished
-                        ? 'bg-green-500/90 text-white'
+                        ? 'bg-accent-success/90 text-white'
                         : isArchived
                         ? 'bg-gray-500/90 text-white'
-                        : 'bg-white/90 text-gray-700 ring-1 ring-gray-200'
+                        : 'bg-surface-0/90 text-text-secondary ring-1 ring-gray-200'
                     }`}>
                       {isPublished ? <Globe className="w-3 h-3" aria-hidden="true" /> : isArchived ? <Archive className="w-3 h-3" aria-hidden="true" /> : <Pencil className="w-3 h-3" aria-hidden="true" />}
                       {isPublished ? 'Published' : isArchived ? 'Archived' : 'Draft'}
@@ -455,7 +455,7 @@ const PortfoliosPage = () => {
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
                     <Link
                       to={`/portfolios/${portfolio.id}/edit`}
-                      className="px-4 py-2 bg-white rounded-lg text-sm font-semibold text-gray-900 shadow-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-white"
+                      className="px-4 py-2 bg-surface-0 rounded-lg text-sm font-semibold text-text-primary shadow-lg hover:bg-surface-1 transition-colors focus:outline-none focus:ring-2 focus:ring-white"
                       aria-label={`Edit ${portfolio.title}`}
                     >
                       Open Editor
@@ -468,7 +468,7 @@ const PortfoliosPage = () => {
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <Link
                       to={`/portfolios/${portfolio.id}/edit`}
-                      className="text-lg font-bold text-gray-900 hover:text-blue-600 transition-colors line-clamp-1 focus:outline-none focus:underline"
+                      className="text-lg font-bold text-text-primary hover:text-brand-600 transition-colors line-clamp-1 focus:outline-none focus:underline"
                     >
                       {portfolio.title || 'Untitled Portfolio'}
                     </Link>
@@ -477,7 +477,7 @@ const PortfoliosPage = () => {
                     <div className="relative shrink-0">
                       <button
                         onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === portfolio.id ? null : portfolio.id); }}
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="p-1.5 rounded-lg text-text-disabled hover:text-text-secondary hover:bg-surface-2 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500"
                         aria-label={`Actions for ${portfolio.title}`}
                         aria-haspopup="true"
                         aria-expanded={openMenuId === portfolio.id}
@@ -487,73 +487,73 @@ const PortfoliosPage = () => {
 
                       {openMenuId === portfolio.id && (
                         <div
-                          className="absolute right-0 top-full mt-1 w-52 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-30 animate-in fade-in slide-in-from-top-2"
+                          className="absolute right-0 top-full mt-1 w-52 bg-surface-0 rounded-xl shadow-xl border border-border-subtle py-1.5 z-30 animate-in fade-in slide-in-from-top-2"
                           role="menu"
                           aria-label="Portfolio actions"
                         >
                           <Link
                             to={`/portfolios/${portfolio.id}/edit`}
-                            className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                            className="flex items-center gap-2.5 px-4 py-2 text-sm text-text-secondary hover:bg-surface-1 transition-colors"
                             role="menuitem"
                           >
-                            <Pencil className="w-4 h-4 text-gray-400" aria-hidden="true" /> Edit
+                            <Pencil className="w-4 h-4 text-text-disabled" aria-hidden="true" /> Edit
                           </Link>
                           {isPublished && (
                             <Link
                               to={`/p/${portfolio.slug || portfolio.id}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                              className="flex items-center gap-2.5 px-4 py-2 text-sm text-text-secondary hover:bg-surface-1 transition-colors"
                               role="menuitem"
                             >
-                              <ExternalLink className="w-4 h-4 text-gray-400" aria-hidden="true" /> View Public Page
+                              <ExternalLink className="w-4 h-4 text-text-disabled" aria-hidden="true" /> View Public Page
                             </Link>
                           )}
                           <button
                             onClick={() => handlePublishToggle(portfolio)}
-                            className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                            className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-text-secondary hover:bg-surface-1 transition-colors text-left"
                             role="menuitem"
                           >
                             {isPublished ? (
-                              <><EyeOff className="w-4 h-4 text-gray-400" aria-hidden="true" /> Unpublish</>
+                              <><EyeOff className="w-4 h-4 text-text-disabled" aria-hidden="true" /> Unpublish</>
                             ) : (
-                              <><Globe className="w-4 h-4 text-gray-400" aria-hidden="true" /> Publish</>
+                              <><Globe className="w-4 h-4 text-text-disabled" aria-hidden="true" /> Publish</>
                             )}
                           </button>
                           <button
                             onClick={() => handleDuplicate(portfolio)}
-                            className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                            className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-text-secondary hover:bg-surface-1 transition-colors text-left"
                             role="menuitem"
                           >
-                            <Copy className="w-4 h-4 text-gray-400" aria-hidden="true" /> Duplicate
+                            <Copy className="w-4 h-4 text-text-disabled" aria-hidden="true" /> Duplicate
                           </button>
                           <button
                             onClick={() => handleExport(portfolio, 'html')}
-                            className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                            className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-text-secondary hover:bg-surface-1 transition-colors text-left"
                             role="menuitem"
                           >
-                            <Download className="w-4 h-4 text-gray-400" aria-hidden="true" /> Export as Website
+                            <Download className="w-4 h-4 text-text-disabled" aria-hidden="true" /> Export as Website
                           </button>
                           <button
                             onClick={() => handleExport(portfolio, 'pdf')}
-                            className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                            className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-text-secondary hover:bg-surface-1 transition-colors text-left"
                             role="menuitem"
                           >
-                            <FileText className="w-4 h-4 text-gray-400" aria-hidden="true" /> Export as PDF
+                            <FileText className="w-4 h-4 text-text-disabled" aria-hidden="true" /> Export as PDF
                           </button>
                           {!isArchived && (
                             <button
                               onClick={() => handleArchive(portfolio)}
-                              className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                              className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-text-secondary hover:bg-surface-1 transition-colors text-left"
                               role="menuitem"
                             >
-                              <Archive className="w-4 h-4 text-gray-400" aria-hidden="true" /> Archive
+                              <Archive className="w-4 h-4 text-text-disabled" aria-hidden="true" /> Archive
                             </button>
                           )}
-                          <div className="border-t border-gray-100 my-1" />
+                          <div className="border-t border-border-subtle my-1" />
                           <button
                             onClick={() => { setDeleteConfirmId(portfolio.id); setOpenMenuId(null); }}
-                            className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
+                            className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-accent-danger hover:bg-accent-danger/10 transition-colors text-left"
                             role="menuitem"
                           >
                             <Trash2 className="w-4 h-4" aria-hidden="true" /> Delete
@@ -564,10 +564,10 @@ const PortfoliosPage = () => {
                   </div>
 
                   {portfolio.tagline && (
-                    <p className="text-sm text-gray-500 line-clamp-2 mb-3">{portfolio.tagline}</p>
+                    <p className="text-sm text-text-tertiary line-clamp-2 mb-3">{portfolio.tagline}</p>
                   )}
 
-                  <div className="mt-auto pt-3 border-t border-gray-50 flex items-center justify-between text-xs text-gray-400">
+                  <div className="mt-auto pt-3 border-t border-gray-50 flex items-center justify-between text-xs text-text-disabled">
                     <span className="flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5" aria-hidden="true" />
                       {formatDate(portfolio.updated_at)}
@@ -600,13 +600,13 @@ const PortfoliosPage = () => {
           />
 
           {/* Modal */}
-          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden">
+          <div className="relative w-full max-w-lg bg-surface-0 rounded-2xl shadow-2xl overflow-hidden">
             <div className="p-6 pb-0">
               <div className="flex items-center justify-between mb-6">
-                <h2 id="create-portfolio-title" className="text-xl font-bold text-gray-900">Create New Portfolio</h2>
+                <h2 id="create-portfolio-title" className="text-xl font-bold text-text-primary">Create New Portfolio</h2>
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="p-2 rounded-lg text-text-disabled hover:text-text-secondary hover:bg-surface-2 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500"
                   aria-label="Close"
                 >
                   <X className="w-5 h-5" />
@@ -616,7 +616,7 @@ const PortfoliosPage = () => {
               <form onSubmit={handleCreate} id="create-portfolio-form">
                 {/* Name */}
                 <div className="mb-5">
-                  <label htmlFor="portfolio-name" className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  <label htmlFor="portfolio-name" className="block text-sm font-semibold text-text-secondary mb-1.5">
                     Portfolio Name
                   </label>
                   <input
@@ -625,7 +625,7 @@ const PortfoliosPage = () => {
                     value={createName}
                     onChange={(e) => setCreateName(e.target.value)}
                     placeholder="My Amazing Portfolio"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                    className="w-full px-4 py-3 border border-border-default rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-shadow"
                     required
                     autoFocus
                   />
@@ -633,7 +633,7 @@ const PortfoliosPage = () => {
 
                 {/* Template */}
                 <div className="mb-5">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Template</label>
+                  <label className="block text-sm font-semibold text-text-secondary mb-2">Template</label>
                   <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Portfolio template">
                     {TEMPLATES.map((tpl) => {
                       const Icon = tpl.icon;
@@ -646,13 +646,13 @@ const PortfoliosPage = () => {
                           aria-checked={createTemplate === tpl.id}
                           className={`p-3 rounded-xl border-2 text-left transition-all ${
                             createTemplate === tpl.id
-                              ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
-                              : 'border-gray-100 hover:border-gray-200 bg-white'
+                              ? 'border-brand-500 bg-brand-50 ring-2 ring-blue-200'
+                              : 'border-border-subtle hover:border-border-default bg-surface-0'
                           }`}
                         >
-                          <Icon className={`w-5 h-5 mb-1.5 ${createTemplate === tpl.id ? 'text-blue-600' : 'text-gray-400'}`} aria-hidden="true" />
-                          <div className="text-sm font-semibold text-gray-900">{tpl.name}</div>
-                          <div className="text-xs text-gray-400 mt-0.5 line-clamp-2">{tpl.description}</div>
+                          <Icon className={`w-5 h-5 mb-1.5 ${createTemplate === tpl.id ? 'text-brand-600' : 'text-text-disabled'}`} aria-hidden="true" />
+                          <div className="text-sm font-semibold text-text-primary">{tpl.name}</div>
+                          <div className="text-xs text-text-disabled mt-0.5 line-clamp-2">{tpl.description}</div>
                         </button>
                       );
                     })}
@@ -661,7 +661,7 @@ const PortfoliosPage = () => {
 
                 {/* Theme */}
                 <div className="mb-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Theme</label>
+                  <label className="block text-sm font-semibold text-text-secondary mb-2">Theme</label>
                   <div className="flex gap-2" role="radiogroup" aria-label="Portfolio theme">
                     {Object.entries(THEME_META).map(([key, meta]) => (
                       <button
@@ -680,18 +680,18 @@ const PortfoliosPage = () => {
                       />
                     ))}
                   </div>
-                  <p className="text-xs text-gray-400 mt-1.5">
+                  <p className="text-xs text-text-disabled mt-1.5">
                     {THEME_META[createTheme]?.label} -- you can change this later
                   </p>
                 </div>
               </form>
             </div>
 
-            <div className="flex items-center justify-end gap-3 p-6 pt-4 bg-gray-50/50 border-t border-gray-100 mt-4">
+            <div className="flex items-center justify-end gap-3 p-6 pt-4 bg-surface-1/50 border-t border-border-subtle mt-4">
               <button
                 type="button"
                 onClick={() => setShowCreateModal(false)}
-                className="px-5 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-800 rounded-xl hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300"
+                className="px-5 py-2.5 text-sm font-medium text-text-secondary hover:text-text-primary rounded-xl hover:bg-surface-2 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300"
               >
                 Cancel
               </button>
@@ -699,7 +699,7 @@ const PortfoliosPage = () => {
                 type="submit"
                 form="create-portfolio-form"
                 disabled={creating || !createName.trim()}
-                className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium text-sm hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium text-sm hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
               >
                 {creating ? 'Creating...' : 'Create Portfolio'}
               </button>
@@ -722,24 +722,24 @@ const PortfoliosPage = () => {
             onClick={() => setDeleteConfirmId(null)}
             aria-hidden="true"
           />
-          <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 text-center">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-red-50 mb-4">
-              <Trash2 className="w-7 h-7 text-red-500" aria-hidden="true" />
+          <div className="relative w-full max-w-sm bg-surface-0 rounded-2xl shadow-2xl p-6 text-center">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-accent-danger/10 mb-4">
+              <Trash2 className="w-7 h-7 text-accent-danger" aria-hidden="true" />
             </div>
-            <h3 id="delete-confirm-title" className="text-lg font-bold text-gray-900 mb-1">Delete Portfolio?</h3>
-            <p id="delete-confirm-desc" className="text-sm text-gray-500 mb-6">
+            <h3 id="delete-confirm-title" className="text-lg font-bold text-text-primary mb-1">Delete Portfolio?</h3>
+            <p id="delete-confirm-desc" className="text-sm text-text-tertiary mb-6">
               This action cannot be undone. All sections, artifacts, and comments will be permanently removed.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirmId(null)}
-                className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300"
+                className="flex-1 px-4 py-2.5 text-sm font-medium text-text-secondary bg-surface-2 rounded-xl hover:bg-border-default transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirmId)}
-                className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-accent-danger rounded-xl hover:bg-accent-danger/90 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
               >
                 Delete Forever
               </button>

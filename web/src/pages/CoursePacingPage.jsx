@@ -168,7 +168,7 @@ const CoursePacingPage = () => {
   };
 
   if (isTeacher === false) return <Navigate to={`/courses/${courseId}`} replace />;
-  if (isTeacher === null) return <Layout><div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  if (isTeacher === null) return <Layout><div className="flex items-center justify-center py-12 gap-2 text-text-tertiary">
   <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
   Loading...
 </div></Layout>;
@@ -176,7 +176,7 @@ const CoursePacingPage = () => {
   if (loading && !pace) {
     return (
       <Layout>
-        <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+        <div className="flex items-center justify-center py-12 gap-2 text-text-tertiary">
   <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
   Loading course pacing...
 </div>
@@ -188,7 +188,7 @@ const CoursePacingPage = () => {
     <Layout>
       <CourseNav />
       <div className="mb-6">
-        <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm">
+        <Link to={`/courses/${courseId}`} className="text-brand-600 hover:underline text-sm">
           &larr; Back to Course
         </Link>
         <div className="flex items-center justify-between mt-2">
@@ -199,7 +199,7 @@ const CoursePacingPage = () => {
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setShowSettings(!showSettings)}
-              className="flex items-center space-x-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-md hover:bg-gray-200 text-sm"
+              className="flex items-center space-x-1 bg-surface-2 text-text-secondary px-3 py-2 rounded-md hover:bg-border-default text-sm"
             >
               <Settings className="w-4 h-4" />
               <span>Settings</span>
@@ -208,7 +208,7 @@ const CoursePacingPage = () => {
               <button
                 onClick={handlePublish}
                 disabled={saving}
-                className="flex items-center space-x-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 text-sm disabled:opacity-50"
+                className="flex items-center space-x-1 bg-accent-success text-white px-4 py-2 rounded-md hover:bg-accent-success/90 text-sm disabled:opacity-50"
               >
                 <Play className="w-4 h-4" />
                 <span>{saving ? 'Publishing...' : 'Publish'}</span>
@@ -219,7 +219,7 @@ const CoursePacingPage = () => {
       </div>
 
       {error && (
-        <div className="bg-red-50 text-red-600 p-3 rounded mb-4">
+        <div className="bg-accent-danger/10 text-accent-danger p-3 rounded mb-4">
           {error}
           <button onClick={() => setError(null)} className="ml-2 underline text-sm">
             Dismiss
@@ -228,8 +228,8 @@ const CoursePacingPage = () => {
       )}
 
       {/* Pace Type Selector */}
-      <div className="bg-white rounded-lg shadow p-4 mb-4">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Pace Type</h3>
+      <div className="bg-surface-0 rounded-lg shadow p-4 mb-4">
+        <h3 className="text-sm font-semibold text-text-secondary mb-3">Pace Type</h3>
         <div className="flex items-center space-x-4 mb-3">
           <label className="flex items-center space-x-2 cursor-pointer">
             <input
@@ -240,7 +240,7 @@ const CoursePacingPage = () => {
               onChange={() => setPaceType('course')}
               className="text-indigo-600"
             />
-            <Clock className="w-4 h-4 text-gray-500" />
+            <Clock className="w-4 h-4 text-text-tertiary" />
             <span className="text-sm">Course Default</span>
           </label>
           <label className="flex items-center space-x-2 cursor-pointer">
@@ -252,7 +252,7 @@ const CoursePacingPage = () => {
               onChange={() => setPaceType('section')}
               className="text-indigo-600"
             />
-            <Users className="w-4 h-4 text-gray-500" />
+            <Users className="w-4 h-4 text-text-tertiary" />
             <span className="text-sm">Section</span>
           </label>
           <label className="flex items-center space-x-2 cursor-pointer">
@@ -264,7 +264,7 @@ const CoursePacingPage = () => {
               onChange={() => setPaceType('student')}
               className="text-indigo-600"
             />
-            <User className="w-4 h-4 text-gray-500" />
+            <User className="w-4 h-4 text-text-tertiary" />
             <span className="text-sm">Student</span>
           </label>
         </div>
@@ -276,7 +276,7 @@ const CoursePacingPage = () => {
               placeholder="Section ID"
               value={sectionId}
               onChange={(e) => setSectionId(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-1.5 text-sm w-32"
+              className="border border-border-strong rounded px-3 py-1.5 text-sm w-32"
             />
           </div>
         )}
@@ -288,7 +288,7 @@ const CoursePacingPage = () => {
               placeholder="Student ID"
               value={studentId}
               onChange={(e) => setStudentId(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-1.5 text-sm w-32"
+              className="border border-border-strong rounded px-3 py-1.5 text-sm w-32"
             />
           </div>
         )}
@@ -296,7 +296,7 @@ const CoursePacingPage = () => {
         {/* Existing paces list */}
         {paces.length > 0 && (
           <div className="mt-3 border-t pt-3">
-            <p className="text-xs text-gray-500 mb-2">Existing paces:</p>
+            <p className="text-xs text-text-tertiary mb-2">Existing paces:</p>
             <div className="flex flex-wrap gap-2">
               {paces.map((p) => (
                 <button
@@ -305,7 +305,7 @@ const CoursePacingPage = () => {
                   className={`px-3 py-1 rounded text-xs border ${
                     pace && pace.id === p.id
                       ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
-                      : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                      : 'bg-surface-1 border-border-default text-text-secondary hover:bg-surface-2'
                   }`}
                 >
                   {getPaceLabel(p)}
@@ -322,7 +322,7 @@ const CoursePacingPage = () => {
           <button
             onClick={handleCreatePace}
             disabled={saving}
-            className="mt-3 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm disabled:opacity-50"
+            className="mt-3 bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 text-sm disabled:opacity-50"
           >
             {saving ? 'Creating...' : 'Create Pace'}
           </button>
@@ -331,8 +331,8 @@ const CoursePacingPage = () => {
 
       {/* Settings Panel */}
       {showSettings && pace && (
-        <div className="bg-white rounded-lg shadow p-4 mb-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Pacing Settings</h3>
+        <div className="bg-surface-0 rounded-lg shadow p-4 mb-4">
+          <h3 className="text-sm font-semibold text-text-secondary mb-3">Pacing Settings</h3>
           <div className="space-y-3">
             <label className="flex items-center space-x-3">
               <input
@@ -341,7 +341,7 @@ const CoursePacingPage = () => {
                 onChange={(e) => setPace({ ...pace, exclude_weekends: e.target.checked })}
                 className="rounded text-indigo-600"
               />
-              <span className="text-sm text-gray-700">Skip weekends</span>
+              <span className="text-sm text-text-secondary">Skip weekends</span>
             </label>
             <label className="flex items-center space-x-3">
               <input
@@ -350,15 +350,15 @@ const CoursePacingPage = () => {
                 onChange={(e) => setPace({ ...pace, hard_end_dates: e.target.checked })}
                 className="rounded text-indigo-600"
               />
-              <span className="text-sm text-gray-700">Require completion by end date</span>
+              <span className="text-sm text-text-secondary">Require completion by end date</span>
             </label>
             <div>
-              <label className="block text-sm text-gray-700 mb-1">End date</label>
+              <label className="block text-sm text-text-secondary mb-1">End date</label>
               <input
                 type="date"
                 value={pace.end_date ? pace.end_date.slice(0, 10) : ''}
                 onChange={(e) => setPace({ ...pace, end_date: e.target.value || null })}
-                className="border border-gray-300 rounded px-3 py-1.5 text-sm"
+                className="border border-border-strong rounded px-3 py-1.5 text-sm"
               />
             </div>
             <button
@@ -374,27 +374,27 @@ const CoursePacingPage = () => {
 
       {/* Pace Status */}
       {pace && (
-        <div className="bg-white rounded-lg shadow p-4 mb-4">
+        <div className="bg-surface-0 rounded-lg shadow p-4 mb-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-medium">{getPaceLabel(pace)}</h3>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-text-tertiary">
                 Status:{' '}
                 <span
                   className={`font-medium ${
-                    pace.workflow_state === 'active' ? 'text-green-600' : 'text-yellow-600'
+                    pace.workflow_state === 'active' ? 'text-accent-success' : 'text-accent-warning'
                   }`}
                 >
                   {pace.workflow_state}
                 </span>
                 {pace.published_at && (
-                  <span className="ml-2 text-gray-400">
+                  <span className="ml-2 text-text-disabled">
                     Published {formatDate(pace.published_at)}
                   </span>
                 )}
               </p>
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-text-tertiary">
               {pace.exclude_weekends && <span className="mr-3">Weekends excluded</span>}
               {pace.hard_end_dates && <span>Hard end dates</span>}
             </div>
@@ -404,16 +404,16 @@ const CoursePacingPage = () => {
 
       {/* Timeline / Module Items */}
       {pace && (
-        <div className="bg-white rounded-lg shadow">
+        <div className="bg-surface-0 rounded-lg shadow">
           <div className="flex items-center justify-between px-4 py-3 border-b">
-            <h3 className="font-semibold text-gray-700 flex items-center space-x-2">
+            <h3 className="font-semibold text-text-secondary flex items-center space-x-2">
               <Calendar className="w-5 h-5 text-indigo-500" />
               <span>Module Items Timeline</span>
             </h3>
             <button
               onClick={handleSaveItems}
               disabled={saving}
-              className="flex items-center space-x-1 bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 text-sm disabled:opacity-50"
+              className="flex items-center space-x-1 bg-brand-600 text-white px-3 py-1.5 rounded-md hover:bg-brand-700 text-sm disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
               <span>{saving ? 'Saving...' : 'Save Durations'}</span>
@@ -421,7 +421,7 @@ const CoursePacingPage = () => {
           </div>
 
           {moduleItems.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
+            <div className="p-8 text-center text-text-tertiary">
               No module items configured for this pace. Add module items to your course first, then configure their pacing durations here.
             </div>
           ) : (
@@ -431,35 +431,35 @@ const CoursePacingPage = () => {
                 return (
                   <div
                     key={item.id || item.module_item_id}
-                    className="flex items-center justify-between px-4 py-3 hover:bg-gray-50"
+                    className="flex items-center justify-between px-4 py-3 hover:bg-surface-1"
                   >
                     <div className="flex items-center space-x-3 flex-1">
                       <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 text-sm font-medium">
                         {index + 1}
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-800">
+                        <p className="text-sm font-medium text-text-primary">
                           Module Item #{item.module_item_id}
                         </p>
                         {timelineEntry && (
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-text-tertiary">
                             Due: {formatDate(timelineEntry.projected_date)}
                           </p>
                         )}
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <label className="text-xs text-gray-500">Days:</label>
+                      <label className="text-xs text-text-tertiary">Days:</label>
                       <input
                         type="number"
                         min="1"
                         value={item.duration}
                         onChange={(e) => handleDurationChange(index, e.target.value)}
-                        className="w-16 border border-gray-300 rounded px-2 py-1 text-sm text-center"
+                        className="w-16 border border-border-strong rounded px-2 py-1 text-sm text-center"
                       />
                     </div>
                     {timelineEntry && (
-                      <div className="ml-4 w-32 bg-gray-100 rounded-full h-2 overflow-hidden">
+                      <div className="ml-4 w-32 bg-surface-2 rounded-full h-2 overflow-hidden">
                         <div
                           className="bg-indigo-500 h-2 rounded-full"
                           style={{
@@ -476,8 +476,8 @@ const CoursePacingPage = () => {
 
           {/* Timeline Summary */}
           {timeline.length > 0 && (
-            <div className="border-t px-4 py-3 bg-gray-50">
-              <div className="flex items-center justify-between text-sm text-gray-600">
+            <div className="border-t px-4 py-3 bg-surface-1">
+              <div className="flex items-center justify-between text-sm text-text-secondary">
                 <span>
                   Total items: <strong>{timeline.length}</strong>
                 </span>

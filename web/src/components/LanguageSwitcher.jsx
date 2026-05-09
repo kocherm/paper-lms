@@ -24,7 +24,7 @@ const LanguageSwitcher = () => {
           <button
             onClick={() => setOpen(!open)}
             aria-label="Language"
-            className="relative flex items-center justify-center w-10 h-10 rounded-md text-gray-300 hover:bg-white/10 hover:text-white transition-colors"
+            className="relative flex items-center justify-center w-10 h-10 rounded-md text-gray-300 hover:bg-surface-0/10 hover:text-white transition-colors"
           >
             <Globe className="w-5 h-5" />
           </button>
@@ -33,15 +33,15 @@ const LanguageSwitcher = () => {
       </Tooltip>
 
       {open && (
-        <div className="absolute left-full ml-2 bottom-0 w-36 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
+        <div className="absolute left-full ml-2 bottom-0 w-36 bg-surface-0 rounded-md shadow-lg border border-border-default py-1 z-50">
           {languages.map((lang) => (
             <button
               key={lang.code}
               onClick={() => { i18n.changeLanguage(lang.code); setOpen(false); }}
               className={`block w-full text-left px-4 py-2 text-sm ${
                 i18n.language === lang.code || i18n.language?.startsWith(lang.code + '-')
-                  ? 'bg-blue-50 text-blue-600 font-medium'
-                  : 'text-gray-700 hover:bg-gray-50'
+                  ? 'bg-brand-50 text-brand-600 font-medium'
+                  : 'text-text-secondary hover:bg-surface-1'
               }`}
             >
               {lang.label}

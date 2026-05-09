@@ -82,9 +82,9 @@ const DocViewerPage = () => {
     if (submission.body) return submission.body;
     if (submission.url) {
       return `<div class="text-center p-8">
-        <p class="text-gray-600 mb-4">This submission is a URL:</p>
+        <p class="text-text-secondary mb-4">This submission is a URL:</p>
         <a href="${submission.url}" target="_blank" rel="noopener noreferrer"
-           class="text-blue-600 hover:underline break-all text-lg">${submission.url}</a>
+           class="text-brand-600 hover:underline break-all text-lg">${submission.url}</a>
       </div>`;
     }
     return '';
@@ -100,7 +100,7 @@ const DocViewerPage = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="flex flex-col items-center justify-center h-[calc(100vh-120px)] text-gray-500">
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-120px)] text-text-tertiary">
           <Loader className="w-8 h-8 animate-spin mb-3" />
           <p className="text-lg">Loading document viewer...</p>
         </div>
@@ -111,13 +111,13 @@ const DocViewerPage = () => {
   if (error) {
     return (
       <Layout>
-        <div className="flex flex-col items-center justify-center h-[calc(100vh-120px)] text-red-500">
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-120px)] text-accent-danger">
           <AlertCircle className="w-12 h-12 mb-3" />
           <p className="text-lg font-medium">Error Loading Document</p>
-          <p className="text-sm text-gray-500 mt-1">{error}</p>
+          <p className="text-sm text-text-tertiary mt-1">{error}</p>
           <Link
             to={`/courses/${courseId}/assignments/${assignmentId}`}
-            className="mt-4 text-blue-600 hover:underline text-sm"
+            className="mt-4 text-brand-600 hover:underline text-sm"
           >
             Back to Assignment
           </Link>
@@ -129,10 +129,10 @@ const DocViewerPage = () => {
   if (!hasViewableContent()) {
     return (
       <Layout>
-        <div className="flex flex-col items-center justify-center h-[calc(100vh-120px)] text-gray-400">
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-120px)] text-text-disabled">
           <FileText className="w-16 h-16 mb-4" />
-          <p className="text-xl font-medium text-gray-600">No Viewable Content</p>
-          <p className="text-sm text-gray-500 mt-2 max-w-md text-center">
+          <p className="text-xl font-medium text-text-secondary">No Viewable Content</p>
+          <p className="text-sm text-text-tertiary mt-2 max-w-md text-center">
             This submission does not have content that can be viewed inline.
             {submission?.submission_type && (
               <span className="block mt-1">
@@ -143,13 +143,13 @@ const DocViewerPage = () => {
           <div className="mt-6 flex gap-3">
             <Link
               to={`/courses/${courseId}/assignments/${assignmentId}`}
-              className="text-blue-600 hover:underline text-sm flex items-center gap-1"
+              className="text-brand-600 hover:underline text-sm flex items-center gap-1"
             >
               <ArrowLeft className="w-4 h-4" /> Back to Assignment
             </Link>
             <Link
               to={`/courses/${courseId}/gradebook`}
-              className="text-blue-600 hover:underline text-sm"
+              className="text-brand-600 hover:underline text-sm"
             >
               SpeedGrader
             </Link>
@@ -162,21 +162,21 @@ const DocViewerPage = () => {
   return (
     <Layout>
       {/* Top bar */}
-      <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between -mx-4 -mt-4 mb-4">
+      <div className="bg-surface-0 border-b border-border-default px-4 py-2 flex items-center justify-between -mx-4 -mt-4 mb-4">
         <div className="flex items-center gap-4">
           <Link
             to={`/courses/${courseId}/assignments/${assignmentId}`}
-            className="flex items-center gap-1 text-sm text-gray-600 hover:text-blue-600 transition-colors"
+            className="flex items-center gap-1 text-sm text-text-secondary hover:text-brand-600 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back to SpeedGrader</span>
           </Link>
           <div className="h-5 w-px bg-gray-300" />
           <div>
-            <h1 className="text-sm font-semibold text-gray-800 truncate max-w-md">
+            <h1 className="text-sm font-semibold text-text-primary truncate max-w-md">
               {assignment?.name || 'Document Viewer'}
             </h1>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-text-tertiary">
               {submission?.submission_type && (
                 <span className="capitalize">{submission.submission_type.replace(/_/g, ' ')}</span>
               )}
@@ -189,58 +189,58 @@ const DocViewerPage = () => {
 
         <div className="flex items-center gap-2">
           {/* Zoom controls */}
-          <div className="flex items-center gap-1 bg-gray-100 rounded-lg px-1 py-0.5">
+          <div className="flex items-center gap-1 bg-surface-2 rounded-lg px-1 py-0.5">
             <button
               onClick={handleZoomOut}
-              className="p-1 hover:bg-gray-200 rounded transition-colors"
+              className="p-1 hover:bg-border-default rounded transition-colors"
               title="Zoom out"
               disabled={zoom <= 50}
             >
-              <ZoomOut className="w-4 h-4 text-gray-600" />
+              <ZoomOut className="w-4 h-4 text-text-secondary" />
             </button>
-            <span className="text-xs font-medium text-gray-600 w-10 text-center">{zoom}%</span>
+            <span className="text-xs font-medium text-text-secondary w-10 text-center">{zoom}%</span>
             <button
               onClick={handleZoomIn}
-              className="p-1 hover:bg-gray-200 rounded transition-colors"
+              className="p-1 hover:bg-border-default rounded transition-colors"
               title="Zoom in"
               disabled={zoom >= 200}
             >
-              <ZoomIn className="w-4 h-4 text-gray-600" />
+              <ZoomIn className="w-4 h-4 text-text-secondary" />
             </button>
             <button
               onClick={handleZoomReset}
-              className="p-1 hover:bg-gray-200 rounded transition-colors"
+              className="p-1 hover:bg-border-default rounded transition-colors"
               title="Reset zoom"
             >
-              <RotateCcw className="w-3.5 h-3.5 text-gray-600" />
+              <RotateCcw className="w-3.5 h-3.5 text-text-secondary" />
             </button>
           </div>
 
           {/* Page navigation */}
           {totalPages > 1 && (
-            <div className="flex items-center gap-1 bg-gray-100 rounded-lg px-1 py-0.5">
+            <div className="flex items-center gap-1 bg-surface-2 rounded-lg px-1 py-0.5">
               <button
                 onClick={handlePrevPage}
-                className="p-1 hover:bg-gray-200 rounded transition-colors"
+                className="p-1 hover:bg-border-default rounded transition-colors"
                 disabled={currentPage <= 1}
               >
-                <ChevronLeft className="w-4 h-4 text-gray-600" />
+                <ChevronLeft className="w-4 h-4 text-text-secondary" />
               </button>
-              <span className="text-xs font-medium text-gray-600 w-16 text-center">
+              <span className="text-xs font-medium text-text-secondary w-16 text-center">
                 {currentPage} / {totalPages}
               </span>
               <button
                 onClick={handleNextPage}
-                className="p-1 hover:bg-gray-200 rounded transition-colors"
+                className="p-1 hover:bg-border-default rounded transition-colors"
                 disabled={currentPage >= totalPages}
               >
-                <ChevronRight className="w-4 h-4 text-gray-600" />
+                <ChevronRight className="w-4 h-4 text-text-secondary" />
               </button>
             </div>
           )}
 
           {isReadOnly && (
-            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded font-medium">
+            <span className="text-xs bg-surface-2 text-text-secondary px-2 py-1 rounded font-medium">
               View Only
             </span>
           )}

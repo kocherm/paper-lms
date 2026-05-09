@@ -255,15 +255,15 @@ const NotificationBell = ({ position = 'sidebar' }) => {
   const panelBody = (
     <>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-        <h3 className="font-semibold text-gray-900 text-sm" id={`${dialogId}-title`}>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle">
+        <h3 className="font-semibold text-text-primary text-sm" id={`${dialogId}-title`}>
           Notifications
         </h3>
         <div className="flex items-center gap-2">
           {unreadCount > 0 && (
             <button
               onClick={handleMarkAllRead}
-              className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+              className="text-xs text-brand-600 hover:text-brand-800 flex items-center gap-1"
               title="Mark all as read"
             >
               <CheckCheck className="w-3.5 h-3.5" />
@@ -272,7 +272,7 @@ const NotificationBell = ({ position = 'sidebar' }) => {
           )}
           <button
             onClick={close}
-            className="p-1 text-gray-400 hover:text-gray-600 rounded"
+            className="p-1 text-text-disabled hover:text-text-secondary rounded"
             aria-label="Close notifications"
           >
             <X className="w-4 h-4" />
@@ -281,10 +281,10 @@ const NotificationBell = ({ position = 'sidebar' }) => {
       </div>
 
       {/* DND quick toggle */}
-      <div className="px-4 py-2 border-b border-gray-100 bg-gray-50/60">
+      <div className="px-4 py-2 border-b border-border-subtle bg-surface-1/60">
         <button
           onClick={handleToggleDnd}
-          className="w-full flex items-center justify-between gap-2 text-xs text-gray-700 hover:text-gray-900"
+          className="w-full flex items-center justify-between gap-2 text-xs text-text-secondary hover:text-text-primary"
         >
           <span className="flex items-center gap-2">
             <Moon className="w-3.5 h-3.5" />
@@ -293,7 +293,7 @@ const NotificationBell = ({ position = 'sidebar' }) => {
               : 'Pause notifications until tomorrow morning'}
           </span>
           <span
-            className={`text-[11px] font-semibold uppercase tracking-wide ${dndActive ? 'text-amber-600' : 'text-blue-600'}`}
+            className={`text-[11px] font-semibold uppercase tracking-wide ${dndActive ? 'text-accent-warning' : 'text-brand-600'}`}
           >
             {dndActive ? 'Resume' : 'Pause'}
           </span>
@@ -303,7 +303,7 @@ const NotificationBell = ({ position = 'sidebar' }) => {
       {/* Notification list */}
       <div className="flex-1 overflow-y-auto">
         {loading && notifications.length === 0 ? (
-          <div className="flex items-center justify-center py-8 text-gray-400 text-sm gap-2">
+          <div className="flex items-center justify-center py-8 text-text-disabled text-sm gap-2">
             <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
               <circle
                 className="opacity-25"
@@ -322,7 +322,7 @@ const NotificationBell = ({ position = 'sidebar' }) => {
             Loading...
           </div>
         ) : notifications.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+          <div className="flex flex-col items-center justify-center py-8 text-text-disabled">
             <Bell className="w-8 h-8 mb-2 opacity-50" />
             <p className="text-sm">No notifications</p>
           </div>
@@ -353,29 +353,29 @@ const NotificationBell = ({ position = 'sidebar' }) => {
             return (
               <Wrapper
                 key={n.id}
-                className={`flex items-start gap-3 px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer ${!n.is_read ? 'bg-blue-50/50' : ''}`}
+                className={`flex items-start gap-3 px-4 py-3 border-b border-border-subtle hover:bg-surface-1 transition-colors cursor-pointer ${!n.is_read ? 'bg-brand-50/50' : ''}`}
                 {...wrapperProps}
               >
                 <span className="text-lg flex-shrink-0 mt-0.5">{icon}</span>
                 <div className="flex-1 min-w-0">
                   <p
-                    className={`text-sm leading-snug ${!n.is_read ? 'font-medium text-gray-900' : 'text-gray-700'}`}
+                    className={`text-sm leading-snug ${!n.is_read ? 'font-medium text-text-primary' : 'text-text-secondary'}`}
                   >
                     {n.title}
                   </p>
                   {n.message && (
-                    <p className="text-xs text-gray-500 mt-0.5 truncate">
+                    <p className="text-xs text-text-tertiary mt-0.5 truncate">
                       {n.message}
                     </p>
                   )}
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-text-disabled mt-1">
                     {formatTime(n.created_at)}
                   </p>
                 </div>
                 {!n.is_read && (
                   <button
                     onClick={(e) => handleMarkAsRead(n.id, e)}
-                    className="p-1 text-gray-400 hover:text-blue-600 rounded flex-shrink-0"
+                    className="p-1 text-text-disabled hover:text-brand-600 rounded flex-shrink-0"
                     aria-label="Mark as read"
                     title="Mark as read"
                   >
@@ -390,11 +390,11 @@ const NotificationBell = ({ position = 'sidebar' }) => {
 
       {/* Footer */}
       {notifications.length > 0 && (
-        <div className="border-t border-gray-100 px-4 py-2">
+        <div className="border-t border-border-subtle px-4 py-2">
           <Link
             to="/notifications"
             onClick={close}
-            className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+            className="text-xs text-brand-600 hover:text-brand-800 font-medium"
           >
             View all notifications
           </Link>
@@ -407,10 +407,10 @@ const NotificationBell = ({ position = 'sidebar' }) => {
   const panelClassByPosition = {
     // Existing behavior — opens to right of bell, anchored to bottom.
     sidebar:
-      'absolute start-full ms-2 bottom-0 w-80 max-h-[480px] bg-white rounded-lg shadow-xl border border-gray-200 z-50 flex flex-col',
+      'absolute start-full ms-2 bottom-0 w-80 max-h-[480px] bg-surface-0 rounded-lg shadow-xl border border-border-default z-50 flex flex-col',
     // Header variant — drops down below the trigger, right-aligned.
     header:
-      'absolute end-0 top-full mt-2 w-80 max-h-[480px] bg-white rounded-lg shadow-xl border border-gray-200 z-50 flex flex-col',
+      'absolute end-0 top-full mt-2 w-80 max-h-[480px] bg-surface-0 rounded-lg shadow-xl border border-border-default z-50 flex flex-col',
   };
 
   const renderPanel = () => {
@@ -436,11 +436,11 @@ const NotificationBell = ({ position = 'sidebar' }) => {
               role="dialog"
               aria-modal="true"
               aria-labelledby={`${dialogId}-title`}
-              className="relative w-full max-w-2xl h-[70vh] bg-white rounded-t-2xl shadow-2xl border-t border-gray-200 flex flex-col animate-in slide-in-from-bottom duration-200"
+              className="relative w-full max-w-2xl h-[70vh] bg-surface-0 rounded-t-2xl shadow-2xl border-t border-border-default flex flex-col animate-in slide-in-from-bottom duration-200"
             >
               {/* drag handle */}
               <div className="flex justify-center pt-2 pb-1">
-                <span className="block w-10 h-1.5 rounded-full bg-gray-300" />
+                <span className="block w-10 h-1.5 rounded-full bg-border-strong" />
               </div>
               {panelBody}
             </div>
@@ -480,7 +480,7 @@ const NotificationBell = ({ position = 'sidebar' }) => {
           <button
             ref={triggerRef}
             onClick={toggle}
-            className="relative flex items-center justify-center w-10 h-10 rounded-md text-gray-300 hover:bg-white/10 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+            className="relative flex items-center justify-center w-10 h-10 rounded-md text-gray-300 hover:bg-surface-0/10 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
             aria-label={ariaLabel}
             aria-haspopup="dialog"
             aria-expanded={isOpen}
@@ -489,7 +489,7 @@ const NotificationBell = ({ position = 'sidebar' }) => {
             {dndActive ? <BellOff className="w-5 h-5" /> : <Bell className="w-5 h-5" />}
             {showBadge && (
               <span
-                className="absolute top-1 end-1 flex items-center justify-center min-w-[16px] h-4 px-1 text-[11px] font-semibold text-white bg-red-500 rounded-full leading-none"
+                className="absolute top-1 end-1 flex items-center justify-center min-w-[16px] h-4 px-1 text-[11px] font-semibold text-white bg-accent-danger rounded-full leading-none"
                 aria-hidden="true"
               >
                 {unreadCount > 99 ? '99+' : unreadCount}
@@ -497,7 +497,7 @@ const NotificationBell = ({ position = 'sidebar' }) => {
             )}
             {dndActive && (
               <span
-                className="absolute -bottom-0.5 -end-0.5 flex items-center justify-center px-1 h-3.5 text-[9px] font-semibold text-white bg-amber-500 rounded-full leading-none"
+                className="absolute -bottom-0.5 -end-0.5 flex items-center justify-center px-1 h-3.5 text-[9px] font-semibold text-white bg-accent-warning rounded-full leading-none"
                 aria-hidden="true"
                 title="Do Not Disturb"
               >

@@ -34,7 +34,7 @@ const CommonsCard = ({ item, isFavorited, onFavorite, onClick }) => {
     <button
       type="button"
       onClick={() => onClick?.(item)}
-      className="group flex flex-col text-left bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
+      className="group flex flex-col text-left bg-surface-0 border border-slate-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
     >
       <div className="relative h-32 bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
         {item.thumbnail_url ? (
@@ -42,7 +42,7 @@ const CommonsCard = ({ item, isFavorited, onFavorite, onClick }) => {
         ) : (
           <Icon className="w-12 h-12 text-indigo-400" aria-hidden="true" />
         )}
-        <span className="absolute top-2 left-2 inline-flex items-center gap-1 text-[11px] font-medium uppercase tracking-wide bg-white/90 text-slate-700 px-2 py-0.5 rounded">
+        <span className="absolute top-2 left-2 inline-flex items-center gap-1 text-[11px] font-medium uppercase tracking-wide bg-surface-0/90 text-slate-700 px-2 py-0.5 rounded">
           <Icon className="w-3 h-3" aria-hidden="true" />
           {RESOURCE_LABELS[item.resource_type] || item.resource_type}
         </span>
@@ -57,7 +57,7 @@ const CommonsCard = ({ item, isFavorited, onFavorite, onClick }) => {
               handleStarClick(e);
             }
           }}
-          className="absolute top-2 right-2 p-1 rounded-full bg-white/90 hover:bg-white"
+          className="absolute top-2 right-2 p-1 rounded-full bg-surface-0/90 hover:bg-surface-0"
         >
           <Star
             className={`w-4 h-4 ${isFavorited ? 'fill-yellow-400 text-yellow-400' : 'text-slate-400'}`}

@@ -28,15 +28,15 @@ const CALCULATION_METHODS = [
 ];
 
 const DEFAULT_RATINGS = [
-  { description: 'Exceeds Mastery', points: 4, color: 'bg-green-500' },
-  { description: 'Mastery', points: 3, color: 'bg-blue-500' },
-  { description: 'Near Mastery', points: 2, color: 'bg-yellow-500' },
+  { description: 'Exceeds Mastery', points: 4, color: 'bg-accent-success' },
+  { description: 'Mastery', points: 3, color: 'bg-brand-500' },
+  { description: 'Near Mastery', points: 2, color: 'bg-accent-warning' },
   { description: 'Below Mastery', points: 1, color: 'bg-orange-500' },
-  { description: 'No Evidence', points: 0, color: 'bg-red-500' },
+  { description: 'No Evidence', points: 0, color: 'bg-accent-danger' },
 ];
 
 const getRatingColor = (index, total) => {
-  const colors = ['bg-green-500', 'bg-blue-500', 'bg-yellow-500', 'bg-orange-500', 'bg-red-500'];
+  const colors = ['bg-accent-success', 'bg-brand-500', 'bg-accent-warning', 'bg-orange-500', 'bg-accent-danger'];
   if (total <= colors.length) {
     return colors[index] || colors[colors.length - 1];
   }
@@ -263,7 +263,7 @@ const LearningOutcomesPage = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+        <div className="flex items-center justify-center py-12 gap-2 text-text-tertiary">
   <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
   Loading outcomes...
 </div>
@@ -275,18 +275,18 @@ const LearningOutcomesPage = () => {
     <Layout>
       <CourseNav />
       <div className="mb-6">
-        <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm">
+        <Link to={`/courses/${courseId}`} className="text-brand-600 hover:underline text-sm">
           &larr; Back to Course
         </Link>
         <div className="flex items-center justify-between mt-2">
-          <h2 className="text-2xl font-bold text-gray-900">Learning Outcomes</h2>
+          <h2 className="text-2xl font-bold text-text-primary">Learning Outcomes</h2>
           <div className="flex items-center space-x-2">
             <button
               onClick={handleViewRollup}
               className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm border ${
                 showRollup
                   ? 'bg-purple-50 border-purple-300 text-purple-700'
-                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                  : 'bg-surface-0 border-border-strong text-text-secondary hover:bg-surface-1'
               }`}
             >
               <BarChart3 className="w-4 h-4" />
@@ -294,7 +294,7 @@ const LearningOutcomesPage = () => {
             </button>
             <button
               onClick={() => setShowCreateGroup(!showCreateGroup)}
-              className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm"
+              className="flex items-center space-x-2 bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 text-sm"
             >
               <Plus className="w-4 h-4" />
               <span>New Group</span>
@@ -304,9 +304,9 @@ const LearningOutcomesPage = () => {
       </div>
 
       {error && (
-        <div className="bg-red-50 text-red-600 p-3 rounded mb-4 flex items-center justify-between">
+        <div className="bg-accent-danger/10 text-accent-danger p-3 rounded mb-4 flex items-center justify-between">
           <span>{error}</span>
-          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600">
+          <button onClick={() => setError(null)} className="text-accent-danger hover:text-accent-danger">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -314,22 +314,22 @@ const LearningOutcomesPage = () => {
 
       {/* Create Group Form */}
       {showCreateGroup && (
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-surface-0 rounded-lg shadow p-6 mb-6">
           <h3 className="font-semibold mb-4">Create Outcome Group</h3>
           <form onSubmit={handleCreateGroup} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Title</label>
               <input
                 type="text"
                 value={newGroupTitle}
                 onChange={(e) => setNewGroupTitle(e.target.value)}
                 placeholder="e.g., Common Core Math Standards"
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-border-strong rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-secondary mb-1">
                 Description (optional)
               </label>
               <textarea
@@ -337,20 +337,20 @@ const LearningOutcomesPage = () => {
                 onChange={(e) => setNewGroupDescription(e.target.value)}
                 placeholder="Describe this group of outcomes..."
                 rows={2}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-border-strong rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
             <div className="flex space-x-3">
               <button
                 type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
+                className="bg-brand-600 text-white px-4 py-2 rounded hover:bg-brand-700 text-sm"
               >
                 Create Group
               </button>
               <button
                 type="button"
                 onClick={() => setShowCreateGroup(false)}
-                className="text-gray-500 hover:text-gray-700 text-sm"
+                className="text-text-tertiary hover:text-text-secondary text-sm"
               >
                 Cancel
               </button>
@@ -361,7 +361,7 @@ const LearningOutcomesPage = () => {
 
       {/* Rollup View */}
       {showRollup && (
-        <div className="bg-white rounded-lg shadow mb-6 overflow-hidden">
+        <div className="bg-surface-0 rounded-lg shadow mb-6 overflow-hidden">
           <div className="p-4 border-b bg-purple-50">
             <h3 className="font-semibold text-purple-800 flex items-center space-x-2">
               <BarChart3 className="w-5 h-5" />
@@ -372,7 +372,7 @@ const LearningOutcomesPage = () => {
             </p>
           </div>
           {rollupLoading ? (
-            <div className="p-8 text-center text-gray-500">Loading rollup data...</div>
+            <div className="p-8 text-center text-text-tertiary">Loading rollup data...</div>
           ) : rollupData ? (
             <>
               {/* Desktop: wide table */}
@@ -380,19 +380,19 @@ const LearningOutcomesPage = () => {
                 <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
                   <table className="min-w-full border-collapse" role="grid">
                     <thead>
-                      <tr className="bg-gray-50">
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase border-b border-r min-w-[200px]">
+                      <tr className="bg-surface-1">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase border-b border-r min-w-[200px]">
                           Student
                         </th>
                         {(rollupData.outcomes || []).map((outcome) => (
                           <th
                             key={outcome.id}
-                            className="px-3 py-3 text-center text-xs font-medium text-gray-500 border-b border-r min-w-[120px]"
+                            className="px-3 py-3 text-center text-xs font-medium text-text-tertiary border-b border-r min-w-[120px]"
                           >
                             <span className="block truncate" title={outcome.title}>
                               {outcome.title}
                             </span>
-                            <span className="text-gray-400 font-normal">
+                            <span className="text-text-disabled font-normal">
                               {outcome.mastery_points || 3} pts
                             </span>
                           </th>
@@ -404,15 +404,15 @@ const LearningOutcomesPage = () => {
                         <tr>
                           <td
                             colSpan={(rollupData.outcomes?.length || 0) + 1}
-                            className="px-4 py-8 text-center text-gray-500"
+                            className="px-4 py-8 text-center text-text-tertiary"
                           >
                             No rollup data available yet.
                           </td>
                         </tr>
                       ) : (
                         (rollupData.students || []).map((student) => (
-                          <tr key={student.user_id} className="hover:bg-gray-50">
-                            <td className="px-4 py-2 text-sm font-medium text-gray-900 border-r whitespace-nowrap">
+                          <tr key={student.user_id} className="hover:bg-surface-1">
+                            <td className="px-4 py-2 text-sm font-medium text-text-primary border-r whitespace-nowrap">
                               {student.user_name || `User ${student.user_id}`}
                             </td>
                             {(rollupData.outcomes || []).map((outcome) => {
@@ -426,27 +426,27 @@ const LearningOutcomesPage = () => {
                                     score === null || score === undefined
                                       ? ''
                                       : isMastered
-                                      ? 'bg-green-50'
-                                      : 'bg-red-50'
+                                      ? 'bg-accent-success/10'
+                                      : 'bg-accent-danger/10'
                                   }`}
                                 >
                                   {score !== null && score !== undefined ? (
                                     <div className="flex items-center justify-center space-x-1">
                                       {isMastered ? (
-                                        <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+                                        <CheckCircle2 className="w-3.5 h-3.5 text-accent-success" />
                                       ) : (
-                                        <XCircle className="w-3.5 h-3.5 text-red-500" />
+                                        <XCircle className="w-3.5 h-3.5 text-accent-danger" />
                                       )}
                                       <span
                                         className={`font-medium ${
-                                          isMastered ? 'text-green-700' : 'text-red-700'
+                                          isMastered ? 'text-accent-success' : 'text-accent-danger'
                                         }`}
                                       >
                                         {score}
                                       </span>
                                     </div>
                                   ) : (
-                                    <span className="text-gray-400">-</span>
+                                    <span className="text-text-disabled">-</span>
                                   )}
                                 </td>
                               );
@@ -462,13 +462,13 @@ const LearningOutcomesPage = () => {
               {/* Mobile: stacked card layout (one card per student) */}
               <div className="md:hidden divide-y">
                 {(rollupData.students || []).length === 0 ? (
-                  <div className="px-4 py-8 text-center text-gray-500">
+                  <div className="px-4 py-8 text-center text-text-tertiary">
                     No rollup data available yet.
                   </div>
                 ) : (
                   (rollupData.students || []).map((student) => (
                     <div key={student.user_id} className="p-4">
-                      <p className="text-sm font-semibold text-gray-900 mb-2">
+                      <p className="text-sm font-semibold text-text-primary mb-2">
                         {student.user_name || `User ${student.user_id}`}
                       </p>
                       <div className="space-y-1">
@@ -481,25 +481,25 @@ const LearningOutcomesPage = () => {
                             <div
                               key={`${student.user_id}-${outcome.id}`}
                               className={`flex items-center justify-between px-2 py-1.5 rounded text-sm ${
-                                !hasScore ? 'bg-gray-50' : isMastered ? 'bg-green-50' : 'bg-red-50'
+                                !hasScore ? 'bg-surface-1' : isMastered ? 'bg-accent-success/10' : 'bg-accent-danger/10'
                               }`}
                             >
-                              <span className="text-xs text-gray-700 truncate pr-2 flex-1" title={outcome.title}>
+                              <span className="text-xs text-text-secondary truncate pr-2 flex-1" title={outcome.title}>
                                 {outcome.title}
                               </span>
                               <div className="flex items-center space-x-1 flex-shrink-0">
                                 {!hasScore ? (
-                                  <span className="text-gray-400 text-xs">No data</span>
+                                  <span className="text-text-disabled text-xs">No data</span>
                                 ) : (
                                   <>
                                     {isMastered ? (
-                                      <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+                                      <CheckCircle2 className="w-3.5 h-3.5 text-accent-success" />
                                     ) : (
-                                      <XCircle className="w-3.5 h-3.5 text-red-500" />
+                                      <XCircle className="w-3.5 h-3.5 text-accent-danger" />
                                     )}
                                     <span
                                       className={`font-medium text-xs ${
-                                        isMastered ? 'text-green-700' : 'text-red-700'
+                                        isMastered ? 'text-accent-success' : 'text-accent-danger'
                                       }`}
                                     >
                                       {score}/{mastery}
@@ -517,7 +517,7 @@ const LearningOutcomesPage = () => {
               </div>
             </>
           ) : (
-            <div className="p-8 text-center text-gray-500">
+            <div className="p-8 text-center text-text-tertiary">
               No rollup data available. Outcomes must be assessed to view results.
             </div>
           )}
@@ -529,12 +529,12 @@ const LearningOutcomesPage = () => {
         {/* Groups & Outcomes List */}
         <div className="flex-1">
           {groups.length === 0 && !showCreateGroup ? (
-            <div className="bg-white rounded-lg shadow p-8 text-center">
-              <Target className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 mb-4">No outcome groups yet.</p>
+            <div className="bg-surface-0 rounded-lg shadow p-8 text-center">
+              <Target className="w-12 h-12 text-text-disabled mx-auto mb-3" />
+              <p className="text-text-tertiary mb-4">No outcome groups yet.</p>
               <button
                 onClick={() => setShowCreateGroup(true)}
-                className="text-blue-600 hover:underline text-sm"
+                className="text-brand-600 hover:underline text-sm"
               >
                 Create your first outcome group
               </button>
@@ -542,28 +542,28 @@ const LearningOutcomesPage = () => {
           ) : (
             <div className="space-y-3">
               {groups.map((group) => (
-                <div key={group.id} className="bg-white rounded-lg shadow overflow-hidden">
+                <div key={group.id} className="bg-surface-0 rounded-lg shadow overflow-hidden">
                   {/* Group Header */}
                   <div
-                    className="flex items-center justify-between px-4 py-3 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
+                    className="flex items-center justify-between px-4 py-3 bg-surface-1 cursor-pointer hover:bg-surface-2 transition-colors"
                     onClick={() => toggleGroup(group.id)}
                   >
                     <div className="flex items-center space-x-3">
                       {expandedGroups[group.id] ? (
-                        <ChevronDown className="w-4 h-4 text-gray-500" />
+                        <ChevronDown className="w-4 h-4 text-text-tertiary" />
                       ) : (
-                        <ChevronRight className="w-4 h-4 text-gray-500" />
+                        <ChevronRight className="w-4 h-4 text-text-tertiary" />
                       )}
-                      <FolderOpen className="w-5 h-5 text-yellow-500" />
+                      <FolderOpen className="w-5 h-5 text-accent-warning" />
                       <div>
-                        <p className="font-semibold text-gray-900">{group.title}</p>
+                        <p className="font-semibold text-text-primary">{group.title}</p>
                         {group.description && (
-                          <p className="text-xs text-gray-500 mt-0.5">{group.description}</p>
+                          <p className="text-xs text-text-tertiary mt-0.5">{group.description}</p>
                         )}
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-text-disabled">
                         {(groupOutcomes[group.id] || []).length} outcomes
                       </span>
                       <button
@@ -573,7 +573,7 @@ const LearningOutcomesPage = () => {
                             showCreateOutcome === group.id ? null : group.id
                           );
                         }}
-                        className="text-blue-500 hover:text-blue-700 p-1"
+                        className="text-brand-500 hover:text-brand-700 p-1"
                         title="Add outcome"
                       >
                         <Plus className="w-4 h-4" />
@@ -583,7 +583,7 @@ const LearningOutcomesPage = () => {
                           e.stopPropagation();
                           handleDeleteGroup(group.id);
                         }}
-                        className="text-gray-400 hover:text-red-500 p-1"
+                        className="text-text-disabled hover:text-accent-danger p-1"
                         title="Delete group"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -596,8 +596,8 @@ const LearningOutcomesPage = () => {
                     <div>
                       {/* Create Outcome Form */}
                       {showCreateOutcome === group.id && (
-                        <div className="p-4 border-b bg-blue-50">
-                          <h4 className="font-medium text-sm text-blue-800 mb-3">
+                        <div className="p-4 border-b bg-brand-50">
+                          <h4 className="font-medium text-sm text-brand-800 mb-3">
                             New Outcome in "{group.title}"
                           </h4>
                           <form onSubmit={handleCreateOutcome} className="space-y-3">
@@ -608,7 +608,7 @@ const LearningOutcomesPage = () => {
                                   value={newOutcomeTitle}
                                   onChange={(e) => setNewOutcomeTitle(e.target.value)}
                                   placeholder="Outcome title"
-                                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  className="w-full border border-border-strong rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                                   required
                                 />
                               </div>
@@ -618,17 +618,17 @@ const LearningOutcomesPage = () => {
                                   onChange={(e) => setNewOutcomeDescription(e.target.value)}
                                   placeholder="Description (optional)"
                                   rows={2}
-                                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  className="w-full border border-border-strong rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                                 />
                               </div>
                               <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">
+                                <label className="block text-xs font-medium text-text-secondary mb-1">
                                   Calculation Method
                                 </label>
                                 <select
                                   value={newOutcomeCalcMethod}
                                   onChange={(e) => setNewOutcomeCalcMethod(e.target.value)}
-                                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  className="w-full border border-border-strong rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                                 >
                                   {CALCULATION_METHODS.map((m) => (
                                     <option key={m.value} value={m.value}>
@@ -639,7 +639,7 @@ const LearningOutcomesPage = () => {
                               </div>
                               <div className="grid grid-cols-2 gap-2">
                                 <div>
-                                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                                  <label className="block text-xs font-medium text-text-secondary mb-1">
                                     Mastery Points
                                   </label>
                                   <input
@@ -650,13 +650,13 @@ const LearningOutcomesPage = () => {
                                     onChange={(e) =>
                                       setNewOutcomeMasteryPoints(e.target.value)
                                     }
-                                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full border border-border-strong rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                                   />
                                 </div>
                                 {(newOutcomeCalcMethod === 'decaying_average' ||
                                   newOutcomeCalcMethod === 'n_mastery') && (
                                   <div>
-                                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                                    <label className="block text-xs font-medium text-text-secondary mb-1">
                                       {newOutcomeCalcMethod === 'decaying_average'
                                         ? 'Decay %'
                                         : 'N Count'}
@@ -671,7 +671,7 @@ const LearningOutcomesPage = () => {
                                       }
                                       value={newOutcomeCalcInt}
                                       onChange={(e) => setNewOutcomeCalcInt(e.target.value)}
-                                      className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                      className="w-full border border-border-strong rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                                     />
                                   </div>
                                 )}
@@ -680,7 +680,7 @@ const LearningOutcomesPage = () => {
 
                             {/* Ratings */}
                             <div>
-                              <label className="block text-xs font-medium text-gray-600 mb-2">
+                              <label className="block text-xs font-medium text-text-secondary mb-2">
                                 Ratings
                               </label>
                               <div className="space-y-2">
@@ -699,7 +699,7 @@ const LearningOutcomesPage = () => {
                                         updateRating(idx, 'description', e.target.value)
                                       }
                                       placeholder="Rating description"
-                                      className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+                                      className="flex-1 border border-border-strong rounded px-2 py-1 text-sm"
                                     />
                                     <input
                                       type="number"
@@ -713,14 +713,14 @@ const LearningOutcomesPage = () => {
                                           parseFloat(e.target.value) || 0
                                         )
                                       }
-                                      className="w-20 border border-gray-300 rounded px-2 py-1 text-sm"
+                                      className="w-20 border border-border-strong rounded px-2 py-1 text-sm"
                                     />
-                                    <span className="text-xs text-gray-400">pts</span>
+                                    <span className="text-xs text-text-disabled">pts</span>
                                     {newOutcomeRatings.length > 2 && (
                                       <button
                                         type="button"
                                         onClick={() => removeRating(idx)}
-                                        className="text-red-400 hover:text-red-600"
+                                        className="text-accent-danger hover:text-accent-danger"
                                       >
                                         <X className="w-3.5 h-3.5" />
                                       </button>
@@ -731,7 +731,7 @@ const LearningOutcomesPage = () => {
                               <button
                                 type="button"
                                 onClick={addRating}
-                                className="text-blue-600 hover:underline text-xs mt-1"
+                                className="text-brand-600 hover:underline text-xs mt-1"
                               >
                                 + Add Rating
                               </button>
@@ -740,7 +740,7 @@ const LearningOutcomesPage = () => {
                             <div className="flex space-x-3">
                               <button
                                 type="submit"
-                                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm flex items-center space-x-1"
+                                className="bg-brand-600 text-white px-4 py-2 rounded hover:bg-brand-700 text-sm flex items-center space-x-1"
                               >
                                 <Save className="w-3.5 h-3.5" />
                                 <span>Create Outcome</span>
@@ -748,7 +748,7 @@ const LearningOutcomesPage = () => {
                               <button
                                 type="button"
                                 onClick={() => setShowCreateOutcome(null)}
-                                className="text-gray-500 hover:text-gray-700 text-sm"
+                                className="text-text-tertiary hover:text-text-secondary text-sm"
                               >
                                 Cancel
                               </button>
@@ -759,11 +759,11 @@ const LearningOutcomesPage = () => {
 
                       {/* Outcomes */}
                       {(groupOutcomes[group.id] || []).length === 0 ? (
-                        <div className="px-4 py-6 text-center text-gray-400 text-sm">
+                        <div className="px-4 py-6 text-center text-text-disabled text-sm">
                           No outcomes in this group.{' '}
                           <button
                             onClick={() => setShowCreateOutcome(group.id)}
-                            className="text-blue-500 hover:underline"
+                            className="text-brand-500 hover:underline"
                           >
                             Add one
                           </button>
@@ -778,8 +778,8 @@ const LearningOutcomesPage = () => {
                                 key={outcome.id}
                                 className={`px-4 py-3 cursor-pointer transition-colors ${
                                   isSelected
-                                    ? 'bg-blue-50 border-l-4 border-l-blue-500'
-                                    : 'hover:bg-gray-50 border-l-4 border-l-transparent'
+                                    ? 'bg-brand-50 border-l-4 border-l-blue-500'
+                                    : 'hover:bg-surface-1 border-l-4 border-l-transparent'
                                 }`}
                                 onClick={() =>
                                   setSelectedOutcome(isSelected ? null : outcome)
@@ -787,13 +787,13 @@ const LearningOutcomesPage = () => {
                               >
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center space-x-3">
-                                    <Target className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                                    <Target className="w-4 h-4 text-brand-500 flex-shrink-0" />
                                     <div>
-                                      <p className="font-medium text-sm text-gray-900">
+                                      <p className="font-medium text-sm text-text-primary">
                                         {outcome.title}
                                       </p>
                                       {outcome.description && (
-                                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">
+                                        <p className="text-xs text-text-tertiary mt-0.5 line-clamp-1">
                                           {outcome.description}
                                         </p>
                                       )}
@@ -812,7 +812,7 @@ const LearningOutcomesPage = () => {
                                         />
                                       ))}
                                     </div>
-                                    <span className="text-xs text-gray-400 whitespace-nowrap">
+                                    <span className="text-xs text-text-disabled whitespace-nowrap">
                                       Mastery: {outcome.mastery_points ?? 3}
                                     </span>
                                     <button
@@ -820,7 +820,7 @@ const LearningOutcomesPage = () => {
                                         e.stopPropagation();
                                         handleDeleteOutcome(group.id, outcome.id);
                                       }}
-                                      className="text-gray-400 hover:text-red-500 p-1"
+                                      className="text-text-disabled hover:text-accent-danger p-1"
                                     >
                                       <Trash2 className="w-3.5 h-3.5" />
                                     </button>
@@ -842,13 +842,13 @@ const LearningOutcomesPage = () => {
         {/* Detail Panel */}
         {selectedOutcome && (
           <div className="w-96 flex-shrink-0">
-            <div className="bg-white rounded-lg shadow sticky top-4">
-              <div className="p-4 border-b bg-gray-50">
+            <div className="bg-surface-0 rounded-lg shadow sticky top-4">
+              <div className="p-4 border-b bg-surface-1">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-gray-900">Outcome Details</h3>
+                  <h3 className="font-semibold text-text-primary">Outcome Details</h3>
                   <button
                     onClick={() => setSelectedOutcome(null)}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-text-disabled hover:text-text-secondary"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -856,26 +856,26 @@ const LearningOutcomesPage = () => {
               </div>
               <div className="p-4 space-y-4">
                 <div>
-                  <h4 className="text-lg font-semibold text-gray-900">
+                  <h4 className="text-lg font-semibold text-text-primary">
                     {selectedOutcome.title}
                   </h4>
                   {selectedOutcome.description && (
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-text-secondary mt-1">
                       {selectedOutcome.description}
                     </p>
                   )}
                 </div>
 
                 {/* Calculation Method */}
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-xs font-medium text-gray-500 uppercase mb-1">
+                <div className="bg-surface-1 rounded-lg p-3">
+                  <p className="text-xs font-medium text-text-tertiary uppercase mb-1">
                     Calculation Method
                   </p>
-                  <p className="text-sm font-medium text-gray-800">
+                  <p className="text-sm font-medium text-text-primary">
                     {getCalcMethodLabel(selectedOutcome.calculation_method)}
                   </p>
                   {selectedOutcome.calculation_int && (
-                    <p className="text-xs text-gray-500 mt-0.5">
+                    <p className="text-xs text-text-tertiary mt-0.5">
                       {selectedOutcome.calculation_method === 'decaying_average'
                         ? `${selectedOutcome.calculation_int}% weighted to most recent`
                         : selectedOutcome.calculation_method === 'n_mastery'
@@ -886,18 +886,18 @@ const LearningOutcomesPage = () => {
                 </div>
 
                 {/* Mastery */}
-                <div className="bg-blue-50 rounded-lg p-3">
-                  <p className="text-xs font-medium text-blue-600 uppercase mb-1">
+                <div className="bg-brand-50 rounded-lg p-3">
+                  <p className="text-xs font-medium text-brand-600 uppercase mb-1">
                     Mastery Threshold
                   </p>
-                  <p className="text-lg font-bold text-blue-800">
+                  <p className="text-lg font-bold text-brand-800">
                     {selectedOutcome.mastery_points ?? 3} points
                   </p>
                 </div>
 
                 {/* Ratings */}
                 <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase mb-2">
+                  <p className="text-xs font-medium text-text-tertiary uppercase mb-2">
                     Proficiency Ratings
                   </p>
                   <div className="space-y-2">
@@ -909,7 +909,7 @@ const LearningOutcomesPage = () => {
                         <div
                           key={idx}
                           className={`flex items-center space-x-3 p-2 rounded ${
-                            isMastery ? 'bg-green-50' : 'bg-gray-50'
+                            isMastery ? 'bg-accent-success/10' : 'bg-surface-1'
                           }`}
                         >
                           <div
@@ -919,18 +919,18 @@ const LearningOutcomesPage = () => {
                             )}`}
                           />
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-800">
+                            <p className="text-sm font-medium text-text-primary">
                               {rating.description}
                             </p>
                           </div>
                           <div className="text-right">
-                            <span className="text-sm font-semibold text-gray-700">
+                            <span className="text-sm font-semibold text-text-secondary">
                               {rating.points}
                             </span>
-                            <span className="text-xs text-gray-400 ml-1">pts</span>
+                            <span className="text-xs text-text-disabled ml-1">pts</span>
                           </div>
                           {isMastery && (
-                            <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                            <CheckCircle2 className="w-4 h-4 text-accent-success flex-shrink-0" />
                           )}
                         </div>
                       );
@@ -940,7 +940,7 @@ const LearningOutcomesPage = () => {
 
                 {/* Visual: Ratings bar */}
                 <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase mb-2">
+                  <p className="text-xs font-medium text-text-tertiary uppercase mb-2">
                     Proficiency Scale
                   </p>
                   <div className="flex rounded-full overflow-hidden h-3">
@@ -956,8 +956,8 @@ const LearningOutcomesPage = () => {
                     })}
                   </div>
                   <div className="flex justify-between mt-1">
-                    <span className="text-xs text-gray-400">Low</span>
-                    <span className="text-xs text-gray-400">High</span>
+                    <span className="text-xs text-text-disabled">Low</span>
+                    <span className="text-xs text-text-disabled">High</span>
                   </div>
                 </div>
               </div>

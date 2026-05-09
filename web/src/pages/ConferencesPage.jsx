@@ -148,21 +148,21 @@ const ConferencesPage = () => {
   };
 
   const conferenceStatus = (conf) => {
-    if (conf.ended_at) return { label: 'Ended', color: 'bg-gray-100 text-gray-600' };
-    if (conf.started_at) return { label: 'In Progress', color: 'bg-green-100 text-green-700' };
-    return { label: 'Not Started', color: 'bg-yellow-100 text-yellow-700' };
+    if (conf.ended_at) return { label: 'Ended', color: 'bg-surface-2 text-text-secondary' };
+    if (conf.started_at) return { label: 'In Progress', color: 'bg-accent-success/20 text-accent-success' };
+    return { label: 'Not Started', color: 'bg-accent-warning/20 text-accent-warning' };
   };
 
   if (loading) {
-    return <Layout><div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+    return <Layout><div className="flex items-center justify-center py-12 gap-2 text-text-tertiary">
   <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
   Loading conferences...
 </div></Layout>;
   }
   if (error) {
     return <Layout><div className="text-center py-12">
-  <p className="text-red-600 mb-3">{error}</p>
-  <button onClick={() => window.location.reload()} className="text-blue-600 hover:text-blue-800 text-sm font-medium">Try Again</button>
+  <p className="text-accent-danger mb-3">{error}</p>
+  <button onClick={() => window.location.reload()} className="text-brand-600 hover:text-brand-800 text-sm font-medium">Try Again</button>
 </div></Layout>;
   }
 
@@ -170,14 +170,14 @@ const ConferencesPage = () => {
     <Layout>
       <CourseNav />
       <div className="mb-6">
-        <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm">
+        <Link to={`/courses/${courseId}`} className="text-brand-600 hover:underline text-sm">
           &larr; Back to Course
         </Link>
         <div className="flex items-center justify-between mt-2">
-          <h2 className="text-2xl font-bold text-gray-900">Conferences</h2>
+          <h2 className="text-2xl font-bold text-text-primary">Conferences</h2>
           <button
             onClick={() => { if (showForm) { resetForm(); } else { setShowForm(true); } }}
-            className="inline-flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium"
+            className="inline-flex items-center space-x-2 bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 text-sm font-medium"
           >
             {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
             <span>{showForm ? 'Cancel' : 'New Conference'}</span>
@@ -186,47 +186,47 @@ const ConferencesPage = () => {
       </div>
 
       {showForm && (
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-surface-0 rounded-lg shadow p-6 mb-6">
           <h3 className="font-semibold mb-4">{editingId ? 'Edit Conference' : 'Create Conference'}</h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Title</label>
               <input
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 rows={3}
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Conference Type</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Conference Type</label>
                 <select
                   value={formData.conference_type}
                   onChange={(e) => setFormData({ ...formData, conference_type: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 >
                   <option value="BigBlueButton">BigBlueButton</option>
                   <option value="Zoom">Zoom</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Duration (minutes)</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Duration (minutes)</label>
                 <input
                   type="number"
                   value={formData.duration}
                   onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) || 0 })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   min={1}
                 />
               </div>
@@ -235,14 +235,14 @@ const ConferencesPage = () => {
               <button
                 type="button"
                 onClick={resetForm}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50"
+                className="px-4 py-2 border border-border-strong rounded-md text-sm text-text-secondary hover:bg-surface-1"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={submitting}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium disabled:opacity-50"
+                className="bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 text-sm font-medium disabled:opacity-50"
               >
                 {submitting ? 'Saving...' : (editingId ? 'Update Conference' : 'Create Conference')}
               </button>
@@ -251,12 +251,12 @@ const ConferencesPage = () => {
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-surface-0 rounded-lg shadow">
         <div className="p-4 border-b">
           <h3 className="font-semibold">All Conferences</h3>
         </div>
         {conferences.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">No conferences yet.</div>
+          <div className="p-6 text-center text-text-tertiary">No conferences yet.</div>
         ) : (
           <div className="divide-y">
             {conferences.map((conf) => {
@@ -264,36 +264,36 @@ const ConferencesPage = () => {
               return (
                 <div
                   key={conf.id}
-                  className="p-4 hover:bg-gray-50"
+                  className="p-4 hover:bg-surface-1"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3 min-w-0">
-                      <Video className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                      <Video className="w-5 h-5 text-text-disabled flex-shrink-0" />
                       <div className="min-w-0">
                         <div className="flex items-center space-x-2">
-                          <span className="font-medium text-gray-900 truncate">{conf.title}</span>
+                          <span className="font-medium text-text-primary truncate">{conf.title}</span>
                           <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${status.color}`}>
                             {status.label}
                           </span>
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-brand-50 text-brand-700">
                             {conf.conference_type}
                           </span>
                         </div>
                         {conf.description && (
-                          <p className="text-sm text-gray-500 truncate">{conf.description}</p>
+                          <p className="text-sm text-text-tertiary truncate">{conf.description}</p>
                         )}
                         <div className="flex items-center space-x-4 mt-1">
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-text-disabled">
                             Created {formatDate(conf.created_at)}
                           </span>
                           {conf.duration > 0 && (
-                            <span className="text-xs text-gray-400">{conf.duration} min</span>
+                            <span className="text-xs text-text-disabled">{conf.duration} min</span>
                           )}
                           {conf.started_at && (
-                            <span className="text-xs text-gray-400">Started {formatDate(conf.started_at)}</span>
+                            <span className="text-xs text-text-disabled">Started {formatDate(conf.started_at)}</span>
                           )}
                           {conf.ended_at && (
-                            <span className="text-xs text-gray-400">Ended {formatDate(conf.ended_at)}</span>
+                            <span className="text-xs text-text-disabled">Ended {formatDate(conf.ended_at)}</span>
                           )}
                         </div>
                       </div>
@@ -302,7 +302,7 @@ const ConferencesPage = () => {
                       {!conf.started_at && (
                         <button
                           onClick={() => handleJoin(conf.id)}
-                          className="inline-flex items-center space-x-1 px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 text-xs font-medium"
+                          className="inline-flex items-center space-x-1 px-3 py-1.5 bg-accent-success text-white rounded-md hover:bg-accent-success/90 text-xs font-medium"
                           title="Start and Join"
                         >
                           <Play className="w-3.5 h-3.5" />
@@ -313,7 +313,7 @@ const ConferencesPage = () => {
                         <>
                           <button
                             onClick={() => handleJoin(conf.id)}
-                            className="inline-flex items-center space-x-1 px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 text-xs font-medium"
+                            className="inline-flex items-center space-x-1 px-3 py-1.5 bg-accent-success text-white rounded-md hover:bg-accent-success/90 text-xs font-medium"
                             title="Join Conference"
                           >
                             <LogIn className="w-3.5 h-3.5" />
@@ -321,7 +321,7 @@ const ConferencesPage = () => {
                           </button>
                           <button
                             onClick={() => handleEnd(conf.id)}
-                            className="inline-flex items-center space-x-1 px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 text-xs font-medium"
+                            className="inline-flex items-center space-x-1 px-3 py-1.5 bg-accent-danger text-white rounded-md hover:bg-accent-danger/90 text-xs font-medium"
                             title="End Conference"
                           >
                             <Square className="w-3.5 h-3.5" />
@@ -331,21 +331,21 @@ const ConferencesPage = () => {
                       )}
                       <button
                         onClick={() => handleViewRecordings(conf)}
-                        className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded"
+                        className="p-1.5 text-text-disabled hover:text-purple-600 hover:bg-purple-50 rounded"
                         title="Recordings"
                       >
                         <Film className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleEdit(conf)}
-                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                        className="p-1.5 text-text-disabled hover:text-brand-600 hover:bg-brand-50 rounded"
                         title="Edit"
                       >
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(conf.id)}
-                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                        className="p-1.5 text-text-disabled hover:text-accent-danger hover:bg-accent-danger/10 rounded"
                         title="Delete"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -361,44 +361,44 @@ const ConferencesPage = () => {
 
       {/* Recordings panel */}
       {selectedConference && recordings !== null && (
-        <div className="mt-6 bg-white rounded-lg shadow p-6">
+        <div className="mt-6 bg-surface-0 rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold">Recordings - {selectedConference.title}</h3>
             <button
               onClick={() => { setRecordings(null); setSelectedConference(null); }}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-text-disabled hover:text-text-secondary"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
           {recordings === '[]' || !recordings ? (
-            <p className="text-sm text-gray-500">No recordings available for this conference.</p>
+            <p className="text-sm text-text-tertiary">No recordings available for this conference.</p>
           ) : (
-            <pre className="text-sm bg-gray-50 rounded p-3 overflow-auto">{recordings}</pre>
+            <pre className="text-sm bg-surface-1 rounded p-3 overflow-auto">{recordings}</pre>
           )}
         </div>
       )}
 
       {/* Participants panel */}
       {selectedConference && participants !== null && (
-        <div className="mt-6 bg-white rounded-lg shadow p-6">
+        <div className="mt-6 bg-surface-0 rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold">Participants - {selectedConference.title}</h3>
             <button
               onClick={() => { setParticipants(null); setSelectedConference(null); }}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-text-disabled hover:text-text-secondary"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
           {participants.length === 0 ? (
-            <p className="text-sm text-gray-500">No participants yet.</p>
+            <p className="text-sm text-text-tertiary">No participants yet.</p>
           ) : (
             <div className="divide-y">
               {participants.map((p) => (
                 <div key={p.id} className="flex items-center justify-between py-2">
-                  <span className="text-sm text-gray-900">{p.user?.name || `User #${p.user_id}`}</span>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+                  <span className="text-sm text-text-primary">{p.user?.name || `User #${p.user_id}`}</span>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-surface-2 text-text-secondary">
                     {p.participation_type}
                   </span>
                 </div>

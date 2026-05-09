@@ -98,21 +98,21 @@ const QuestionEditor = ({ question, index, onUpdate, onDelete, groups, courseId 
   const qType = question.question_type || 'multiple_choice';
 
   return (
-    <div className="bg-white rounded-lg shadow border border-gray-200">
+    <div className="bg-surface-0 rounded-lg shadow border border-border-default">
       {/* Header */}
       <div
-        className="flex items-center justify-between px-4 py-3 bg-gray-50 rounded-t-lg cursor-pointer"
+        className="flex items-center justify-between px-4 py-3 bg-surface-1 rounded-t-lg cursor-pointer"
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex items-center gap-3">
-          <GripVertical className="w-4 h-4 text-gray-400" />
-          <span className="text-sm font-semibold text-gray-700">
+          <GripVertical className="w-4 h-4 text-text-disabled" />
+          <span className="text-sm font-semibold text-text-secondary">
             Question {index + 1}
           </span>
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-text-disabled">
             {QUESTION_TYPES.find(t => t.value === qType)?.label || qType}
           </span>
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-text-disabled">
             ({question.points_possible ?? 1} pts)
           </span>
           {question.quiz_question_group_id && (() => {
@@ -128,12 +128,12 @@ const QuestionEditor = ({ question, index, onUpdate, onDelete, groups, courseId 
         <div className="flex items-center gap-2">
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            className="p-1 text-red-400 hover:text-red-600"
+            className="p-1 text-accent-danger hover:text-accent-danger"
             title="Delete question"
           >
             <Trash2 className="w-4 h-4" />
           </button>
-          {expanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+          {expanded ? <ChevronUp className="w-4 h-4 text-text-disabled" /> : <ChevronDown className="w-4 h-4 text-text-disabled" />}
         </div>
       </div>
 
@@ -143,7 +143,7 @@ const QuestionEditor = ({ question, index, onUpdate, onDelete, groups, courseId 
           {/* Question Type, Points & Group */}
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Question Type</label>
+              <label className="block text-xs font-medium text-text-secondary mb-1">Question Type</label>
               <select
                 value={qType}
                 onChange={(e) => {
@@ -156,7 +156,7 @@ const QuestionEditor = ({ question, index, onUpdate, onDelete, groups, courseId 
                     answers: JSON.stringify(newAnswers),
                   });
                 }}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                className="w-full border border-border-strong rounded px-3 py-2 text-sm"
               >
                 {QUESTION_TYPES.map(t => (
                   <option key={t.value} value={t.value}>{t.label}</option>
@@ -164,22 +164,22 @@ const QuestionEditor = ({ question, index, onUpdate, onDelete, groups, courseId 
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Points</label>
+              <label className="block text-xs font-medium text-text-secondary mb-1">Points</label>
               <input
                 type="number"
                 min="0"
                 step="0.5"
                 value={question.points_possible ?? 1}
                 onChange={(e) => updateField('points_possible', parseFloat(e.target.value) || 0)}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                className="w-full border border-border-strong rounded px-3 py-2 text-sm"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Group</label>
+              <label className="block text-xs font-medium text-text-secondary mb-1">Group</label>
               <select
                 value={question.quiz_question_group_id || ''}
                 onChange={(e) => updateField('quiz_question_group_id', e.target.value ? Number(e.target.value) : null)}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                className="w-full border border-border-strong rounded px-3 py-2 text-sm"
               >
                 <option value="">None (ungrouped)</option>
                 {(groups || []).map(g => (
@@ -191,7 +191,7 @@ const QuestionEditor = ({ question, index, onUpdate, onDelete, groups, courseId 
 
           {/* Question Text */}
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Question Text</label>
+            <label className="block text-xs font-medium text-text-secondary mb-1">Question Text</label>
             <RichContentEditorV2
               value={question.question_text || ''}
               onChange={(html) => updateField('question_text', html)}
@@ -205,8 +205,8 @@ const QuestionEditor = ({ question, index, onUpdate, onDelete, groups, courseId 
           {/* Answer Options (MC, TF) */}
           {(qType === 'multiple_choice' || qType === 'true_false') && (
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-2">
-                Answers {qType === 'multiple_choice' && <span className="text-gray-400">(click circle to mark correct)</span>}
+              <label className="block text-xs font-medium text-text-secondary mb-2">
+                Answers {qType === 'multiple_choice' && <span className="text-text-disabled">(click circle to mark correct)</span>}
               </label>
               <div className="space-y-2">
                 {answers.map((answer, i) => (
@@ -216,8 +216,8 @@ const QuestionEditor = ({ question, index, onUpdate, onDelete, groups, courseId 
                       onClick={() => setCorrectAnswer(i)}
                       className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                         answer.weight > 0
-                          ? 'border-green-500 bg-green-500 text-white'
-                          : 'border-gray-300 hover:border-green-400'
+                          ? 'border-accent-success bg-accent-success text-white'
+                          : 'border-border-strong hover:border-accent-success/60'
                       }`}
                       title={answer.weight > 0 ? 'Correct answer' : 'Mark as correct'}
                     >
@@ -227,14 +227,14 @@ const QuestionEditor = ({ question, index, onUpdate, onDelete, groups, courseId 
                       type="text"
                       value={answer.text}
                       onChange={(e) => updateAnswerText(i, e.target.value)}
-                      className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm"
+                      className="flex-1 border border-border-strong rounded px-3 py-1.5 text-sm"
                       placeholder={`Answer ${i + 1}`}
                       disabled={qType === 'true_false'}
                     />
                     {qType === 'multiple_choice' && answers.length > 2 && (
                       <button
                         onClick={() => removeAnswer(i)}
-                        className="p-1 text-gray-400 hover:text-red-500"
+                        className="p-1 text-text-disabled hover:text-accent-danger"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -245,7 +245,7 @@ const QuestionEditor = ({ question, index, onUpdate, onDelete, groups, courseId 
               {qType === 'multiple_choice' && (
                 <button
                   onClick={addAnswer}
-                  className="mt-2 text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                  className="mt-2 text-xs text-brand-600 hover:text-brand-800 flex items-center gap-1"
                 >
                   <Plus className="w-3 h-3" /> Add Answer
                 </button>
@@ -256,8 +256,8 @@ const QuestionEditor = ({ question, index, onUpdate, onDelete, groups, courseId 
           {/* Short Answer */}
           {qType === 'short_answer' && (
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-2">
-                Acceptable Answers <span className="text-gray-400">(case-insensitive match)</span>
+              <label className="block text-xs font-medium text-text-secondary mb-2">
+                Acceptable Answers <span className="text-text-disabled">(case-insensitive match)</span>
               </label>
               <div className="space-y-2">
                 {answers.map((answer, i) => (
@@ -266,13 +266,13 @@ const QuestionEditor = ({ question, index, onUpdate, onDelete, groups, courseId 
                       type="text"
                       value={answer.text}
                       onChange={(e) => updateAnswerText(i, e.target.value)}
-                      className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm"
+                      className="flex-1 border border-border-strong rounded px-3 py-1.5 text-sm"
                       placeholder="Acceptable answer..."
                     />
                     {answers.length > 1 && (
                       <button
                         onClick={() => removeAnswer(i)}
-                        className="p-1 text-gray-400 hover:text-red-500"
+                        className="p-1 text-text-disabled hover:text-accent-danger"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -282,7 +282,7 @@ const QuestionEditor = ({ question, index, onUpdate, onDelete, groups, courseId 
               </div>
               <button
                 onClick={addAnswer}
-                className="mt-2 text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                className="mt-2 text-xs text-brand-600 hover:text-brand-800 flex items-center gap-1"
               >
                 <Plus className="w-3 h-3" /> Add Acceptable Answer
               </button>
@@ -292,13 +292,13 @@ const QuestionEditor = ({ question, index, onUpdate, onDelete, groups, courseId 
           {/* Numerical */}
           {qType === 'numerical_question' && (
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Expected Answer</label>
+              <label className="block text-xs font-medium text-text-secondary mb-1">Expected Answer</label>
               <input
                 type="number"
                 step="any"
                 value={answers[0]?.text || ''}
                 onChange={(e) => updateAnswers([{ ...emptyAnswer(), text: e.target.value, weight: 100 }])}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                className="w-full border border-border-strong rounded px-3 py-2 text-sm"
                 placeholder="Enter the expected numeric answer..."
               />
             </div>
@@ -306,30 +306,30 @@ const QuestionEditor = ({ question, index, onUpdate, onDelete, groups, courseId 
 
           {/* Essay - no answers needed */}
           {qType === 'essay' && (
-            <p className="text-xs text-gray-500 italic">Essay questions require manual grading.</p>
+            <p className="text-xs text-text-tertiary italic">Essay questions require manual grading.</p>
           )}
 
           {/* Feedback */}
           <details className="text-sm">
-            <summary className="cursor-pointer text-gray-500 hover:text-gray-700 text-xs">Feedback (optional)</summary>
+            <summary className="cursor-pointer text-text-tertiary hover:text-text-secondary text-xs">Feedback (optional)</summary>
             <div className="mt-2 grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Correct feedback</label>
+                <label className="block text-xs text-text-tertiary mb-1">Correct feedback</label>
                 <input
                   type="text"
                   value={question.correct_comments || ''}
                   onChange={(e) => updateField('correct_comments', e.target.value)}
-                  className="w-full border border-gray-300 rounded px-2 py-1 text-xs"
+                  className="w-full border border-border-strong rounded px-2 py-1 text-xs"
                   placeholder="Shown when correct..."
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Incorrect feedback</label>
+                <label className="block text-xs text-text-tertiary mb-1">Incorrect feedback</label>
                 <input
                   type="text"
                   value={question.incorrect_comments || ''}
                   onChange={(e) => updateField('incorrect_comments', e.target.value)}
-                  className="w-full border border-gray-300 rounded px-2 py-1 text-xs"
+                  className="w-full border border-border-strong rounded px-2 py-1 text-xs"
                   placeholder="Shown when incorrect..."
                 />
               </div>
@@ -573,15 +573,15 @@ const QuizEditorPage = () => {
 
   if (isTeacher === false) return <Navigate to={`/courses/${courseId}/quizzes`} replace />;
   if (isTeacher === null || loading) {
-    return <Layout><div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+    return <Layout><div className="flex items-center justify-center py-12 gap-2 text-text-tertiary">
   <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
   Loading...
 </div></Layout>;
   }
   if (error) {
     return <Layout><div className="text-center py-12">
-  <p className="text-red-600 mb-3">{error}</p>
-  <button onClick={() => window.location.reload()} className="text-blue-600 hover:text-blue-800 text-sm font-medium">Try Again</button>
+  <p className="text-accent-danger mb-3">{error}</p>
+  <button onClick={() => window.location.reload()} className="text-brand-600 hover:text-brand-800 text-sm font-medium">Try Again</button>
 </div></Layout>;
   }
 
@@ -589,33 +589,33 @@ const QuizEditorPage = () => {
     <Layout>
       <CourseNav />
       <div className="mb-6">
-        <Link to={`/courses/${courseId}/quizzes`} className="text-blue-600 hover:underline text-sm">
+        <Link to={`/courses/${courseId}/quizzes`} className="text-brand-600 hover:underline text-sm">
           &larr; Back to Quizzes
         </Link>
-        <h2 className="text-2xl font-bold text-gray-900 mt-2">Edit Quiz</h2>
+        <h2 className="text-2xl font-bold text-text-primary mt-2">Edit Quiz</h2>
       </div>
 
       {message && (
-        <div className={`mb-4 px-4 py-2 rounded text-sm ${message.startsWith('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+        <div className={`mb-4 px-4 py-2 rounded text-sm ${message.startsWith('Error') ? 'bg-accent-danger/10 text-accent-danger' : 'bg-accent-success/10 text-accent-success'}`}>
           {message}
         </div>
       )}
 
       {/* Quiz Settings */}
-      <section className="bg-white rounded-lg shadow p-6 mb-6">
+      <section className="bg-surface-0 rounded-lg shadow p-6 mb-6">
         <h3 className="font-semibold text-lg mb-4">Quiz Settings</h3>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Title</label>
             <input
               type="text"
               value={quizForm.title}
               onChange={(e) => { setQuizForm(f => ({ ...f, title: e.target.value })); setIsDirty(true); }}
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+              className="w-full border border-border-strong rounded px-3 py-2 text-sm"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description / Instructions</label>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Description / Instructions</label>
             <RichContentEditorV2
               value={quizForm.description}
               onChange={(html) => { setQuizForm(f => ({ ...f, description: html })); setIsDirty(true); }}
@@ -627,11 +627,11 @@ const QuizEditorPage = () => {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Type</label>
               <select
                 value={quizForm.quiz_type}
                 onChange={(e) => { setQuizForm(f => ({ ...f, quiz_type: e.target.value })); setIsDirty(true); }}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                className="w-full border border-border-strong rounded px-3 py-2 text-sm"
               >
                 <option value="assignment">Graded Quiz</option>
                 <option value="practice_quiz">Practice Quiz</option>
@@ -640,31 +640,31 @@ const QuizEditorPage = () => {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Time Limit (min)</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Time Limit (min)</label>
               <input
                 type="number"
                 min="0"
                 value={quizForm.time_limit}
                 onChange={(e) => { setQuizForm(f => ({ ...f, time_limit: e.target.value })); setIsDirty(true); }}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                className="w-full border border-border-strong rounded px-3 py-2 text-sm"
                 placeholder="No limit"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Attempts</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Attempts</label>
               <input
                 type="number"
                 min="-1"
                 value={quizForm.allowed_attempts}
                 onChange={(e) => { setQuizForm(f => ({ ...f, allowed_attempts: e.target.value })); setIsDirty(true); }}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                className="w-full border border-border-strong rounded px-3 py-2 text-sm"
                 title="-1 for unlimited"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Total Points</label>
-              <div className="border border-gray-200 rounded px-3 py-2 text-sm bg-gray-50 text-gray-600">
-                {totalPoints} pts <span className="text-xs text-gray-400">(from questions)</span>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Total Points</label>
+              <div className="border border-border-default rounded px-3 py-2 text-sm bg-surface-1 text-text-secondary">
+                {totalPoints} pts <span className="text-xs text-text-disabled">(from questions)</span>
               </div>
             </div>
           </div>
@@ -680,7 +680,7 @@ const QuizEditorPage = () => {
             <button
               onClick={handleSaveQuiz}
               disabled={saving}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded hover:bg-brand-700 text-sm font-medium disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
               {saving ? 'Saving...' : 'Save Settings'}
@@ -690,12 +690,12 @@ const QuizEditorPage = () => {
       </section>
 
       {/* Question Groups */}
-      <section className="bg-white rounded-lg shadow p-6 mb-6">
+      <section className="bg-surface-0 rounded-lg shadow p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-lg flex items-center gap-2">
             <Layers className="w-5 h-5 text-purple-600" />
             Question Groups
-            <span className="text-sm text-gray-500 font-normal">({groups.length})</span>
+            <span className="text-sm text-text-tertiary font-normal">({groups.length})</span>
           </h3>
           {!showGroupForm && (
             <button
@@ -708,7 +708,7 @@ const QuizEditorPage = () => {
         </div>
 
         {groups.length === 0 && !showGroupForm && (
-          <p className="text-sm text-gray-500 italic">
+          <p className="text-sm text-text-tertiary italic">
             No question groups yet. Groups allow you to pick a random subset of questions for each student.
           </p>
         )}
@@ -722,25 +722,25 @@ const QuizEditorPage = () => {
               return (
                 <div key={group.id} className="border border-purple-200 rounded-lg p-4 bg-purple-50">
                   <div className="flex items-start justify-between mb-2">
-                    <h4 className="font-medium text-gray-900 text-sm">{group.name}</h4>
+                    <h4 className="font-medium text-text-primary text-sm">{group.name}</h4>
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => handleEditGroup(group)}
-                        className="p-1 text-gray-400 hover:text-purple-600"
+                        className="p-1 text-text-disabled hover:text-purple-600"
                         title="Edit group"
                       >
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => handleDeleteGroup(group.id)}
-                        className="p-1 text-gray-400 hover:text-red-600"
+                        className="p-1 text-text-disabled hover:text-accent-danger"
                         title="Delete group"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </div>
-                  <div className="space-y-1 text-xs text-gray-600">
+                  <div className="space-y-1 text-xs text-text-secondary">
                     <div>
                       Pick <span className="font-semibold text-purple-700">{group.pick_count}</span> question{group.pick_count !== 1 ? 's' : ''} randomly
                     </div>
@@ -749,12 +749,12 @@ const QuizEditorPage = () => {
                     </div>
                     {bank && (
                       <div className="flex items-center gap-1">
-                        <span className="text-gray-400">Bank:</span>
+                        <span className="text-text-disabled">Bank:</span>
                         <span className="text-purple-600 font-medium">{bank.title}</span>
                       </div>
                     )}
                     {group.question_bank_id && !bank && (
-                      <div className="text-gray-400">
+                      <div className="text-text-disabled">
                         Bank ID: {group.question_bank_id}
                       </div>
                     )}
@@ -768,38 +768,38 @@ const QuizEditorPage = () => {
         {/* Group Form */}
         {showGroupForm && (
           <div className="border border-purple-300 rounded-lg p-4 bg-purple-50">
-            <h4 className="font-medium text-sm text-gray-900 mb-3">
+            <h4 className="font-medium text-sm text-text-primary mb-3">
               {editingGroup ? 'Edit Question Group' : 'New Question Group'}
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Group Name *</label>
+                <label className="block text-xs font-medium text-text-secondary mb-1">Group Name *</label>
                 <input
                   type="text"
                   value={groupForm.name}
                   onChange={(e) => setGroupForm(f => ({ ...f, name: e.target.value }))}
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  className="w-full border border-border-strong rounded px-3 py-2 text-sm"
                   placeholder="e.g., Random Pool A"
                   autoFocus
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Pick Count</label>
+                <label className="block text-xs font-medium text-text-secondary mb-1">Pick Count</label>
                 <input
                   type="number"
                   min="1"
                   value={groupForm.pick_count}
                   onChange={(e) => setGroupForm(f => ({ ...f, pick_count: e.target.value }))}
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  className="w-full border border-border-strong rounded px-3 py-2 text-sm"
                 />
-                <p className="text-xs text-gray-400 mt-0.5">Questions picked per student</p>
+                <p className="text-xs text-text-disabled mt-0.5">Questions picked per student</p>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Question Bank (optional)</label>
+                <label className="block text-xs font-medium text-text-secondary mb-1">Question Bank (optional)</label>
                 <select
                   value={groupForm.question_bank_id}
                   onChange={(e) => setGroupForm(f => ({ ...f, question_bank_id: e.target.value }))}
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  className="w-full border border-border-strong rounded px-3 py-2 text-sm"
                 >
                   <option value="">No bank</option>
                   {questionBanks.map(b => (
@@ -817,7 +817,7 @@ const QuizEditorPage = () => {
               </button>
               <button
                 onClick={resetGroupForm}
-                className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm font-medium"
+                className="inline-flex items-center gap-1 px-3 py-1.5 bg-border-default text-text-secondary rounded hover:bg-border-strong text-sm font-medium"
               >
                 <X className="w-4 h-4" /> Cancel
               </button>
@@ -830,13 +830,13 @@ const QuizEditorPage = () => {
       <section>
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-lg">
-            Questions <span className="text-sm text-gray-500 font-normal">({questions.length} question{questions.length !== 1 ? 's' : ''}, {totalPoints} pts)</span>
+            Questions <span className="text-sm text-text-tertiary font-normal">({questions.length} question{questions.length !== 1 ? 's' : ''}, {totalPoints} pts)</span>
           </h3>
           <div className="flex items-center gap-2">
             <select
               id="add-question-type"
               defaultValue="multiple_choice"
-              className="border border-gray-300 rounded px-2 py-1.5 text-sm"
+              className="border border-border-strong rounded px-2 py-1.5 text-sm"
             >
               {QUESTION_TYPES.map(t => (
                 <option key={t.value} value={t.value}>{t.label}</option>
@@ -847,7 +847,7 @@ const QuizEditorPage = () => {
                 const typeSelect = document.getElementById('add-question-type');
                 handleAddQuestion(typeSelect?.value || 'multiple_choice');
               }}
-              className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-accent-success text-white rounded hover:bg-accent-success/90 text-sm font-medium"
             >
               <Plus className="w-4 h-4" /> Add Question
             </button>
@@ -855,7 +855,7 @@ const QuizEditorPage = () => {
         </div>
 
         {questions.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
+          <div className="bg-surface-0 rounded-lg shadow p-8 text-center text-text-tertiary">
             No questions yet. Click "Add Question" to get started.
           </div>
         ) : (
@@ -881,7 +881,7 @@ const QuizEditorPage = () => {
                 const typeSelect = document.getElementById('add-question-type');
                 handleAddQuestion(typeSelect?.value || 'multiple_choice');
               }}
-              className="inline-flex items-center gap-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"
+              className="inline-flex items-center gap-1 px-4 py-2 bg-accent-success text-white rounded hover:bg-accent-success/90 text-sm font-medium"
             >
               <Plus className="w-4 h-4" /> Add Question
             </button>

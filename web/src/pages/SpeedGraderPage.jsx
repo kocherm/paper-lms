@@ -35,10 +35,10 @@ import {
 } from '../components/ui/tooltip';
 
 const STATUS_CONFIG = {
-  submitted: { label: 'Submitted', color: 'bg-blue-100 text-blue-800', icon: CheckCircle, dot: 'bg-blue-500' },
-  graded: { label: 'Graded', color: 'bg-green-100 text-green-800', icon: Award, dot: 'bg-green-500' },
-  pending_review: { label: 'Pending Review', color: 'bg-yellow-100 text-yellow-800', icon: Clock, dot: 'bg-yellow-500' },
-  unsubmitted: { label: 'Not Submitted', color: 'bg-gray-100 text-gray-600', icon: MinusCircle, dot: 'bg-gray-400' },
+  submitted: { label: 'Submitted', color: 'bg-brand-100 text-brand-800', icon: CheckCircle, dot: 'bg-brand-500' },
+  graded: { label: 'Graded', color: 'bg-accent-success/20 text-accent-success', icon: Award, dot: 'bg-accent-success' },
+  pending_review: { label: 'Pending Review', color: 'bg-accent-warning/20 text-accent-warning', icon: Clock, dot: 'bg-accent-warning' },
+  unsubmitted: { label: 'Not Submitted', color: 'bg-surface-2 text-text-secondary', icon: MinusCircle, dot: 'bg-gray-400' },
 };
 
 const getStatusConfig = (student) => {
@@ -72,10 +72,10 @@ const StudentListItem = React.memo(
         onKeyDown={onKeyDown}
         role="option"
         aria-selected={isSelected}
-        className={`w-full text-left px-3 py-2.5 border-b border-gray-100 flex items-center space-x-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+        className={`w-full text-left px-3 py-2.5 border-b border-border-subtle flex items-center space-x-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
           isSelected
-            ? 'bg-blue-50 border-l-4 border-l-blue-500'
-            : 'hover:bg-gray-50 border-l-4 border-l-transparent'
+            ? 'bg-brand-50 border-l-4 border-l-blue-500'
+            : 'hover:bg-surface-1 border-l-4 border-l-transparent'
         }`}
       >
         <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${config.dot}`} aria-hidden="true" />
@@ -85,10 +85,10 @@ const StudentListItem = React.memo(
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
-          <p className={`text-sm truncate ${isSelected ? 'font-semibold text-blue-900' : 'text-gray-700'}`}>
+          <p className={`text-sm truncate ${isSelected ? 'font-semibold text-blue-900' : 'text-text-secondary'}`}>
             {student.user_name || `User ${student.user_id}`}
           </p>
-          <p className="text-xs text-gray-600">
+          <p className="text-xs text-text-secondary">
             {hasScore ? `${score}/${pointsPossible ?? 0}` : config.label}
           </p>
         </div>
@@ -110,13 +110,13 @@ const RubricCriterionRow = React.memo(
     const cId = criterion.id || criterion.description;
     const ratings = criterion.ratings || [];
     return (
-      <div className="border-b border-gray-100 pb-3 last:border-0 last:pb-0">
+      <div className="border-b border-border-subtle pb-3 last:border-0 last:pb-0">
         <div className="flex items-center justify-between mb-1">
-          <p className="text-xs font-semibold text-gray-700">{criterion.description}</p>
+          <p className="text-xs font-semibold text-text-secondary">{criterion.description}</p>
           <Badge variant="outline" className="text-xs">{criterion.points} pts</Badge>
         </div>
         {criterion.long_description && (
-          <p className="text-xs text-gray-600 mb-2">{criterion.long_description}</p>
+          <p className="text-xs text-text-secondary mb-2">{criterion.long_description}</p>
         )}
         {ratings.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-2">
@@ -129,8 +129,8 @@ const RubricCriterionRow = React.memo(
                   onClick={() => onScoreChange(cId, rating.points)}
                   className={`text-xs px-2 py-1 rounded border transition-colors ${
                     isSelected
-                      ? 'bg-blue-100 border-blue-400 text-blue-800 font-medium'
-                      : 'bg-white border-gray-200 text-gray-600 hover:border-blue-300 hover:bg-blue-50'
+                      ? 'bg-brand-100 border-blue-400 text-brand-800 font-medium'
+                      : 'bg-surface-0 border-border-default text-text-secondary hover:border-blue-300 hover:bg-brand-50'
                   }`}
                   title={rating.description}
                   disabled={disabled}
@@ -150,7 +150,7 @@ const RubricCriterionRow = React.memo(
             value={score ?? ''}
             onChange={(e) => onScoreChange(cId, e.target.value)}
             placeholder="Pts"
-            className="w-16 border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-16 border border-border-strong rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-brand-500"
             disabled={disabled}
           />
           <input
@@ -158,7 +158,7 @@ const RubricCriterionRow = React.memo(
             value={comment || ''}
             onChange={(e) => onCommentChange(cId, e.target.value)}
             placeholder="Comment..."
-            className="flex-1 border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="flex-1 border border-border-strong rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-brand-500"
             disabled={disabled}
           />
         </div>
@@ -182,7 +182,7 @@ const RubricCriterionRow = React.memo(
 const SubmissionPreview = React.memo(function SubmissionPreview({ student }) {
   if (!student) {
     return (
-      <Card className="flex-1 flex items-center justify-center text-gray-600 p-6">
+      <Card className="flex-1 flex items-center justify-center text-text-secondary p-6">
         <p>Select a student to view their submission</p>
       </Card>
     );
@@ -194,19 +194,19 @@ const SubmissionPreview = React.memo(function SubmissionPreview({ student }) {
 
   return (
     <Card className="flex-1 overflow-hidden flex flex-col">
-      <div className="p-4 border-b bg-gray-50 flex items-center justify-between">
+      <div className="p-4 border-b bg-surface-1 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <Avatar className="h-9 w-9">
             <AvatarFallback>{initialsOf(student.user_name, student.user_id)}</AvatarFallback>
           </Avatar>
           <div>
-            <p className="font-semibold text-gray-900">
+            <p className="font-semibold text-text-primary">
               {student.user_name || `User ${student.user_id}`}
             </p>
             {sub?.submitted_at && (
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-text-tertiary">
                 Submitted {formatDate(sub.submitted_at)}
-                {sub.late && <span className="ml-2 text-red-600 font-medium">LATE</span>}
+                {sub.late && <span className="ml-2 text-accent-danger font-medium">LATE</span>}
               </p>
             )}
           </div>
@@ -216,7 +216,7 @@ const SubmissionPreview = React.memo(function SubmissionPreview({ student }) {
 
       <div className="p-6 flex-1 overflow-y-auto">
         {isUnsubmitted ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-600">
+          <div className="flex flex-col items-center justify-center h-full text-text-secondary">
             <AlertCircle className="w-12 h-12 mb-3" />
             <p className="text-lg font-medium">No Submission</p>
             <p className="text-sm">This student has not submitted this assignment.</p>
@@ -224,7 +224,7 @@ const SubmissionPreview = React.memo(function SubmissionPreview({ student }) {
         ) : (
           <div>
             {sub.submission_type && (
-              <div className="flex items-center space-x-2 mb-4 text-sm text-gray-500">
+              <div className="flex items-center space-x-2 mb-4 text-sm text-text-tertiary">
                 <FileText className="w-4 h-4" />
                 <span>
                   Type: {sub.submission_type}
@@ -235,7 +235,7 @@ const SubmissionPreview = React.memo(function SubmissionPreview({ student }) {
 
             {sub.body && (
               <div
-                className="prose max-w-none text-gray-700"
+                className="prose max-w-none text-text-secondary"
                 dangerouslySetInnerHTML={{ __html: sanitizeHTML(sub.body) }}
               />
             )}
@@ -246,7 +246,7 @@ const SubmissionPreview = React.memo(function SubmissionPreview({ student }) {
                   href={sub.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline break-all"
+                  className="text-brand-600 hover:underline break-all"
                 >
                   {sub.url}
                 </a>
@@ -255,7 +255,7 @@ const SubmissionPreview = React.memo(function SubmissionPreview({ student }) {
 
             {sub.attachments?.length > 0 && (
               <div className="mt-4">
-                <h4 className="text-sm font-medium text-gray-600 mb-2">Attachments</h4>
+                <h4 className="text-sm font-medium text-text-secondary mb-2">Attachments</h4>
                 <div className="space-y-2">
                   {sub.attachments.map((file, idx) => (
                     <a
@@ -263,12 +263,12 @@ const SubmissionPreview = React.memo(function SubmissionPreview({ student }) {
                       href={file.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 p-2 border border-gray-200 rounded hover:bg-gray-50 text-sm"
+                      className="flex items-center gap-2 p-2 border border-border-default rounded hover:bg-surface-1 text-sm"
                     >
-                      <FileText className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                      <span className="text-blue-600 truncate">{file.display_name || file.filename}</span>
+                      <FileText className="w-4 h-4 text-text-disabled flex-shrink-0" />
+                      <span className="text-brand-600 truncate">{file.display_name || file.filename}</span>
                       {file.size && (
-                        <span className="text-xs text-gray-600 ml-auto flex-shrink-0">
+                        <span className="text-xs text-text-secondary ml-auto flex-shrink-0">
                           {file.size > 1048576
                             ? `${(file.size / 1048576).toFixed(1)} MB`
                             : `${Math.round(file.size / 1024)} KB`}
@@ -281,7 +281,7 @@ const SubmissionPreview = React.memo(function SubmissionPreview({ student }) {
             )}
 
             {!sub.body && !sub.url && !sub.attachments?.length && (
-              <p className="text-gray-600 italic">No content available for this submission type.</p>
+              <p className="text-text-secondary italic">No content available for this submission type.</p>
             )}
           </div>
         )}
@@ -612,11 +612,11 @@ const SpeedGraderPage = () => {
     return (
       <Layout>
         <div className="text-center py-12">
-          <p className="text-red-600 mb-3">{error}</p>
+          <p className="text-accent-danger mb-3">{error}</p>
           <Button
             variant="link"
             onClick={() => { setError(null); window.location.reload(); }}
-            className="text-blue-600"
+            className="text-brand-600"
           >
             Try Again
           </Button>
@@ -635,13 +635,13 @@ const SpeedGraderPage = () => {
         <div className="mb-4">
           <Link
             to={`/courses/${courseId}/assignments/${assignmentId}`}
-            className="text-blue-600 hover:underline text-sm"
+            className="text-brand-600 hover:underline text-sm"
           >
             &larr; Back to Assignment
           </Link>
           <div className="flex items-center justify-between mt-2">
-            <h2 className="text-2xl font-bold text-gray-900">SpeedGrader</h2>
-            <div className="flex items-center gap-3 text-sm text-gray-500">
+            <h2 className="text-2xl font-bold text-text-primary">SpeedGrader</h2>
+            <div className="flex items-center gap-3 text-sm text-text-tertiary">
               {assignment.anonymous_grading && (
                 <Badge variant="secondary" className="bg-purple-100 text-purple-700 hover:bg-purple-100">
                   Anonymous Grading
@@ -652,7 +652,7 @@ const SpeedGraderPage = () => {
               <span>{gradedCount}/{students.length} graded</span>
             </div>
           </div>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-text-tertiary text-sm mt-1">
             {assignment.name} &middot; {assignment.points_possible ?? 0} points
           </p>
         </div>
@@ -664,14 +664,14 @@ const SpeedGraderPage = () => {
             role="listbox"
             aria-label="Students"
           >
-            <div className="p-3 border-b bg-gray-50">
-              <h3 className="font-semibold text-sm text-gray-700">
+            <div className="p-3 border-b bg-surface-1">
+              <h3 className="font-semibold text-sm text-text-secondary">
                 Students ({sortedStudents.length})
               </h3>
             </div>
             <div className="overflow-y-auto flex-1">
               {sortedStudents.length === 0 ? (
-                <div className="p-4 text-center text-gray-500 text-sm">No students enrolled</div>
+                <div className="p-4 text-center text-text-tertiary text-sm">No students enrolled</div>
               ) : (
                 sortedStudents.map((student) => (
                   <StudentListItem
@@ -705,10 +705,10 @@ const SpeedGraderPage = () => {
                 </TooltipTrigger>
                 <TooltipContent>Previous student</TooltipContent>
               </Tooltip>
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-text-secondary">
                 {students.length > 0 ? `${selectedIndex + 1} of ${students.length}` : 'No students'}
                 {selectedStudent && (
-                  <span className="text-gray-500">
+                  <span className="text-text-tertiary">
                     {' '}&mdash; {selectedStudent.user_name || `User ${selectedStudent.user_id}`}
                   </span>
                 )}
@@ -735,7 +735,7 @@ const SpeedGraderPage = () => {
           {/* Right rail: sticky grade entry & rubric */}
           <div className="w-80 flex-shrink-0 sticky top-0 self-start max-h-screen overflow-y-auto flex flex-col gap-4">
             <Card className="p-4">
-              <h3 className="font-semibold text-sm text-gray-700 mb-3 flex items-center space-x-2">
+              <h3 className="font-semibold text-sm text-text-secondary mb-3 flex items-center space-x-2">
                 <Award className="w-4 h-4" />
                 <span>Grade</span>
                 {isStudentSubmitted && (
@@ -752,17 +752,17 @@ const SpeedGraderPage = () => {
                     value={gradeInput}
                     onChange={handleScoreChange}
                     placeholder="Score"
-                    className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="flex-1 border border-border-strong rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                     disabled={!selectedStudent}
                     aria-label="Grade score"
                   />
-                  <span className="text-sm text-gray-500 whitespace-nowrap">
+                  <span className="text-sm text-text-tertiary whitespace-nowrap">
                     / {assignment.points_possible ?? 0}
                   </span>
                 </div>
 
                 {assignment.points_possible > 0 && gradeInput !== '' && (
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-text-tertiary">
                     {((parseFloat(gradeInput) / assignment.points_possible) * 100).toFixed(1)}%
                   </div>
                 )}
@@ -772,7 +772,7 @@ const SpeedGraderPage = () => {
                 </Button>
 
                 {gradeSuccess && (
-                  <div className="flex items-center space-x-1 text-green-600 text-xs">
+                  <div className="flex items-center space-x-1 text-accent-success text-xs">
                     <CheckCircle className="w-3 h-3" />
                     <span>Grade saved</span>
                   </div>
@@ -784,16 +784,16 @@ const SpeedGraderPage = () => {
               <Card className="overflow-hidden">
                 <button
                   onClick={() => setRubricExpanded((v) => !v)}
-                  className="w-full p-3 border-b bg-gray-50 flex items-center justify-between hover:bg-gray-100 transition-colors"
+                  className="w-full p-3 border-b bg-surface-1 flex items-center justify-between hover:bg-surface-2 transition-colors"
                   aria-expanded={rubricExpanded}
                 >
-                  <h3 className="font-semibold text-sm text-gray-700 flex items-center space-x-2">
+                  <h3 className="font-semibold text-sm text-text-secondary flex items-center space-x-2">
                     <Grid className="w-4 h-4" />
                     <span>Rubric ({rubricCriteria.length} criteria)</span>
                   </h3>
                   {rubricExpanded
-                    ? <ChevronUp className="w-4 h-4 text-gray-400" />
-                    : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                    ? <ChevronUp className="w-4 h-4 text-text-disabled" />
+                    : <ChevronDown className="w-4 h-4 text-text-disabled" />}
                 </button>
                 {rubricExpanded && (
                   <div className="p-3 space-y-4">
@@ -814,7 +814,7 @@ const SpeedGraderPage = () => {
                     })}
                     <Separator />
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold text-gray-700">
+                      <span className="text-sm font-semibold text-text-secondary">
                         Total: {rubricTotal} / {rubricMax}
                       </span>
                       <Button
@@ -831,8 +831,8 @@ const SpeedGraderPage = () => {
             )}
 
             <Card className="flex-1 flex flex-col overflow-hidden">
-              <div className="p-4 border-b bg-gray-50">
-                <h3 className="font-semibold text-sm text-gray-700 flex items-center space-x-2">
+              <div className="p-4 border-b bg-surface-1">
+                <h3 className="font-semibold text-sm text-text-secondary flex items-center space-x-2">
                   <MessageSquare className="w-4 h-4" />
                   <span>
                     Comments
@@ -843,34 +843,34 @@ const SpeedGraderPage = () => {
 
               <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ maxHeight: '300px' }}>
                 {!selectedStudent?.comments?.length ? (
-                  <p className="text-sm text-gray-600 text-center py-4">No comments yet</p>
+                  <p className="text-sm text-text-secondary text-center py-4">No comments yet</p>
                 ) : (
                   selectedStudent.comments.map((comment) => (
-                    <div key={comment.id} className="border-b border-gray-100 pb-3 last:border-0">
+                    <div key={comment.id} className="border-b border-border-subtle pb-3 last:border-0">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-medium text-gray-600">
+                        <span className="text-xs font-medium text-text-secondary">
                           {comment.author_id === user?.id
                             ? 'You'
                             : comment.author_name || comment.author?.display_name || comment.author?.name
                               || students.find((s) => s.user_id === comment.author_id)?.user_name
                               || `User ${comment.author_id}`}
                         </span>
-                        <span className="text-xs text-gray-600">{formatDate(comment.created_at)}</span>
+                        <span className="text-xs text-text-secondary">{formatDate(comment.created_at)}</span>
                       </div>
-                      <p className="text-sm text-gray-700">{comment.comment}</p>
+                      <p className="text-sm text-text-secondary">{comment.comment}</p>
                     </div>
                   ))
                 )}
               </div>
 
-              <div className="p-3 border-t bg-gray-50">
+              <div className="p-3 border-t bg-surface-1">
                 <form onSubmit={handleAddComment} className="flex space-x-2">
                   <input
                     type="text"
                     value={commentText}
                     onChange={handleCommentChange}
                     placeholder="Add a comment..."
-                    className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="flex-1 border border-border-strong rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                     disabled={!selectedStudent || submittingComment}
                     aria-label="Comment text"
                   />

@@ -118,8 +118,8 @@ const DiscussionsPage = () => {
   }
   if (error) {
     return <Layout><div className="text-center py-12">
-  <p className="text-red-600 mb-3">{error}</p>
-  <button onClick={() => window.location.reload()} className="text-blue-600 hover:text-blue-800 text-sm font-medium">Try Again</button>
+  <p className="text-accent-danger mb-3">{error}</p>
+  <button onClick={() => window.location.reload()} className="text-brand-600 hover:text-brand-800 text-sm font-medium">Try Again</button>
 </div></Layout>;
   }
 
@@ -127,18 +127,18 @@ const DiscussionsPage = () => {
     <Layout>
       <CourseNav />
       <div className="mb-6">
-        <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm">
+        <Link to={`/courses/${courseId}`} className="text-brand-600 hover:underline text-sm">
           &larr; Back to Course
         </Link>
         <div className="flex items-center justify-between mt-2">
-          <h2 className="text-2xl font-bold text-gray-900">Discussions</h2>
+          <h2 className="text-2xl font-bold text-text-primary">Discussions</h2>
           {isTeacher && (
             <button
               onClick={() => {
                 if (showForm) { resetForm(); }
                 setShowForm(!showForm);
               }}
-              className="inline-flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium"
+              className="inline-flex items-center space-x-2 bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 text-sm font-medium"
             >
               {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
               <span>{showForm ? 'Cancel' : 'New Discussion'}</span>
@@ -148,21 +148,21 @@ const DiscussionsPage = () => {
       </div>
 
       {showForm && (
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-surface-0 rounded-lg shadow p-6 mb-6">
           <h3 className="font-semibold mb-4">{editingId ? 'Edit Discussion Topic' : 'Create Discussion Topic'}</h3>
           <form onSubmit={handleCreate} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Title</label>
               <input
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Message</label>
               <RichContentEditorV2
                 value={formData.message}
                 onChange={(html) => setFormData((prev) => ({ ...prev, message: html }))}
@@ -174,11 +174,11 @@ const DiscussionsPage = () => {
             </div>
             <div className="flex items-center space-x-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Discussion Type</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Discussion Type</label>
                 <select
                   value={formData.discussion_type}
                   onChange={(e) => setFormData({ ...formData, discussion_type: e.target.value })}
-                  className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 >
                   <option value="side_comment">Side Comment</option>
                   <option value="threaded">Threaded</option>
@@ -190,23 +190,23 @@ const DiscussionsPage = () => {
                   id="pinned"
                   checked={formData.pinned}
                   onChange={(e) => setFormData({ ...formData, pinned: e.target.checked })}
-                  className="rounded border-gray-300"
+                  className="rounded border-border-strong"
                 />
-                <label htmlFor="pinned" className="text-sm text-gray-700">Pinned</label>
+                <label htmlFor="pinned" className="text-sm text-text-secondary">Pinned</label>
               </div>
             </div>
             <div className="flex justify-end space-x-3">
               <button
                 type="button"
                 onClick={() => { resetForm(); setShowForm(false); }}
-                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+                className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={creating}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium disabled:opacity-50"
+                className="bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 text-sm font-medium disabled:opacity-50"
               >
                 {creating ? 'Saving...' : editingId ? 'Update Topic' : 'Create Topic'}
               </button>
@@ -215,49 +215,49 @@ const DiscussionsPage = () => {
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-surface-0 rounded-lg shadow">
         <div className="p-4 border-b">
           <h3 className="font-semibold">Topics</h3>
         </div>
         {topics.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">No discussions yet.</div>
+          <div className="p-6 text-center text-text-tertiary">No discussions yet.</div>
         ) : (
           <div className="divide-y">
             {topics.map((topic) => (
-              <div key={topic.id} className="flex items-center justify-between p-4 hover:bg-gray-50 group">
+              <div key={topic.id} className="flex items-center justify-between p-4 hover:bg-surface-1 group">
                 <Link
                   to={`/courses/${courseId}/discussions/${topic.id}`}
                   className="flex items-center space-x-3 min-w-0 flex-1"
                 >
-                  <MessageSquare className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                  <MessageSquare className="w-5 h-5 text-text-disabled flex-shrink-0" />
                   <div className="min-w-0">
                     <div className="flex items-center space-x-2">
-                      <span className="font-medium text-gray-900 truncate">{topic.title}</span>
+                      <span className="font-medium text-text-primary truncate">{topic.title}</span>
                       {topic.pinned && (
-                        <Pin className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
+                        <Pin className="w-3.5 h-3.5 text-brand-500 flex-shrink-0" />
                       )}
                     </div>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-text-disabled">
                       {topic.discussion_type === 'side_comment' ? 'Side Comment' : topic.discussion_type === 'threaded' ? 'Threaded' : topic.discussion_type}
                     </span>
                   </div>
                 </Link>
                 <div className="flex items-center gap-2 flex-shrink-0 ml-4">
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-text-disabled">
                     {formatDate(topic.created_at)}
                   </span>
                   {isTeacher && (
                     <>
                       <button
                         onClick={(e) => { e.preventDefault(); handleEdit(topic); }}
-                        className="p-1 text-gray-400 hover:text-blue-600 opacity-0 group-hover:opacity-100"
+                        className="p-1 text-text-disabled hover:text-brand-600 opacity-0 group-hover:opacity-100"
                         title="Edit"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={(e) => { e.preventDefault(); handleDelete(topic.id); }}
-                        className="p-1 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100"
+                        className="p-1 text-text-disabled hover:text-accent-danger opacity-0 group-hover:opacity-100"
                         title="Delete"
                       >
                         <Trash2 className="w-4 h-4" />

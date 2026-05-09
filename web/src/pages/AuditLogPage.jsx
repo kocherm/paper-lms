@@ -11,13 +11,13 @@ const TAB_ACTIVITY = 'activity';
 const TAB_GRADES = 'grades';
 
 const EVENT_TYPE_COLORS = {
-  grade_change: 'bg-amber-100 text-amber-800',
-  course_update: 'bg-blue-100 text-blue-800',
-  enrollment_change: 'bg-green-100 text-green-800',
+  grade_change: 'bg-accent-warning/20 text-accent-warning',
+  course_update: 'bg-brand-100 text-brand-800',
+  enrollment_change: 'bg-accent-success/20 text-accent-success',
   assignment_update: 'bg-purple-100 text-purple-800',
   submission_update: 'bg-indigo-100 text-indigo-800',
   user_update: 'bg-pink-100 text-pink-800',
-  account_update: 'bg-gray-100 text-gray-800',
+  account_update: 'bg-surface-2 text-text-primary',
 };
 
 const EVENT_TYPE_OPTIONS = [
@@ -211,11 +211,11 @@ const AuditLogPage = () => {
   };
 
   const getEventTypeClass = (eventType) => {
-    return EVENT_TYPE_COLORS[eventType] || 'bg-gray-100 text-gray-800';
+    return EVENT_TYPE_COLORS[eventType] || 'bg-surface-2 text-text-primary';
   };
 
   if (isTeacher === false) return <Navigate to={`/courses/${courseId}`} replace />;
-  if (isTeacher === null) return <Layout><div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  if (isTeacher === null) return <Layout><div className="flex items-center justify-center py-12 gap-2 text-text-tertiary">
   <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
   Loading...
 </div></Layout>;
@@ -223,7 +223,7 @@ const AuditLogPage = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+        <div className="flex items-center justify-center py-12 gap-2 text-text-tertiary">
   <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
   Loading...
 </div>
@@ -234,7 +234,7 @@ const AuditLogPage = () => {
   if (error) {
     return (
       <Layout>
-        <div className="text-center py-12 text-red-500">{error}</div>
+        <div className="text-center py-12 text-accent-danger">{error}</div>
       </Layout>
     );
   }
@@ -244,23 +244,23 @@ const AuditLogPage = () => {
       <CourseNav />
       {/* Header */}
       <div className="mb-6">
-        <Link to={`/courses/${courseId}`} className="text-blue-600 hover:text-blue-800 text-sm flex items-center mb-2">
+        <Link to={`/courses/${courseId}`} className="text-brand-600 hover:text-brand-800 text-sm flex items-center mb-2">
           <ArrowLeft className="w-4 h-4 mr-1" />
           Back to Course
         </Link>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <FileText className="w-8 h-8 text-gray-400" />
+            <FileText className="w-8 h-8 text-text-disabled" />
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Audit Log</h1>
-              <p className="text-sm text-gray-500">{course?.name || 'Course'}</p>
+              <h1 className="text-2xl font-bold text-text-primary">Audit Log</h1>
+              <p className="text-sm text-text-tertiary">{course?.name || 'Course'}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200 mb-6" role="tablist" aria-label="Audit log tabs">
+      <div className="border-b border-border-default mb-6" role="tablist" aria-label="Audit log tabs">
         <nav className="flex space-x-8">
           <button
             role="tab"
@@ -269,8 +269,8 @@ const AuditLogPage = () => {
             onClick={() => setActiveTab(TAB_ACTIVITY)}
             className={`pb-3 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeTab === TAB_ACTIVITY
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-brand-500 text-brand-600'
+                : 'border-transparent text-text-tertiary hover:text-text-secondary hover:border-border-strong'
             }`}
           >
             Course Activity
@@ -282,8 +282,8 @@ const AuditLogPage = () => {
             onClick={() => setActiveTab(TAB_GRADES)}
             className={`pb-3 px-1 border-b-2 font-medium text-sm transition-colors ${
               activeTab === TAB_GRADES
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-brand-500 text-brand-600'
+                : 'border-transparent text-text-tertiary hover:text-text-secondary hover:border-border-strong'
             }`}
           >
             Grade Changes
@@ -295,11 +295,11 @@ const AuditLogPage = () => {
       {activeTab === TAB_ACTIVITY && (
         <div id="panel-activity" role="tabpanel" aria-labelledby="tab-activity">
           {/* Filter Bar */}
-          <div className="bg-white rounded-lg shadow mb-4 p-4">
+          <div className="bg-surface-0 rounded-lg shadow mb-4 p-4">
             <div className="flex items-center justify-between mb-3">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center space-x-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                className="flex items-center space-x-2 text-sm font-medium text-text-secondary hover:text-text-primary"
               >
                 <Filter className="w-4 h-4" />
                 <span>Filters</span>
@@ -307,7 +307,7 @@ const AuditLogPage = () => {
               </button>
               <button
                 onClick={handleExportAuditCSV}
-                className="flex items-center space-x-2 px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
+                className="flex items-center space-x-2 px-3 py-1.5 bg-accent-success text-white text-sm rounded hover:bg-accent-success/90 transition-colors"
               >
                 <Download className="w-4 h-4" />
                 <span>Export CSV</span>
@@ -315,14 +315,14 @@ const AuditLogPage = () => {
             </div>
 
             {showFilters && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-gray-100">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-border-subtle">
                 <div>
-                  <label htmlFor="event-type-filter" className="block text-xs font-medium text-gray-500 mb-1">Event Type</label>
+                  <label htmlFor="event-type-filter" className="block text-xs font-medium text-text-tertiary mb-1">Event Type</label>
                   <select
                     id="event-type-filter"
                     value={eventTypeFilter}
                     onChange={(e) => setEventTypeFilter(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full border border-border-strong rounded px-3 py-1.5 text-sm focus:ring-brand-500 focus:border-brand-500"
                   >
                     {EVENT_TYPE_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -330,34 +330,34 @@ const AuditLogPage = () => {
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="user-id-filter" className="block text-xs font-medium text-gray-500 mb-1">User ID</label>
+                  <label htmlFor="user-id-filter" className="block text-xs font-medium text-text-tertiary mb-1">User ID</label>
                   <input
                     id="user-id-filter"
                     type="text"
                     value={userIdFilter}
                     onChange={(e) => setUserIdFilter(e.target.value)}
                     placeholder="Filter by user ID"
-                    className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full border border-border-strong rounded px-3 py-1.5 text-sm focus:ring-brand-500 focus:border-brand-500"
                   />
                 </div>
                 <div>
-                  <label htmlFor="date-from-filter" className="block text-xs font-medium text-gray-500 mb-1">Date From</label>
+                  <label htmlFor="date-from-filter" className="block text-xs font-medium text-text-tertiary mb-1">Date From</label>
                   <input
                     id="date-from-filter"
                     type="date"
                     value={dateFromFilter}
                     onChange={(e) => setDateFromFilter(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full border border-border-strong rounded px-3 py-1.5 text-sm focus:ring-brand-500 focus:border-brand-500"
                   />
                 </div>
                 <div>
-                  <label htmlFor="date-to-filter" className="block text-xs font-medium text-gray-500 mb-1">Date To</label>
+                  <label htmlFor="date-to-filter" className="block text-xs font-medium text-text-tertiary mb-1">Date To</label>
                   <input
                     id="date-to-filter"
                     type="date"
                     value={dateToFilter}
                     onChange={(e) => setDateToFilter(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full border border-border-strong rounded px-3 py-1.5 text-sm focus:ring-brand-500 focus:border-brand-500"
                   />
                 </div>
               </div>
@@ -366,49 +366,49 @@ const AuditLogPage = () => {
 
           {/* Activity Table */}
           {auditLoading ? (
-            <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+            <div className="flex items-center justify-center py-12 gap-2 text-text-tertiary">
   <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
   Loading audit log...
 </div>
           ) : auditLogs.length === 0 ? (
-            <div className="bg-white rounded-lg shadow p-8 text-center">
-              <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">No audit log entries found.</p>
-              <p className="text-gray-400 text-sm mt-1">Activity will appear here as changes are made to this course.</p>
+            <div className="bg-surface-0 rounded-lg shadow p-8 text-center">
+              <FileText className="w-12 h-12 text-text-disabled mx-auto mb-3" />
+              <p className="text-text-tertiary">No audit log entries found.</p>
+              <p className="text-text-disabled text-sm mt-1">Activity will appear here as changes are made to this course.</p>
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="bg-surface-0 rounded-lg shadow overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="min-w-full border-collapse" aria-label="Course audit log">
                   <caption className="sr-only">Course activity audit log showing recent changes and actions</caption>
                   <thead>
-                    <tr className="bg-gray-50">
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Date</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">User</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Event Type</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Action</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Context</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Details</th>
+                    <tr className="bg-surface-1">
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider border-b">Date</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider border-b">User</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider border-b">Event Type</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider border-b">Action</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider border-b">Context</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider border-b">Details</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-border-default">
                     {auditLogs.map((log) => (
                       <React.Fragment key={log.id}>
-                        <tr className="hover:bg-gray-50">
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{formatDate(log.created_at)}</td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">User {log.user_id}</td>
+                        <tr className="hover:bg-surface-1">
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-text-secondary">{formatDate(log.created_at)}</td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-text-primary">User {log.user_id}</td>
                           <td className="px-4 py-3 whitespace-nowrap">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getEventTypeClass(log.event_type)}`}>
                               {log.event_type}
                             </span>
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{log.action}</td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{log.context_type} #{log.context_id}</td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-text-secondary">{log.action}</td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-text-secondary">{log.context_type} #{log.context_id}</td>
                           <td className="px-4 py-3 whitespace-nowrap">
                             {log.payload && log.payload !== '{}' && (
                               <button
                                 onClick={() => toggleRow(log.id)}
-                                className="flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-800"
+                                className="flex items-center space-x-1 text-sm text-brand-600 hover:text-brand-800"
                                 aria-expanded={!!expandedRows[log.id]}
                                 aria-controls={`payload-${log.id}`}
                               >
@@ -420,12 +420,12 @@ const AuditLogPage = () => {
                         </tr>
                         {expandedRows[log.id] && (
                           <tr id={`payload-${log.id}`}>
-                            <td colSpan={6} className="px-4 py-3 bg-gray-50">
-                              <pre className="text-xs text-gray-700 whitespace-pre-wrap font-mono bg-gray-100 p-3 rounded max-w-full overflow-x-auto">
+                            <td colSpan={6} className="px-4 py-3 bg-surface-1">
+                              <pre className="text-xs text-text-secondary whitespace-pre-wrap font-mono bg-surface-2 p-3 rounded max-w-full overflow-x-auto">
                                 {formatPayload(log.payload)}
                               </pre>
                               {log.ip_address && (
-                                <p className="text-xs text-gray-400 mt-2">IP: {log.ip_address} | User-Agent: {log.user_agent}</p>
+                                <p className="text-xs text-text-disabled mt-2">IP: {log.ip_address} | User-Agent: {log.user_agent}</p>
                               )}
                             </td>
                           </tr>
@@ -437,19 +437,19 @@ const AuditLogPage = () => {
               </div>
 
               {/* Pagination */}
-              <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+              <div className="px-4 py-3 bg-surface-1 border-t border-border-default flex items-center justify-between">
                 <button
                   onClick={() => fetchAuditLogs(auditPage - 1)}
                   disabled={auditPage <= 1}
-                  className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm border border-border-strong rounded hover:bg-surface-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
-                <span className="text-sm text-gray-600">Page {auditPage}</span>
+                <span className="text-sm text-text-secondary">Page {auditPage}</span>
                 <button
                   onClick={() => fetchAuditLogs(auditPage + 1)}
                   disabled={!auditHasMore}
-                  className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm border border-border-strong rounded hover:bg-surface-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>
@@ -463,11 +463,11 @@ const AuditLogPage = () => {
       {activeTab === TAB_GRADES && (
         <div id="panel-grades" role="tabpanel" aria-labelledby="tab-grades">
           {/* Filter Bar */}
-          <div className="bg-white rounded-lg shadow mb-4 p-4">
+          <div className="bg-surface-0 rounded-lg shadow mb-4 p-4">
             <div className="flex items-center justify-between mb-3">
               <button
                 onClick={() => setShowGradeFilters(!showGradeFilters)}
-                className="flex items-center space-x-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                className="flex items-center space-x-2 text-sm font-medium text-text-secondary hover:text-text-primary"
               >
                 <Filter className="w-4 h-4" />
                 <span>Filters</span>
@@ -475,7 +475,7 @@ const AuditLogPage = () => {
               </button>
               <button
                 onClick={handleExportGradeCSV}
-                className="flex items-center space-x-2 px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
+                className="flex items-center space-x-2 px-3 py-1.5 bg-accent-success text-white text-sm rounded hover:bg-accent-success/90 transition-colors"
               >
                 <Download className="w-4 h-4" />
                 <span>Export CSV</span>
@@ -483,58 +483,58 @@ const AuditLogPage = () => {
             </div>
 
             {showGradeFilters && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-3 border-t border-gray-100">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-3 border-t border-border-subtle">
                 <div>
-                  <label htmlFor="student-id-filter" className="block text-xs font-medium text-gray-500 mb-1">Student ID</label>
+                  <label htmlFor="student-id-filter" className="block text-xs font-medium text-text-tertiary mb-1">Student ID</label>
                   <input
                     id="student-id-filter"
                     type="text"
                     value={studentIdFilter}
                     onChange={(e) => setStudentIdFilter(e.target.value)}
                     placeholder="Filter by student"
-                    className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full border border-border-strong rounded px-3 py-1.5 text-sm focus:ring-brand-500 focus:border-brand-500"
                   />
                 </div>
                 <div>
-                  <label htmlFor="grader-id-filter" className="block text-xs font-medium text-gray-500 mb-1">Grader ID</label>
+                  <label htmlFor="grader-id-filter" className="block text-xs font-medium text-text-tertiary mb-1">Grader ID</label>
                   <input
                     id="grader-id-filter"
                     type="text"
                     value={graderIdFilter}
                     onChange={(e) => setGraderIdFilter(e.target.value)}
                     placeholder="Filter by grader"
-                    className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full border border-border-strong rounded px-3 py-1.5 text-sm focus:ring-brand-500 focus:border-brand-500"
                   />
                 </div>
                 <div>
-                  <label htmlFor="assignment-id-filter" className="block text-xs font-medium text-gray-500 mb-1">Assignment ID</label>
+                  <label htmlFor="assignment-id-filter" className="block text-xs font-medium text-text-tertiary mb-1">Assignment ID</label>
                   <input
                     id="assignment-id-filter"
                     type="text"
                     value={assignmentIdFilter}
                     onChange={(e) => setAssignmentIdFilter(e.target.value)}
                     placeholder="Filter by assignment"
-                    className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full border border-border-strong rounded px-3 py-1.5 text-sm focus:ring-brand-500 focus:border-brand-500"
                   />
                 </div>
                 <div>
-                  <label htmlFor="grade-date-from" className="block text-xs font-medium text-gray-500 mb-1">Date From</label>
+                  <label htmlFor="grade-date-from" className="block text-xs font-medium text-text-tertiary mb-1">Date From</label>
                   <input
                     id="grade-date-from"
                     type="date"
                     value={gradeDateFromFilter}
                     onChange={(e) => setGradeDateFromFilter(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full border border-border-strong rounded px-3 py-1.5 text-sm focus:ring-brand-500 focus:border-brand-500"
                   />
                 </div>
                 <div>
-                  <label htmlFor="grade-date-to" className="block text-xs font-medium text-gray-500 mb-1">Date To</label>
+                  <label htmlFor="grade-date-to" className="block text-xs font-medium text-text-tertiary mb-1">Date To</label>
                   <input
                     id="grade-date-to"
                     type="date"
                     value={gradeDateToFilter}
                     onChange={(e) => setGradeDateToFilter(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full border border-border-strong rounded px-3 py-1.5 text-sm focus:ring-brand-500 focus:border-brand-500"
                   />
                 </div>
               </div>
@@ -543,57 +543,57 @@ const AuditLogPage = () => {
 
           {/* Grade Changes Table */}
           {gradeLoading ? (
-            <div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+            <div className="flex items-center justify-center py-12 gap-2 text-text-tertiary">
   <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
   Loading grade changes...
 </div>
           ) : gradeChanges.length === 0 ? (
-            <div className="bg-white rounded-lg shadow p-8 text-center">
-              <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">No grade changes found.</p>
-              <p className="text-gray-400 text-sm mt-1">Grade changes will appear here when grades are modified.</p>
+            <div className="bg-surface-0 rounded-lg shadow p-8 text-center">
+              <FileText className="w-12 h-12 text-text-disabled mx-auto mb-3" />
+              <p className="text-text-tertiary">No grade changes found.</p>
+              <p className="text-text-disabled text-sm mt-1">Grade changes will appear here when grades are modified.</p>
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="bg-surface-0 rounded-lg shadow overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="min-w-full border-collapse" aria-label="Grade change log">
                   <caption className="sr-only">Grade change log showing all grade modifications for this course</caption>
                   <thead>
-                    <tr className="bg-gray-50">
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Date</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Student</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Assignment</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Grader</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Grade</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Score</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Method</th>
+                    <tr className="bg-surface-1">
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider border-b">Date</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider border-b">Student</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider border-b">Assignment</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider border-b">Grader</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider border-b">Grade</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider border-b">Score</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider border-b">Method</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-border-default">
                     {gradeChanges.map((gc) => (
-                      <tr key={gc.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{formatDate(gc.created_at)}</td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">Student {gc.student_id}</td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">Assignment {gc.assignment_id}</td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">User {gc.grader_id}</td>
+                      <tr key={gc.id} className="hover:bg-surface-1">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-text-secondary">{formatDate(gc.created_at)}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-text-primary">Student {gc.student_id}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-text-secondary">Assignment {gc.assignment_id}</td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-text-secondary">User {gc.grader_id}</td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm">
                           <div className="flex items-center space-x-1">
-                            <span className={gc.old_grade ? 'text-red-600 line-through' : 'text-gray-400'}>{gc.old_grade || 'none'}</span>
-                            <ArrowRight className="w-3 h-3 text-gray-400" />
-                            <span className="text-green-700 font-medium">{gc.new_grade || 'none'}</span>
+                            <span className={gc.old_grade ? 'text-accent-danger line-through' : 'text-text-disabled'}>{gc.old_grade || 'none'}</span>
+                            <ArrowRight className="w-3 h-3 text-text-disabled" />
+                            <span className="text-accent-success font-medium">{gc.new_grade || 'none'}</span>
                             {gc.excused && (
-                              <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">EX</span>
+                              <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-accent-warning/20 text-accent-warning">EX</span>
                             )}
                           </div>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm">
                           <div className="flex items-center space-x-1">
-                            <span className="text-gray-500">{gc.old_score != null ? gc.old_score : '-'}</span>
-                            <ArrowRight className="w-3 h-3 text-gray-400" />
-                            <span className="text-gray-900 font-medium">{gc.new_score != null ? gc.new_score : '-'}</span>
+                            <span className="text-text-tertiary">{gc.old_score != null ? gc.old_score : '-'}</span>
+                            <ArrowRight className="w-3 h-3 text-text-disabled" />
+                            <span className="text-text-primary font-medium">{gc.new_score != null ? gc.new_score : '-'}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-text-secondary">
                           {GRADING_METHOD_LABELS[gc.grading_method] || gc.grading_method}
                         </td>
                       </tr>
@@ -603,19 +603,19 @@ const AuditLogPage = () => {
               </div>
 
               {/* Pagination */}
-              <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+              <div className="px-4 py-3 bg-surface-1 border-t border-border-default flex items-center justify-between">
                 <button
                   onClick={() => fetchGradeChanges(gradePage - 1)}
                   disabled={gradePage <= 1}
-                  className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm border border-border-strong rounded hover:bg-surface-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
-                <span className="text-sm text-gray-600">Page {gradePage}</span>
+                <span className="text-sm text-text-secondary">Page {gradePage}</span>
                 <button
                   onClick={() => fetchGradeChanges(gradePage + 1)}
                   disabled={!gradeHasMore}
-                  className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 text-sm border border-border-strong rounded hover:bg-surface-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>

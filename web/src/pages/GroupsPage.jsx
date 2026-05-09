@@ -248,8 +248,8 @@ const GroupsPage = () => {
     return (
       <Layout>
         <div className="text-center py-12">
-          <p className="text-red-600 mb-3">{error}</p>
-          <button onClick={() => window.location.reload()} className="text-blue-600 hover:text-blue-800 text-sm font-medium">Try Again</button>
+          <p className="text-accent-danger mb-3">{error}</p>
+          <button onClick={() => window.location.reload()} className="text-brand-600 hover:text-brand-800 text-sm font-medium">Try Again</button>
         </div>
       </Layout>
     );
@@ -259,15 +259,15 @@ const GroupsPage = () => {
     <Layout>
       <CourseNav />
       <div className="mb-6">
-        <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm">
+        <Link to={`/courses/${courseId}`} className="text-brand-600 hover:underline text-sm">
           &larr; Back to Course
         </Link>
         <div className="flex items-center justify-between mt-2">
-          <h2 className="text-2xl font-bold text-gray-900">Groups</h2>
+          <h2 className="text-2xl font-bold text-text-primary">Groups</h2>
           {isTeacher && (
             <button
               onClick={openCreateCategory}
-              className="inline-flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium"
+              className="inline-flex items-center space-x-2 bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 text-sm font-medium"
             >
               <Plus className="w-4 h-4" />
               <span>New Category</span>
@@ -277,25 +277,25 @@ const GroupsPage = () => {
       </div>
 
       {categories.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
+        <div className="bg-surface-0 rounded-lg shadow p-6 text-center text-text-tertiary">
           No group categories yet. Create one to get started.
         </div>
       ) : (
         <div className="space-y-6">
           {categories.map((cat) => (
-            <div key={cat.id} className="bg-white rounded-lg shadow">
+            <div key={cat.id} className="bg-surface-0 rounded-lg shadow">
               <div className="p-4 border-b flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <FolderOpen className="w-5 h-5 text-gray-400" />
+                  <FolderOpen className="w-5 h-5 text-text-disabled" />
                   <div>
-                    <h3 className="font-semibold text-gray-900">{cat.name}</h3>
-                    <div className="flex items-center space-x-3 text-xs text-gray-500 mt-0.5">
+                    <h3 className="font-semibold text-text-primary">{cat.name}</h3>
+                    <div className="flex items-center space-x-3 text-xs text-text-tertiary mt-0.5">
                       {cat.self_signup && (
                         <span className="inline-flex items-center space-x-1">
                           {cat.self_signup === 'enabled' ? (
-                            <ToggleRight className="w-3.5 h-3.5 text-green-500" />
+                            <ToggleRight className="w-3.5 h-3.5 text-accent-success" />
                           ) : (
-                            <ToggleLeft className="w-3.5 h-3.5 text-yellow-500" />
+                            <ToggleLeft className="w-3.5 h-3.5 text-accent-warning" />
                           )}
                           <span>Self-signup: {cat.self_signup}</span>
                         </span>
@@ -309,7 +309,7 @@ const GroupsPage = () => {
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={() => openCreateGroup(cat.id)}
-                      className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-sm"
+                      className="inline-flex items-center space-x-1 text-brand-600 hover:text-brand-800 text-sm"
                       title="Add Group"
                     >
                       <Plus className="w-4 h-4" />
@@ -317,14 +317,14 @@ const GroupsPage = () => {
                     </button>
                     <button
                       onClick={() => openEditCategory(cat)}
-                      className="text-gray-400 hover:text-gray-600"
+                      className="text-text-disabled hover:text-text-secondary"
                       title="Edit Category"
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteCategory(cat.id)}
-                      className="text-gray-400 hover:text-red-600"
+                      className="text-text-disabled hover:text-accent-danger"
                       title="Delete Category"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -336,21 +336,21 @@ const GroupsPage = () => {
               {/* Groups within category */}
               <div className="divide-y">
                 {(!groupsByCategory[cat.id] || groupsByCategory[cat.id].length === 0) ? (
-                  <div className="p-4 text-center text-gray-400 text-sm">No groups in this category.</div>
+                  <div className="p-4 text-center text-text-disabled text-sm">No groups in this category.</div>
                 ) : (
                   groupsByCategory[cat.id].map((group) => (
                     <div key={group.id} className="p-4">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
-                          <Users className="w-4 h-4 text-gray-400" />
-                          <span className="font-medium text-gray-800">{group.name}</span>
+                          <Users className="w-4 h-4 text-text-disabled" />
+                          <span className="font-medium text-text-primary">{group.name}</span>
                           {group.max_membership != null && (
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-text-tertiary">
                               ({getMembersInGroup(group.id).length}/{group.max_membership} members)
                             </span>
                           )}
                           {group.max_membership == null && (
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-text-tertiary">
                               ({getMembersInGroup(group.id).length} members)
                             </span>
                           )}
@@ -362,21 +362,21 @@ const GroupsPage = () => {
                                 setAddingMemberGroup(addingMemberGroup === group.id ? null : group.id);
                                 setSelectedUserId('');
                               }}
-                              className="text-green-600 hover:text-green-800 text-sm inline-flex items-center space-x-1"
+                              className="text-accent-success hover:text-accent-success text-sm inline-flex items-center space-x-1"
                               title="Add Member"
                             >
                               <UserPlus className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => openEditGroup(group, cat.id)}
-                              className="text-gray-400 hover:text-gray-600"
+                              className="text-text-disabled hover:text-text-secondary"
                               title="Edit Group"
                             >
                               <Edit2 className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => handleDeleteGroup(group.id)}
-                              className="text-gray-400 hover:text-red-600"
+                              className="text-text-disabled hover:text-accent-danger"
                               title="Delete Group"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -386,16 +386,16 @@ const GroupsPage = () => {
                       </div>
 
                       {group.description && (
-                        <p className="text-sm text-gray-500 mb-2">{group.description}</p>
+                        <p className="text-sm text-text-tertiary mb-2">{group.description}</p>
                       )}
 
                       {/* Add member row */}
                       {addingMemberGroup === group.id && (
-                        <div className="flex items-center space-x-2 mb-2 bg-gray-50 p-2 rounded">
+                        <div className="flex items-center space-x-2 mb-2 bg-surface-1 p-2 rounded">
                           <select
                             value={selectedUserId}
                             onChange={(e) => setSelectedUserId(e.target.value)}
-                            className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="flex-1 border border-border-strong rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                           >
                             <option value="">Select a user...</option>
                             {getAvailableUsers(group.id).map((u) => (
@@ -407,13 +407,13 @@ const GroupsPage = () => {
                           <button
                             onClick={() => handleAddMember(group.id)}
                             disabled={!selectedUserId || saving}
-                            className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 disabled:opacity-50"
+                            className="bg-accent-success text-white px-3 py-1 rounded text-sm hover:bg-accent-success/90 disabled:opacity-50"
                           >
                             Add
                           </button>
                           <button
                             onClick={() => { setAddingMemberGroup(null); setSelectedUserId(''); }}
-                            className="text-gray-400 hover:text-gray-600"
+                            className="text-text-disabled hover:text-text-secondary"
                           >
                             <X className="w-4 h-4" />
                           </button>
@@ -426,16 +426,16 @@ const GroupsPage = () => {
                           {getMembersInGroup(group.id).map((member) => (
                             <span
                               key={member.id}
-                              className="inline-flex items-center space-x-1 bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full"
+                              className="inline-flex items-center space-x-1 bg-surface-2 text-text-secondary text-xs px-2 py-1 rounded-full"
                             >
                               <span>{member.user ? member.user.name : `User ${member.user_id}`}</span>
                               {member.moderator && (
-                                <span className="text-blue-600 font-semibold">(mod)</span>
+                                <span className="text-brand-600 font-semibold">(mod)</span>
                               )}
                               {isTeacher && (
                                 <button
                                   onClick={() => handleRemoveMember(member.id)}
-                                  className="text-gray-400 hover:text-red-500 ml-1"
+                                  className="text-text-disabled hover:text-accent-danger ml-1"
                                   title="Remove member"
                                 >
                                   <UserMinus className="w-3 h-3" />
@@ -457,30 +457,30 @@ const GroupsPage = () => {
       {/* Category Modal */}
       {showCategoryModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md mx-4">
+          <div className="bg-surface-0 rounded-lg shadow-lg p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">{editingCategory ? 'Edit Category' : 'New Category'}</h3>
-              <button onClick={() => setShowCategoryModal(false)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setShowCategoryModal(false)} className="text-text-disabled hover:text-text-secondary">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleSaveCategory} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Name</label>
                 <input
                   type="text"
                   value={categoryForm.name}
                   onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Self Signup</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Self Signup</label>
                 <select
                   value={categoryForm.self_signup}
                   onChange={(e) => setCategoryForm({ ...categoryForm, self_signup: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 >
                   <option value="">Disabled</option>
                   <option value="enabled">Enabled</option>
@@ -488,22 +488,22 @@ const GroupsPage = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Group Limit</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Group Limit</label>
                 <input
                   type="number"
                   value={categoryForm.group_limit}
                   onChange={(e) => setCategoryForm({ ...categoryForm, group_limit: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   placeholder="No limit"
                   min="1"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Auto Leader</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Auto Leader</label>
                 <select
                   value={categoryForm.auto_leader}
                   onChange={(e) => setCategoryForm({ ...categoryForm, auto_leader: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 >
                   <option value="">None</option>
                   <option value="first">First Member</option>
@@ -514,14 +514,14 @@ const GroupsPage = () => {
                 <button
                   type="button"
                   onClick={() => setShowCategoryModal(false)}
-                  className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+                  className="px-4 py-2 text-sm text-text-secondary border border-border-strong rounded-md hover:bg-surface-1"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium disabled:opacity-50"
+                  className="bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 text-sm font-medium disabled:opacity-50"
                 >
                   {saving ? 'Saving...' : editingCategory ? 'Update' : 'Create'}
                 </button>
@@ -534,50 +534,50 @@ const GroupsPage = () => {
       {/* Group Modal */}
       {showGroupModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md mx-4">
+          <div className="bg-surface-0 rounded-lg shadow-lg p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">{editingGroup ? 'Edit Group' : 'New Group'}</h3>
-              <button onClick={() => setShowGroupModal(false)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setShowGroupModal(false)} className="text-text-disabled hover:text-text-secondary">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleSaveGroup} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Name</label>
                 <input
                   type="text"
                   value={groupForm.name}
                   onChange={(e) => setGroupForm({ ...groupForm, name: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
                 <textarea
                   value={groupForm.description}
                   onChange={(e) => setGroupForm({ ...groupForm, description: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   rows={3}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Max Membership</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Max Membership</label>
                 <input
                   type="number"
                   value={groupForm.max_membership}
                   onChange={(e) => setGroupForm({ ...groupForm, max_membership: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   placeholder="No limit"
                   min="1"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Join Level</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Join Level</label>
                 <select
                   value={groupForm.join_level}
                   onChange={(e) => setGroupForm({ ...groupForm, join_level: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 >
                   <option value="invitation_only">Invitation Only</option>
                   <option value="parent_context_auto_join">Auto Join</option>
@@ -588,14 +588,14 @@ const GroupsPage = () => {
                 <button
                   type="button"
                   onClick={() => setShowGroupModal(false)}
-                  className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+                  className="px-4 py-2 text-sm text-text-secondary border border-border-strong rounded-md hover:bg-surface-1"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium disabled:opacity-50"
+                  className="bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 text-sm font-medium disabled:opacity-50"
                 >
                   {saving ? 'Saving...' : editingGroup ? 'Update' : 'Create'}
                 </button>

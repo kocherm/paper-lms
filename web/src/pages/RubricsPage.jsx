@@ -126,7 +126,7 @@ const RubricsPage = () => {
     <Layout>
       <CourseNav />
       <div className="mb-6">
-        <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm">← Back to Course</Link>
+        <Link to={`/courses/${courseId}`} className="text-brand-600 hover:underline text-sm">← Back to Course</Link>
         <div className="flex items-center justify-between mt-2">
           <h2 className="text-2xl font-bold">Rubrics</h2>
           {isTeacher && (
@@ -135,7 +135,7 @@ const RubricsPage = () => {
                 if (showCreate) { resetForm(); }
                 setShowCreate(!showCreate);
               }}
-              className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm"
+              className="flex items-center space-x-2 bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 text-sm"
             >
               {showCreate ? <Plus className="w-4 h-4 rotate-45" /> : <Plus className="w-4 h-4" />}
               <span>{showCreate ? 'Cancel' : 'New Rubric'}</span>
@@ -144,10 +144,10 @@ const RubricsPage = () => {
         </div>
       </div>
 
-      {error && <div className="bg-red-50 text-red-600 p-3 rounded mb-4">{error}</div>}
+      {error && <div className="bg-accent-danger/10 text-accent-danger p-3 rounded mb-4">{error}</div>}
 
       {showCreate && (
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-surface-0 rounded-lg shadow p-6 mb-6">
           <h3 className="font-semibold mb-4">{editingId ? 'Edit Rubric' : 'Create Rubric'}</h3>
           <form onSubmit={handleCreate} className="space-y-4">
             <input
@@ -155,16 +155,16 @@ const RubricsPage = () => {
               placeholder="Rubric title"
               value={title}
               onChange={e => setTitle(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2"
+              className="w-full border border-border-strong rounded px-3 py-2"
               required
             />
 
             {criteria.map((c, idx) => (
-              <div key={c.id} className="border border-gray-200 rounded p-4">
+              <div key={c.id} className="border border-border-default rounded p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-500">Criterion {idx + 1}</span>
+                  <span className="text-sm font-medium text-text-tertiary">Criterion {idx + 1}</span>
                   {criteria.length > 1 && (
-                    <button type="button" onClick={() => removeCriterion(idx)} className="text-red-500 hover:text-red-700">
+                    <button type="button" onClick={() => removeCriterion(idx)} className="text-accent-danger hover:text-accent-danger">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   )}
@@ -175,28 +175,28 @@ const RubricsPage = () => {
                     placeholder="Description"
                     value={c.description}
                     onChange={e => updateCriterion(idx, 'description', e.target.value)}
-                    className="col-span-3 border border-gray-300 rounded px-3 py-2 text-sm"
+                    className="col-span-3 border border-border-strong rounded px-3 py-2 text-sm"
                   />
                   <input
                     type="number"
                     placeholder="Points"
                     value={c.points}
                     onChange={e => updateCriterion(idx, 'points', parseFloat(e.target.value) || 0)}
-                    className="border border-gray-300 rounded px-3 py-2 text-sm"
+                    className="border border-border-strong rounded px-3 py-2 text-sm"
                   />
                 </div>
               </div>
             ))}
 
-            <button type="button" onClick={addCriterion} className="text-blue-600 hover:underline text-sm">
+            <button type="button" onClick={addCriterion} className="text-brand-600 hover:underline text-sm">
               + Add Criterion
             </button>
 
             <div className="flex space-x-3">
-              <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm">
+              <button type="submit" className="bg-brand-600 text-white px-4 py-2 rounded hover:bg-brand-700 text-sm">
                 {editingId ? 'Update Rubric' : 'Create Rubric'}
               </button>
-              <button type="button" onClick={() => { resetForm(); setShowCreate(false); }} className="text-gray-500 hover:text-gray-700 text-sm">
+              <button type="button" onClick={() => { resetForm(); setShowCreate(false); }} className="text-text-tertiary hover:text-text-secondary text-sm">
                 Cancel
               </button>
             </div>
@@ -206,29 +206,29 @@ const RubricsPage = () => {
 
       <div className="space-y-3">
         {rubrics.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">No rubrics yet.</div>
+          <div className="bg-surface-0 rounded-lg shadow p-8 text-center text-text-tertiary">No rubrics yet.</div>
         ) : (
           rubrics.map(rubric => (
-            <div key={rubric.id} className="bg-white rounded-lg shadow p-4 flex items-center justify-between">
+            <div key={rubric.id} className="bg-surface-0 rounded-lg shadow p-4 flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <Award className="w-5 h-5 text-purple-500" />
                 <div>
                   <p className="font-medium">{rubric.title}</p>
-                  <p className="text-sm text-gray-500">{rubric.points_possible} points</p>
+                  <p className="text-sm text-text-tertiary">{rubric.points_possible} points</p>
                 </div>
               </div>
               {isTeacher && (
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleEdit(rubric)}
-                    className="text-gray-400 hover:text-blue-600"
+                    className="text-text-disabled hover:text-brand-600"
                     title="Edit rubric"
                   >
                     <Edit2 className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDelete(rubric.id)}
-                    className="text-gray-400 hover:text-red-500"
+                    className="text-text-disabled hover:text-accent-danger"
                     title="Delete rubric"
                   >
                     <Trash2 className="w-4 h-4" />

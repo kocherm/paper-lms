@@ -177,10 +177,10 @@ const EnrollmentTermsPage = () => {
 
   const statusBadge = (status) => {
     const styles = {
-      active: 'bg-green-100 text-green-800',
-      upcoming: 'bg-blue-100 text-blue-800',
-      completed: 'bg-gray-100 text-gray-600',
-      deleted: 'bg-red-100 text-red-800',
+      active: 'bg-accent-success/20 text-accent-success',
+      upcoming: 'bg-brand-100 text-brand-800',
+      completed: 'bg-surface-2 text-text-secondary',
+      deleted: 'bg-accent-danger/20 text-accent-danger',
     };
     return (
       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${styles[status] || styles.active}`}>
@@ -191,7 +191,7 @@ const EnrollmentTermsPage = () => {
 
   const SortHeader = ({ field, label }) => (
     <th
-      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 select-none"
+      className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider cursor-pointer hover:text-text-secondary select-none"
       onClick={() => handleSort(field)}
       role="columnheader"
       aria-sort={sortField === field ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
@@ -208,7 +208,7 @@ const EnrollmentTermsPage = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="text-center py-12 text-gray-500" role="status" aria-live="polite">
+        <div className="text-center py-12 text-text-tertiary" role="status" aria-live="polite">
           Loading enrollment terms...
         </div>
       </Layout>
@@ -221,11 +221,11 @@ const EnrollmentTermsPage = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Calendar className="w-6 h-6 text-indigo-600" aria-hidden="true" />
-            <h1 className="text-2xl font-bold text-gray-900">Enrollment Terms</h1>
+            <h1 className="text-2xl font-bold text-text-primary">Enrollment Terms</h1>
           </div>
           <button
             onClick={() => { resetForm(); setShowForm(!showForm); }}
-            className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="flex items-center space-x-2 bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
             aria-expanded={showForm}
           >
             <Plus className="w-4 h-4" aria-hidden="true" />
@@ -235,36 +235,36 @@ const EnrollmentTermsPage = () => {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-md mb-4" role="alert">
+        <div className="bg-accent-danger/10 border border-accent-danger/30 text-accent-danger p-3 rounded-md mb-4" role="alert">
           {error}
-          <button onClick={() => setError(null)} className="ml-2 text-red-500 hover:text-red-700 text-sm" aria-label="Dismiss error">
+          <button onClick={() => setError(null)} className="ml-2 text-accent-danger hover:text-accent-danger text-sm" aria-label="Dismiss error">
             Dismiss
           </button>
         </div>
       )}
 
       {showForm && (
-        <div className="bg-white rounded-lg shadow p-6 mb-6" role="region" aria-label={editingTerm ? 'Edit enrollment term' : 'Create enrollment term'}>
+        <div className="bg-surface-0 rounded-lg shadow p-6 mb-6" role="region" aria-label={editingTerm ? 'Edit enrollment term' : 'Create enrollment term'}>
           <h2 className="text-lg font-semibold mb-4">{editingTerm ? 'Edit Term' : 'Create New Term'}</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="term-name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Name <span className="text-red-500">*</span>
+                <label htmlFor="term-name" className="block text-sm font-medium text-text-secondary mb-1">
+                  Name <span className="text-accent-danger">*</span>
                 </label>
                 <input
                   id="term-name"
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                   placeholder="e.g. Fall 2026"
                   required
                   aria-required="true"
                 />
               </div>
               <div>
-                <label htmlFor="term-sis-id" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="term-sis-id" className="block text-sm font-medium text-text-secondary mb-1">
                   SIS Term ID
                 </label>
                 <input
@@ -272,12 +272,12 @@ const EnrollmentTermsPage = () => {
                   type="text"
                   value={formData.sis_term_id}
                   onChange={(e) => setFormData({ ...formData, sis_term_id: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                   placeholder="e.g. FALL2026"
                 />
               </div>
               <div>
-                <label htmlFor="term-start" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="term-start" className="block text-sm font-medium text-text-secondary mb-1">
                   Start Date
                 </label>
                 <input
@@ -285,11 +285,11 @@ const EnrollmentTermsPage = () => {
                   type="datetime-local"
                   value={formData.start_at}
                   onChange={(e) => setFormData({ ...formData, start_at: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                 />
               </div>
               <div>
-                <label htmlFor="term-end" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="term-end" className="block text-sm font-medium text-text-secondary mb-1">
                   End Date
                 </label>
                 <input
@@ -297,11 +297,11 @@ const EnrollmentTermsPage = () => {
                   type="datetime-local"
                   value={formData.end_at}
                   onChange={(e) => setFormData({ ...formData, end_at: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                 />
               </div>
               <div>
-                <label htmlFor="term-grading-group" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="term-grading-group" className="block text-sm font-medium text-text-secondary mb-1">
                   Grading Period Group ID
                 </label>
                 <input
@@ -309,7 +309,7 @@ const EnrollmentTermsPage = () => {
                   type="number"
                   value={formData.grading_period_group_id}
                   onChange={(e) => setFormData({ ...formData, grading_period_group_id: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                   placeholder="Optional"
                   min="1"
                 />
@@ -318,14 +318,14 @@ const EnrollmentTermsPage = () => {
             <div className="flex items-center space-x-3">
               <button
                 type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="bg-brand-600 text-white px-4 py-2 rounded-md text-sm hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
               >
                 {editingTerm ? 'Update Term' : 'Create Term'}
               </button>
               <button
                 type="button"
                 onClick={resetForm}
-                className="text-gray-600 hover:text-gray-800 text-sm"
+                className="text-text-secondary hover:text-text-primary text-sm"
               >
                 Cancel
               </button>
@@ -335,36 +335,36 @@ const EnrollmentTermsPage = () => {
       )}
 
       {terms.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
-          <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" aria-hidden="true" />
-          <h3 className="text-lg font-medium text-gray-900 mb-1">No enrollment terms</h3>
-          <p className="text-gray-500 text-sm">Create your first enrollment term to organize courses by academic period.</p>
+        <div className="bg-surface-0 rounded-lg shadow p-12 text-center">
+          <Calendar className="w-12 h-12 text-text-disabled mx-auto mb-4" aria-hidden="true" />
+          <h3 className="text-lg font-medium text-text-primary mb-1">No enrollment terms</h3>
+          <p className="text-text-tertiary text-sm">Create your first enrollment term to organize courses by academic period.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200" role="table" aria-label="Enrollment terms">
-            <thead className="bg-gray-50">
+        <div className="bg-surface-0 rounded-lg shadow overflow-hidden">
+          <table className="min-w-full divide-y divide-border-default" role="table" aria-label="Enrollment terms">
+            <thead className="bg-surface-1">
               <tr>
                 <SortHeader field="name" label="Name" />
                 <SortHeader field="start_at" label="Start Date" />
                 <SortHeader field="end_at" label="End Date" />
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SIS ID</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">Status</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-text-tertiary uppercase tracking-wider">SIS ID</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-text-tertiary uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-surface-0 divide-y divide-border-default">
               {sortedTerms.map((term) => {
                 const status = getTermStatus(term);
                 const isCurrent = currentTerm && currentTerm.id === term.id;
                 return (
                   <tr
                     key={term.id}
-                    className={`hover:bg-gray-50 ${isCurrent ? 'bg-indigo-50' : ''}`}
+                    className={`hover:bg-surface-1 ${isCurrent ? 'bg-indigo-50' : ''}`}
                   >
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center space-x-2">
-                        <span className="text-sm font-medium text-gray-900">{term.name}</span>
+                        <span className="text-sm font-medium text-text-primary">{term.name}</span>
                         {isCurrent && (
                           <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
                             <CheckCircle className="w-3 h-3" aria-hidden="true" />
@@ -373,26 +373,26 @@ const EnrollmentTermsPage = () => {
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-text-tertiary">
                       <div className="flex items-center space-x-1">
-                        <Clock className="w-3.5 h-3.5 text-gray-400" aria-hidden="true" />
+                        <Clock className="w-3.5 h-3.5 text-text-disabled" aria-hidden="true" />
                         <span>{formatDate(term.start_at)}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-text-tertiary">
                       {formatDate(term.end_at)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {statusBadge(status)}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 font-mono">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-text-tertiary font-mono">
                       {term.sis_term_id || '--'}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-right">
                       <div className="flex items-center justify-end space-x-2">
                         <button
                           onClick={() => handleEdit(term)}
-                          className="text-gray-400 hover:text-blue-600 p-1 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="text-text-disabled hover:text-brand-600 p-1 rounded focus:outline-none focus:ring-2 focus:ring-brand-500"
                           aria-label={`Edit ${term.name}`}
                           title="Edit term"
                         >
@@ -400,7 +400,7 @@ const EnrollmentTermsPage = () => {
                         </button>
                         <button
                           onClick={() => handleDelete(term.id)}
-                          className="text-gray-400 hover:text-red-600 p-1 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+                          className="text-text-disabled hover:text-accent-danger p-1 rounded focus:outline-none focus:ring-2 focus:ring-accent-danger"
                           aria-label={`Delete ${term.name}`}
                           title="Delete term"
                         >

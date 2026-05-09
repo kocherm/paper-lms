@@ -59,20 +59,20 @@ const formatRelative = (iso) => {
 };
 
 const gradeBadgeStyle = (pct) => {
-  if (pct == null) return 'bg-gray-100 text-gray-700';
-  if (pct >= 90) return 'bg-green-100 text-green-800';
-  if (pct >= 80) return 'bg-blue-100 text-blue-800';
-  if (pct >= 70) return 'bg-yellow-100 text-yellow-800';
-  return 'bg-red-100 text-red-800';
+  if (pct == null) return 'bg-surface-2 text-text-secondary';
+  if (pct >= 90) return 'bg-accent-success/20 text-accent-success';
+  if (pct >= 80) return 'bg-brand-100 text-brand-800';
+  if (pct >= 70) return 'bg-accent-warning/20 text-accent-warning';
+  return 'bg-accent-danger/20 text-accent-danger';
 };
 
 const scoreColor = (score, possible) => {
-  if (score == null || !possible) return 'text-gray-700';
+  if (score == null || !possible) return 'text-text-secondary';
   const pct = (score / possible) * 100;
-  if (pct >= 90) return 'text-green-700';
-  if (pct >= 80) return 'text-blue-700';
-  if (pct >= 70) return 'text-yellow-700';
-  return 'text-red-700';
+  if (pct >= 90) return 'text-accent-success';
+  if (pct >= 80) return 'text-brand-700';
+  if (pct >= 70) return 'text-accent-warning';
+  return 'text-accent-danger';
 };
 
 // Pill-style child switcher for <= 5 kids; native select for more.
@@ -82,14 +82,14 @@ const ChildSwitcher = ({ kids, selectedId, onSelect }) => {
   if (kids.length > 5) {
     return (
       <div className="mb-6">
-        <label htmlFor="kid-select" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="kid-select" className="block text-sm font-medium text-text-secondary mb-1">
           Viewing
         </label>
         <select
           id="kid-select"
           value={selectedId ?? ''}
           onChange={(e) => onSelect(Number(e.target.value))}
-          className="w-full sm:w-72 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full sm:w-72 border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
         >
           {kids.map((k) => (
             <option key={k.id} value={k.id}>
@@ -120,13 +120,13 @@ const ChildSwitcher = ({ kids, selectedId, onSelect }) => {
             onClick={() => onSelect(k.id)}
             className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors border ${
               active
-                ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50'
+                ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
+                : 'bg-surface-0 text-text-secondary border-border-default hover:border-blue-300 hover:bg-brand-50'
             }`}
           >
             <span
               className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold ${
-                active ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-700'
+                active ? 'bg-surface-0/20 text-white' : 'bg-brand-100 text-brand-700'
               }`}
             >
               {initials}
@@ -158,8 +158,8 @@ const SkeletonCard = ({ rows = 3 }) => (
 const EmptyState = ({ icon: Icon, title, body }) => (
   <div className="text-center py-6">
     <Icon className="w-10 h-10 text-gray-200 mx-auto mb-2" />
-    <p className="text-gray-600 text-sm font-medium">{title}</p>
-    {body && <p className="text-gray-400 text-xs mt-1">{body}</p>}
+    <p className="text-text-secondary text-sm font-medium">{title}</p>
+    {body && <p className="text-text-disabled text-xs mt-1">{body}</p>}
   </div>
 );
 
@@ -301,7 +301,7 @@ const ObserverDashboardPage = () => {
       <Layout>
         <div className="text-center py-12">
           <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-          <p className="text-red-600 mb-4">{kidsError}</p>
+          <p className="text-accent-danger mb-4">{kidsError}</p>
           <Button
             onClick={() => {
               setKidsError(null);
@@ -323,9 +323,9 @@ const ObserverDashboardPage = () => {
       <div className="mb-6">
         <div className="flex items-center space-x-3 mb-1">
           <Heart className="w-7 h-7 text-pink-500" />
-          <h2 className="text-2xl font-bold text-gray-900">My Kids</h2>
+          <h2 className="text-2xl font-bold text-text-primary">My Kids</h2>
         </div>
-        <p className="text-gray-600 mt-1">
+        <p className="text-text-secondary mt-1">
           Keep an eye on your kids&rsquo; classes, grades, and what&rsquo;s due this week.
         </p>
       </div>
@@ -333,14 +333,14 @@ const ObserverDashboardPage = () => {
       {/* Non-fatal error banner */}
       {kidsError && (
         <div
-          className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between"
+          className="mb-6 p-3 bg-accent-danger/10 border border-accent-danger/30 rounded-lg flex items-center justify-between"
           role="alert"
         >
           <div className="flex items-center space-x-2">
-            <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
-            <span className="text-red-700 text-sm">{kidsError}</span>
+            <AlertCircle className="w-4 h-4 text-accent-danger shrink-0" />
+            <span className="text-accent-danger text-sm">{kidsError}</span>
           </div>
-          <button onClick={() => setKidsError(null)} className="text-red-400 hover:text-red-600">
+          <button onClick={() => setKidsError(null)} className="text-red-400 hover:text-accent-danger">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -367,7 +367,7 @@ const ObserverDashboardPage = () => {
             <Button
               variant="outline"
               onClick={() => setUnlinkTarget(selectedKid)}
-              className="text-red-600 hover:text-red-700"
+              className="text-accent-danger hover:text-accent-danger"
             >
               <UserMinus className="w-4 h-4 mr-2" />
               Unlink
@@ -383,7 +383,7 @@ const ObserverDashboardPage = () => {
             <CardTitle className="text-base">Link a child</CardTitle>
             <button
               onClick={() => setShowLinkForm(false)}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-text-disabled hover:text-text-secondary"
               aria-label="Close"
             >
               <X className="w-4 h-4" />
@@ -406,8 +406,8 @@ const ObserverDashboardPage = () => {
         <Card>
           <CardContent className="py-12 text-center">
             <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-700 font-medium mb-1">No kids linked yet</p>
-            <p className="text-gray-500 text-sm mb-4">
+            <p className="text-text-secondary font-medium mb-1">No kids linked yet</p>
+            <p className="text-text-tertiary text-sm mb-4">
               Use &ldquo;Link a child&rdquo; above to start following your kid&rsquo;s classes.
             </p>
             <Button onClick={() => setShowLinkForm(true)}>
@@ -420,9 +420,9 @@ const ObserverDashboardPage = () => {
         <>
           {/* Per-child overview error */}
           {overviewError && (
-            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-between">
+            <div className="mb-4 p-3 bg-accent-warning/10 border border-accent-warning/30 rounded-lg flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                <AlertCircle className="w-4 h-4 text-accent-warning shrink-0" />
                 <span className="text-amber-800 text-sm">
                   Couldn&rsquo;t load latest data: {overviewError}
                 </span>
@@ -443,7 +443,7 @@ const ObserverDashboardPage = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <BookOpen className="w-5 h-5 text-blue-600" />
+                  <BookOpen className="w-5 h-5 text-brand-600" />
                   Classes
                 </CardTitle>
               </CardHeader>
@@ -469,11 +469,11 @@ const ObserverDashboardPage = () => {
                       <li key={c.course_id} className={idx === 0 ? 'pb-3' : 'py-3'}>
                         <Link
                           to={`/courses/${c.course_id}?as_child=${selectedChildId}`}
-                          className="flex items-center justify-between hover:bg-gray-50 rounded-md -mx-2 px-2 py-1 transition"
+                          className="flex items-center justify-between hover:bg-surface-1 rounded-md -mx-2 px-2 py-1 transition"
                         >
                           <div className="min-w-0 flex-1">
-                            <p className="font-medium text-gray-900 truncate">{c.name}</p>
-                            <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-500">
+                            <p className="font-medium text-text-primary truncate">{c.name}</p>
+                            <div className="flex items-center gap-2 mt-0.5 text-xs text-text-tertiary">
                               {c.course_code && <span>{c.course_code}</span>}
                               {c.pending_count > 0 && (
                                 <Badge variant="secondary" className="text-xs">
@@ -501,7 +501,7 @@ const ObserverDashboardPage = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <CalendarClock className="w-5 h-5 text-yellow-600" />
+                  <CalendarClock className="w-5 h-5 text-accent-warning" />
                   Due this week
                 </CardTitle>
               </CardHeader>
@@ -532,13 +532,13 @@ const ObserverDashboardPage = () => {
                           {u.type === 'quiz' ? (
                             <PenLine className="w-4 h-4 text-purple-500 shrink-0" />
                           ) : (
-                            <FileText className="w-4 h-4 text-blue-500 shrink-0" />
+                            <FileText className="w-4 h-4 text-brand-500 shrink-0" />
                           )}
                           <div className="min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">
+                            <p className="text-sm font-medium text-text-primary truncate">
                               {u.title}
                             </p>
-                            <p className="text-xs text-gray-500 truncate">{u.course_name}</p>
+                            <p className="text-xs text-text-tertiary truncate">{u.course_name}</p>
                           </div>
                         </div>
                         <Badge variant="outline" className="shrink-0">
@@ -555,7 +555,7 @@ const ObserverDashboardPage = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <GraduationCap className="w-5 h-5 text-green-600" />
+                  <GraduationCap className="w-5 h-5 text-accent-success" />
                   Recent grades
                 </CardTitle>
               </CardHeader>
@@ -580,10 +580,10 @@ const ObserverDashboardPage = () => {
                     {overview.recent_grades.map((g) => (
                       <li key={g.submission_id} className="flex items-center justify-between gap-3">
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium text-gray-900 truncate">
+                          <p className="text-sm font-medium text-text-primary truncate">
                             {g.assignment_name}
                           </p>
-                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <div className="flex items-center gap-2 text-xs text-text-tertiary">
                             <span className="truncate">{g.course_name}</span>
                             <span>·</span>
                             <span>{formatRelative(g.graded_at)}</span>
@@ -597,7 +597,7 @@ const ObserverDashboardPage = () => {
                         >
                           {g.score != null ? g.score : '—'}
                           {g.points_possible != null && (
-                            <span className="text-gray-400 font-normal">
+                            <span className="text-text-disabled font-normal">
                               {' '}
                               / {g.points_possible}
                             </span>
@@ -641,13 +641,13 @@ const ObserverDashboardPage = () => {
                         {a.type === 'announcement' ? (
                           <Bell className="w-4 h-4 text-purple-500 mt-0.5 shrink-0" />
                         ) : (
-                          <FileText className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
+                          <FileText className="w-4 h-4 text-brand-500 mt-0.5 shrink-0" />
                         )}
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm text-gray-900 truncate">
+                          <p className="text-sm text-text-primary truncate">
                             <span className="font-medium">{a.title}</span>
                           </p>
-                          <p className="text-xs text-gray-500 truncate">
+                          <p className="text-xs text-text-tertiary truncate">
                             {a.course_name} · {formatRelative(a.occurred_at)}
                           </p>
                         </div>
@@ -662,13 +662,13 @@ const ObserverDashboardPage = () => {
           <Separator className="my-8" />
 
           {/* Footer: full kid roster + manage link */}
-          <div className="text-sm text-gray-500 flex items-center justify-between">
+          <div className="text-sm text-text-tertiary flex items-center justify-between">
             <span>
               Following {kids.length} {kids.length === 1 ? 'child' : 'children'}
             </span>
             <button
               onClick={() => setShowLinkForm(true)}
-              className="text-blue-600 hover:text-blue-700 font-medium inline-flex items-center gap-1"
+              className="text-brand-600 hover:text-brand-700 font-medium inline-flex items-center gap-1"
             >
               <UserPlus className="w-4 h-4" /> Link another
             </button>
@@ -679,30 +679,30 @@ const ObserverDashboardPage = () => {
       {/* Unlink Confirmation Modal — preserved structure from original page */}
       {unlinkTarget && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md mx-4">
+          <div className="bg-surface-0 rounded-lg shadow-lg p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Unlink Child</h3>
+              <h3 className="text-lg font-semibold text-text-primary">Unlink Child</h3>
               <button
                 onClick={() => setUnlinkTarget(null)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-text-disabled hover:text-text-secondary"
                 disabled={unlinkLoading}
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="mb-6">
-              <div className="flex items-center space-x-3 p-3 bg-red-50 border border-red-200 rounded-lg mb-3">
-                <UserMinus className="w-5 h-5 text-red-500 shrink-0" />
+              <div className="flex items-center space-x-3 p-3 bg-accent-danger/10 border border-accent-danger/30 rounded-lg mb-3">
+                <UserMinus className="w-5 h-5 text-accent-danger shrink-0" />
                 <div>
-                  <p className="font-medium text-gray-900">
+                  <p className="font-medium text-text-primary">
                     {unlinkTarget.name || `Student #${unlinkTarget.id}`}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-text-tertiary">
                     {unlinkTarget.email || unlinkTarget.login_id || `ID: ${unlinkTarget.id}`}
                   </p>
                 </div>
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-text-secondary">
                 Are you sure you want to unlink this child? You will no longer be able to view
                 their classes or monitor their progress. You can re-link them later if needed.
               </p>
@@ -718,7 +718,7 @@ const ObserverDashboardPage = () => {
               <Button
                 onClick={handleUnlinkStudent}
                 disabled={unlinkLoading}
-                className="bg-red-600 hover:bg-red-700 text-white"
+                className="bg-accent-danger hover:bg-accent-danger/90 text-white"
               >
                 <UserMinus className="w-4 h-4 mr-2" />
                 {unlinkLoading ? 'Unlinking…' : 'Unlink Child'}

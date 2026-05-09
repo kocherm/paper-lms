@@ -23,7 +23,7 @@ const ProficiencyDot = ({ rating, score, possible, size = 20 }) => {
         style={{ width: size, height: size }}
       >
         <div
-          className="rounded-full border border-dashed border-gray-300"
+          className="rounded-full border border-dashed border-border-strong"
           style={{ width: size * 0.7, height: size * 0.7 }}
           aria-label="No proficiency data"
         />
@@ -56,7 +56,7 @@ const ProficiencyDot = ({ rating, score, possible, size = 20 }) => {
         style={{
           width: size,
           height: size,
-          backgroundColor: rating.color || '#999999',
+          backgroundColor: rating.color || 'rgb(var(--color-text-tertiary))',
         }}
       />
       {hovered && (

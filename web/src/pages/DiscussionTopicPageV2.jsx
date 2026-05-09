@@ -98,10 +98,10 @@ function getInitials(name) {
 
 /** Stable color from a string (for avatar backgrounds). */
 const AVATAR_COLORS = [
-  'bg-blue-500',
-  'bg-emerald-500',
+  'bg-brand-500',
+  'bg-accent-success',
   'bg-violet-500',
-  'bg-amber-500',
+  'bg-accent-warning',
   'bg-rose-500',
   'bg-cyan-500',
   'bg-fuchsia-500',
@@ -130,7 +130,7 @@ function highlightMentions(html) {
   if (!html) return '';
   return html.replace(
     /(@\w+)/g,
-    '<span class="bg-blue-100 text-blue-700 rounded px-0.5 font-medium">$1</span>'
+    '<span class="bg-brand-100 text-brand-700 rounded px-0.5 font-medium">$1</span>'
   );
 }
 
@@ -230,7 +230,7 @@ const ComposeArea = ({ initialValue = '', onSubmit, onCancel, submitLabel = 'Pos
     <button
       type="button"
       onClick={action}
-      className="p-1.5 rounded hover:bg-gray-200 text-gray-600 hover:text-gray-900 transition-colors"
+      className="p-1.5 rounded hover:bg-border-default text-text-secondary hover:text-text-primary transition-colors"
       aria-label={label}
       title={label}
       tabIndex={-1}
@@ -240,22 +240,22 @@ const ComposeArea = ({ initialValue = '', onSubmit, onCancel, submitLabel = 'Pos
   );
 
   return (
-    <div className="border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 bg-white">
+    <div className="border border-border-strong rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-brand-500 focus-within:border-brand-500 bg-surface-0">
       {/* Toolbar */}
-      <div className="flex items-center gap-0.5 px-2 py-1 border-b border-gray-200 bg-gray-50" role="toolbar" aria-label="Text formatting">
+      <div className="flex items-center gap-0.5 px-2 py-1 border-b border-border-default bg-surface-1" role="toolbar" aria-label="Text formatting">
         {toolbarButton('Bold', <Bold className="w-4 h-4" />, () => execCommand('bold'))}
         {toolbarButton('Italic', <Italic className="w-4 h-4" />, () => execCommand('italic'))}
-        <div className="w-px h-5 bg-gray-300 mx-1" aria-hidden="true" />
+        <div className="w-px h-5 bg-border-strong mx-1" aria-hidden="true" />
         {toolbarButton('Bulleted list', <List className="w-4 h-4" />, () => execCommand('insertUnorderedList'))}
         {toolbarButton('Numbered list', <ListOrdered className="w-4 h-4" />, () => execCommand('insertOrderedList'))}
-        <div className="w-px h-5 bg-gray-300 mx-1" aria-hidden="true" />
+        <div className="w-px h-5 bg-border-strong mx-1" aria-hidden="true" />
         {toolbarButton('Insert link', <LinkIcon className="w-4 h-4" />, handleInsertLink)}
       </div>
 
       {/* Editor */}
       <div className="relative">
         {isEmpty && (
-          <div className="absolute top-2 left-3 text-sm text-gray-400 pointer-events-none select-none" aria-hidden="true">
+          <div className="absolute top-2 left-3 text-sm text-text-disabled pointer-events-none select-none" aria-hidden="true">
             {placeholder}
           </div>
         )}
@@ -265,7 +265,7 @@ const ComposeArea = ({ initialValue = '', onSubmit, onCancel, submitLabel = 'Pos
           role="textbox"
           aria-multiline="true"
           aria-label={placeholder}
-          className="min-h-[80px] max-h-[300px] overflow-y-auto px-3 py-2 text-sm text-gray-800 focus:outline-none prose prose-sm max-w-none"
+          className="min-h-[80px] max-h-[300px] overflow-y-auto px-3 py-2 text-sm text-text-primary focus:outline-none prose prose-sm max-w-none"
           onInput={handleInput}
           onKeyDown={handleKeyDown}
           suppressContentEditableWarning
@@ -273,8 +273,8 @@ const ComposeArea = ({ initialValue = '', onSubmit, onCancel, submitLabel = 'Pos
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-between px-3 py-2 border-t border-gray-200 bg-gray-50">
-        <span className="text-xs text-gray-400">
+      <div className="flex items-center justify-between px-3 py-2 border-t border-border-default bg-surface-1">
+        <span className="text-xs text-text-disabled">
           {navigator.platform?.includes('Mac') ? '\u2318' : 'Ctrl'}+Enter to submit
         </span>
         <div className="flex items-center gap-2">
@@ -282,7 +282,7 @@ const ComposeArea = ({ initialValue = '', onSubmit, onCancel, submitLabel = 'Pos
             <button
               type="button"
               onClick={onCancel}
-              className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 rounded-md hover:bg-gray-100 transition-colors"
+              className="px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary rounded-md hover:bg-surface-2 transition-colors"
             >
               Cancel
             </button>
@@ -291,7 +291,7 @@ const ComposeArea = ({ initialValue = '', onSubmit, onCancel, submitLabel = 'Pos
             type="button"
             onClick={handleSubmit}
             disabled={isEmpty || submitting}
-            className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-brand-600 text-white text-sm font-medium rounded-md hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {submitting ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -336,16 +336,16 @@ const VersionHistoryModal = ({ versions, onClose }) => {
       aria-modal="true"
       aria-label="Edit history"
     >
-      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <History className="w-5 h-5 text-gray-500" />
+      <div className="bg-surface-0 rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border-default">
+          <h3 className="text-lg font-semibold text-text-primary flex items-center gap-2">
+            <History className="w-5 h-5 text-text-tertiary" />
             Edit History
           </h3>
           <button
             ref={closeButtonRef}
             onClick={onClose}
-            className="p-1 rounded-md hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
+            className="p-1 rounded-md hover:bg-surface-2 text-text-tertiary hover:text-text-secondary transition-colors"
             aria-label="Close edit history"
           >
             <X className="w-5 h-5" />
@@ -353,19 +353,19 @@ const VersionHistoryModal = ({ versions, onClose }) => {
         </div>
         <div className="overflow-y-auto p-6 space-y-4 flex-1">
           {!versions || versions.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No edit history available.</p>
+            <p className="text-text-tertiary text-center py-8">No edit history available.</p>
           ) : (
             versions.map((version, index) => (
-              <div key={version.id || index} className="border border-gray-200 rounded-lg p-4">
+              <div key={version.id || index} className="border border-border-default rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-text-secondary">
                     Version {versions.length - index}
                   </span>
-                  <span className="text-xs text-gray-500" title={fullDate(version.created_at)}>
+                  <span className="text-xs text-text-tertiary" title={fullDate(version.created_at)}>
                     {relativeTime(version.created_at)}
                   </span>
                 </div>
-                <RichContentViewer content={version.message} className="text-sm text-gray-800" />
+                <RichContentViewer content={version.message} className="text-sm text-text-primary" />
               </div>
             ))
           )}
@@ -401,27 +401,27 @@ const DeleteConfirmModal = ({ onConfirm, onCancel }) => {
       aria-modal="true"
       aria-label="Confirm delete"
     >
-      <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6">
+      <div className="bg-surface-0 rounded-xl shadow-2xl max-w-sm w-full p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-            <AlertCircle className="w-5 h-5 text-red-600" />
+          <div className="w-10 h-10 rounded-full bg-accent-danger/20 flex items-center justify-center flex-shrink-0">
+            <AlertCircle className="w-5 h-5 text-accent-danger" />
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900">Delete Entry</h3>
-            <p className="text-sm text-gray-500">This action cannot be undone.</p>
+            <h3 className="font-semibold text-text-primary">Delete Entry</h3>
+            <p className="text-sm text-text-tertiary">This action cannot be undone.</p>
           </div>
         </div>
         <div className="flex justify-end gap-3">
           <button
             ref={cancelRef}
             onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+            className="px-4 py-2 text-sm font-medium text-text-secondary bg-surface-2 hover:bg-border-default rounded-md transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+            className="px-4 py-2 text-sm font-medium text-white bg-accent-danger hover:bg-accent-danger/90 rounded-md transition-colors"
           >
             Delete
           </button>
@@ -510,14 +510,14 @@ const EntryItem = ({
 
   // Depth color bands for visual thread indication
   const depthColors = [
-    'border-blue-400',
-    'border-emerald-400',
+    'border-brand-400',
+    'border-accent-success/60',
     'border-violet-400',
-    'border-amber-400',
+    'border-accent-warning/60',
     'border-rose-400',
     'border-cyan-400',
   ];
-  const borderColor = depth === 0 ? 'border-blue-400' : depthColors[depth % depthColors.length];
+  const borderColor = depth === 0 ? 'border-brand-400' : depthColors[depth % depthColors.length];
 
   return (
     <article
@@ -527,13 +527,13 @@ const EntryItem = ({
     >
       <div
         className={`relative border-l-[3px] ${borderColor} rounded-r-lg pl-4 pr-4 py-3 transition-colors ${
-          isUnread ? 'bg-blue-50/60' : 'bg-white hover:bg-gray-50/50'
+          isUnread ? 'bg-brand-50/60' : 'bg-surface-0 hover:bg-surface-1/50'
         }`}
       >
         {/* Unread indicator dot */}
         {isUnread && (
           <span
-            className="absolute -left-[7px] top-5 w-[11px] h-[11px] bg-blue-500 rounded-full border-2 border-white"
+            className="absolute -left-[7px] top-5 w-[11px] h-[11px] bg-brand-500 rounded-full border-2 border-white"
             aria-label="Unread"
           />
         )}
@@ -549,11 +549,11 @@ const EntryItem = ({
           <div className="flex-1 min-w-0">
             {/* Name + time row */}
             <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-              <span className="text-sm font-semibold text-gray-900">
+              <span className="text-sm font-semibold text-text-primary">
                 {entry.user_name || `User ${entry.user_id}`}
               </span>
               <span
-                className="text-xs text-gray-400"
+                className="text-xs text-text-disabled"
                 title={fullDate(entry.created_at)}
               >
                 {relativeTime(entry.created_at)}
@@ -562,7 +562,7 @@ const EntryItem = ({
                 <button
                   onClick={handleShowVersions}
                   disabled={loadingVersions}
-                  className="text-xs text-gray-400 hover:text-blue-600 italic inline-flex items-center gap-0.5 transition-colors"
+                  className="text-xs text-text-disabled hover:text-brand-600 italic inline-flex items-center gap-0.5 transition-colors"
                   aria-label="View edit history"
                 >
                   {loadingVersions ? (
@@ -588,7 +588,7 @@ const EntryItem = ({
                 />
               </div>
             ) : (
-              <RichContentViewer content={highlightMentions(entry.message)} className="mt-1 text-sm text-gray-800 break-words" />
+              <RichContentViewer content={highlightMentions(entry.message)} className="mt-1 text-sm text-text-primary break-words" />
             )}
 
             {/* Action bar */}
@@ -598,8 +598,8 @@ const EntryItem = ({
                 onClick={() => onRate(entry.id)}
                 className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-colors ${
                   entry.rating_sum > 0
-                    ? 'text-blue-600 bg-blue-50 hover:bg-blue-100'
-                    : 'text-gray-500 hover:bg-gray-100 hover:text-blue-600'
+                    ? 'text-brand-600 bg-brand-50 hover:bg-brand-100'
+                    : 'text-text-tertiary hover:bg-surface-2 hover:text-brand-600'
                 }`}
                 aria-label={`Like (${entry.rating_sum || 0} likes)`}
               >
@@ -615,8 +615,8 @@ const EntryItem = ({
                 }}
                 className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-colors ${
                   showReplyForm
-                    ? 'text-blue-600 bg-blue-50'
-                    : 'text-gray-500 hover:bg-gray-100 hover:text-blue-600'
+                    ? 'text-brand-600 bg-brand-50'
+                    : 'text-text-tertiary hover:bg-surface-2 hover:text-brand-600'
                 }`}
                 aria-label="Reply to this post"
                 aria-expanded={showReplyForm}
@@ -632,7 +632,7 @@ const EntryItem = ({
                     setShowEditForm(true);
                     setShowReplyForm(false);
                   }}
-                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs text-text-tertiary hover:bg-surface-2 hover:text-text-secondary transition-colors"
                   aria-label="Edit this post"
                 >
                   <Edit3 className="w-3.5 h-3.5" />
@@ -644,7 +644,7 @@ const EntryItem = ({
               {isOwnEntry && (
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs text-text-tertiary hover:bg-accent-danger/10 hover:text-accent-danger transition-colors"
                   aria-label="Delete this post"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -659,7 +659,7 @@ const EntryItem = ({
               {hasReplies && (
                 <button
                   onClick={() => toggleCollapse(entry.id)}
-                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs text-text-tertiary hover:bg-surface-2 hover:text-text-secondary transition-colors"
                   aria-expanded={!isCollapsed}
                   aria-label={isCollapsed ? `Expand ${replyCount} replies` : 'Collapse thread'}
                 >
@@ -920,8 +920,8 @@ const DiscussionTopicPageV2 = () => {
     return (
       <Layout>
         <div className="flex flex-col items-center justify-center py-24 gap-3" role="status" aria-label="Loading discussion">
-          <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-          <span className="text-gray-500 text-sm">Loading discussion...</span>
+          <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
+          <span className="text-text-tertiary text-sm">Loading discussion...</span>
         </div>
       </Layout>
     );
@@ -931,11 +931,11 @@ const DiscussionTopicPageV2 = () => {
     return (
       <Layout>
         <div className="flex flex-col items-center justify-center py-24 gap-3" role="alert">
-          <AlertCircle className="w-8 h-8 text-red-400" />
-          <span className="text-red-600 text-sm">{error}</span>
+          <AlertCircle className="w-8 h-8 text-accent-danger" />
+          <span className="text-accent-danger text-sm">{error}</span>
           <button
             onClick={() => { setError(null); setLoading(true); fetchData(); }}
-            className="text-sm text-blue-600 hover:underline"
+            className="text-sm text-brand-600 hover:underline"
           >
             Try again
           </button>
@@ -947,7 +947,7 @@ const DiscussionTopicPageV2 = () => {
   if (!topic) {
     return (
       <Layout>
-        <div className="text-center py-24 text-gray-500">Discussion not found.</div>
+        <div className="text-center py-24 text-text-tertiary">Discussion not found.</div>
       </Layout>
     );
   }
@@ -959,7 +959,7 @@ const DiscussionTopicPageV2 = () => {
         <nav className="mb-4" aria-label="Breadcrumb">
           <Link
             to={`/courses/${courseId}/discussions`}
-            className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-text-tertiary hover:text-brand-600 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Discussions
@@ -967,7 +967,7 @@ const DiscussionTopicPageV2 = () => {
         </nav>
 
         {/* Topic header card */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+        <div className="bg-surface-0 rounded-xl shadow-sm border border-border-default overflow-hidden mb-6">
           <div className="p-6">
             <div className="flex items-start gap-4">
               <UserAvatar
@@ -978,19 +978,19 @@ const DiscussionTopicPageV2 = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
                   {topic.pinned && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs font-medium">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-accent-warning/20 text-accent-warning rounded-full text-xs font-medium">
                       <Pin className="w-3 h-3" />
                       Pinned
                     </span>
                   )}
-                  <h1 className="text-xl font-bold text-gray-900">{topic.title}</h1>
+                  <h1 className="text-xl font-bold text-text-primary">{topic.title}</h1>
                 </div>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500">
-                  <span className="font-medium text-gray-700">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-text-tertiary">
+                  <span className="font-medium text-text-secondary">
                     {topic.user_name || `User ${topic.user_id}`}
                   </span>
                   <span title={fullDate(topic.created_at)}>{relativeTime(topic.created_at)}</span>
-                  <span className="px-2 py-0.5 bg-gray-100 rounded text-xs font-medium">
+                  <span className="px-2 py-0.5 bg-surface-2 rounded text-xs font-medium">
                     {topic.discussion_type === 'threaded' ? 'Threaded' : 'Side Comment'}
                   </span>
                 </div>
@@ -999,7 +999,7 @@ const DiscussionTopicPageV2 = () => {
 
             {/* Topic body */}
             {topic.message && (
-              <RichContentViewer content={highlightMentions(topic.message)} className="mt-4 text-sm text-gray-800" />
+              <RichContentViewer content={highlightMentions(topic.message)} className="mt-4 text-sm text-text-primary" />
             )}
 
             {/* Phase 5 Wave 1: Discussion checkpoints (only render once role
@@ -1017,15 +1017,15 @@ const DiscussionTopicPageV2 = () => {
           </div>
 
           {/* Topic action bar */}
-          <div className="flex flex-wrap items-center gap-2 px-6 py-3 border-t border-gray-100 bg-gray-50/50">
+          <div className="flex flex-wrap items-center gap-2 px-6 py-3 border-t border-border-subtle bg-surface-1/50">
             {/* Subscribe toggle */}
             <button
               onClick={handleToggleSubscription}
               disabled={togglingSubscription}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 subscribed
-                  ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-brand-100 text-brand-700 hover:bg-brand-200'
+                  : 'bg-surface-2 text-text-secondary hover:bg-border-default'
               }`}
               aria-label={subscribed ? 'Unsubscribe from notifications' : 'Subscribe to notifications'}
               aria-pressed={subscribed}
@@ -1045,7 +1045,7 @@ const DiscussionTopicPageV2 = () => {
               <button
                 onClick={handleMarkAllRead}
                 disabled={markingAllRead}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-surface-2 text-text-secondary hover:bg-border-default transition-colors"
                 aria-label={`Mark all ${unreadCount} entries as read`}
               >
                 {markingAllRead ? (
@@ -1054,7 +1054,7 @@ const DiscussionTopicPageV2 = () => {
                   <CheckCheck className="w-4 h-4" />
                 )}
                 Mark All Read
-                <span className="ml-1 px-1.5 py-0.5 bg-blue-500 text-white text-xs rounded-full font-semibold">
+                <span className="ml-1 px-1.5 py-0.5 bg-brand-500 text-white text-xs rounded-full font-semibold">
                   {unreadCount}
                 </span>
               </button>
@@ -1065,14 +1065,14 @@ const DiscussionTopicPageV2 = () => {
             {/* Collapse / Expand all */}
             <button
               onClick={collapseAll}
-              className="px-2 py-1.5 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+              className="px-2 py-1.5 text-xs text-text-tertiary hover:text-text-secondary hover:bg-surface-2 rounded transition-colors"
               aria-label="Collapse all threads"
             >
               Collapse All
             </button>
             <button
               onClick={expandAll}
-              className="px-2 py-1.5 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+              className="px-2 py-1.5 text-xs text-text-tertiary hover:text-text-secondary hover:bg-surface-2 rounded transition-colors"
               aria-label="Expand all threads"
             >
               Expand All
@@ -1081,22 +1081,22 @@ const DiscussionTopicPageV2 = () => {
         </div>
 
         {/* Entries section */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+        <div className="bg-surface-0 rounded-xl shadow-sm border border-border-default overflow-hidden mb-6">
           {/* Header bar */}
-          <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200">
-            <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-gray-400" />
+          <div className="flex items-center justify-between px-6 py-3 border-b border-border-default">
+            <h2 className="font-semibold text-text-primary flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-text-disabled" />
               Replies
-              <span className="text-sm font-normal text-gray-400">({totalEntries})</span>
+              <span className="text-sm font-normal text-text-disabled">({totalEntries})</span>
               {unreadCount > 0 && (
-                <span className="px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full font-semibold" aria-label={`${unreadCount} unread`}>
+                <span className="px-2 py-0.5 bg-brand-500 text-white text-xs rounded-full font-semibold" aria-label={`${unreadCount} unread`}>
                   {unreadCount} unread
                 </span>
               )}
             </h2>
             <button
               onClick={() => setShowNewEntryForm(!showNewEntryForm)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 text-white text-sm font-medium rounded-lg hover:bg-brand-700 transition-colors"
               aria-expanded={showNewEntryForm}
             >
               <MessageSquare className="w-4 h-4" />
@@ -1106,7 +1106,7 @@ const DiscussionTopicPageV2 = () => {
 
           {/* New entry form (top) */}
           {showNewEntryForm && (
-            <div className="px-6 py-4 border-b border-gray-200 bg-blue-50/30" role="region" aria-label="New reply form">
+            <div className="px-6 py-4 border-b border-border-default bg-brand-50/30" role="region" aria-label="New reply form">
               <ComposeArea
                 onSubmit={handleNewEntry}
                 onCancel={() => setShowNewEntryForm(false)}
@@ -1120,12 +1120,12 @@ const DiscussionTopicPageV2 = () => {
           {/* Entries list */}
           {entries.length === 0 ? (
             <div className="py-16 text-center" role="status">
-              <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 text-sm">No replies yet. Be the first to respond!</p>
+              <MessageSquare className="w-12 h-12 text-text-disabled mx-auto mb-3" />
+              <p className="text-text-tertiary text-sm">No replies yet. Be the first to respond!</p>
               {!showNewEntryForm && (
                 <button
                   onClick={() => setShowNewEntryForm(true)}
-                  className="mt-3 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  className="mt-3 text-sm text-brand-600 hover:text-brand-700 font-medium"
                 >
                   Write a reply
                 </button>
@@ -1156,10 +1156,10 @@ const DiscussionTopicPageV2 = () => {
 
         {/* Bottom compose area (shown when there are entries) */}
         {entries.length > 0 && !showNewEntryForm && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+          <div className="bg-surface-0 rounded-xl shadow-sm border border-border-default overflow-hidden mb-6">
             <div className="px-6 py-4">
-              <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <Send className="w-4 h-4 text-gray-400" />
+              <h3 className="font-semibold text-text-primary mb-3 flex items-center gap-2">
+                <Send className="w-4 h-4 text-text-disabled" />
                 Post a Reply
               </h3>
               <ComposeArea

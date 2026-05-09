@@ -16,20 +16,20 @@ import { api } from '../services/api';
 const STATE_ORDER = ['off', 'allowed', 'on'];
 
 const STATE_STYLES = {
-  on:      'bg-green-100 text-green-800 border-green-200',
-  off:     'bg-gray-100 text-gray-700 border-gray-200',
-  allowed: 'bg-blue-50  text-blue-800  border-blue-200',
+  on:      'bg-accent-success/20 text-accent-success border-accent-success/30',
+  off:     'bg-surface-2 text-text-secondary border-border-default',
+  allowed: 'bg-brand-50  text-brand-800  border-brand-100',
   hidden:  'bg-purple-100 text-purple-800 border-purple-200',
 };
 
 const STAGE_STYLES = {
-  released: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
-  beta:     'bg-amber-50  text-amber-800  ring-1 ring-amber-200',
+  released: 'bg-accent-success/10 text-accent-success ring-1 ring-accent-success/30',
+  beta:     'bg-accent-warning/10  text-accent-warning  ring-1 ring-accent-warning/30',
   hidden:   'bg-slate-100 text-slate-700  ring-1 ring-slate-200',
 };
 
 const Spinner = () => (
-  <svg className="animate-spin h-5 w-5 text-blue-600" viewBox="0 0 24 24" fill="none">
+  <svg className="animate-spin h-5 w-5 text-brand-600" viewBox="0 0 24 24" fill="none">
     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
     <path
       className="opacity-75"
@@ -42,7 +42,7 @@ const Spinner = () => (
 const StateToggle = ({ flag, onChange, disabled }) => {
   const idx = STATE_ORDER.indexOf(flag.state);
   return (
-    <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden text-xs">
+    <div className="inline-flex rounded-lg border border-border-default overflow-hidden text-xs">
       {STATE_ORDER.map((s, i) => (
         <button
           key={s}
@@ -52,7 +52,7 @@ const StateToggle = ({ flag, onChange, disabled }) => {
             'px-3 py-1.5 font-medium transition-colors',
             i === idx
               ? `${STATE_STYLES[s]} border-l ${i === 0 ? 'border-l-0' : ''}`
-              : 'bg-white text-gray-500 hover:bg-gray-50',
+              : 'bg-surface-0 text-text-tertiary hover:bg-surface-1',
             disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
           ].join(' ')}
         >
@@ -133,16 +133,16 @@ const FeatureFlagsPage = () => {
     <Layout>
       <div className="max-w-5xl mx-auto p-6">
         <div className="flex items-center gap-3 mb-2">
-          <Flag className="h-6 w-6 text-blue-600" />
-          <h1 className="text-2xl font-semibold text-gray-900">Feature Flags</h1>
+          <Flag className="h-6 w-6 text-brand-600" />
+          <h1 className="text-2xl font-semibold text-text-primary">Feature Flags</h1>
         </div>
-        <p className="text-sm text-gray-600 mb-6">
+        <p className="text-sm text-text-secondary mb-6">
           Toggle experimental and released features for this account. Course-level
           flags inherit from the account unless overridden.
         </p>
 
         {!isAdmin && (
-          <div className="mb-4 flex gap-2 items-start rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          <div className="mb-4 flex gap-2 items-start rounded-md border border-accent-warning/30 bg-accent-warning/10 p-3 text-sm text-accent-warning">
             <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
             You are viewing in read-only mode. Admin permission is required to change feature states.
           </div>
@@ -154,11 +154,11 @@ const FeatureFlagsPage = () => {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search features..."
-            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="flex-1 rounded-md border border-border-strong px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
           />
           <button
             onClick={load}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm rounded-md border border-gray-300 bg-white hover:bg-gray-50"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm rounded-md border border-border-strong bg-surface-0 hover:bg-surface-1"
           >
             <RefreshCw className="h-4 w-4" />
             Reload
@@ -166,7 +166,7 @@ const FeatureFlagsPage = () => {
         </div>
 
         {error && (
-          <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800 flex justify-between items-center">
+          <div className="mb-4 rounded-md border border-accent-danger/30 bg-accent-danger/10 p-3 text-sm text-accent-danger flex justify-between items-center">
             <span>{error}</span>
             <button onClick={load} className="underline">Try Again</button>
           </div>
@@ -177,14 +177,14 @@ const FeatureFlagsPage = () => {
             <Spinner />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-16 text-gray-500 text-sm">No matching features.</div>
+          <div className="text-center py-16 text-text-tertiary text-sm">No matching features.</div>
         ) : (
-          <ul className="divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white">
+          <ul className="divide-y divide-border-default rounded-lg border border-border-default bg-surface-0">
             {filtered.map(flag => (
               <li key={flag.feature} className="p-4 flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-sm font-semibold text-gray-900">
+                    <h3 className="text-sm font-semibold text-text-primary">
                       {flag.display_name}
                     </h3>
                     <span
@@ -199,8 +199,8 @@ const FeatureFlagsPage = () => {
                       </span>
                     )}
                   </div>
-                  <code className="text-[11px] text-gray-500 font-mono">{flag.feature}</code>
-                  <p className="text-sm text-gray-600 mt-1">{flag.description}</p>
+                  <code className="text-[11px] text-text-tertiary font-mono">{flag.feature}</code>
+                  <p className="text-sm text-text-secondary mt-1">{flag.description}</p>
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   {busyFeature === flag.feature ? (
@@ -215,7 +215,7 @@ const FeatureFlagsPage = () => {
                   {isAdmin && !flag.locked && (
                     <button
                       onClick={() => reset(flag.feature)}
-                      className="text-xs text-gray-500 hover:text-gray-700 underline"
+                      className="text-xs text-text-tertiary hover:text-text-secondary underline"
                     >
                       Reset to inherited
                     </button>

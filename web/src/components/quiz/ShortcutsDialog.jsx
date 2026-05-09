@@ -8,13 +8,13 @@ import {
 } from '../ui/dialog';
 
 const Row = ({ keys, label }) => (
-  <div className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-    <span className="text-sm text-gray-700">{label}</span>
+  <div className="flex items-center justify-between py-2 border-b border-border-subtle last:border-0">
+    <span className="text-sm text-text-secondary">{label}</span>
     <span className="flex items-center gap-1">
       {keys.map((k) => (
         <kbd
           key={k}
-          className="px-2 py-0.5 text-xs font-mono bg-gray-100 border border-gray-300 rounded shadow-sm"
+          className="px-2 py-0.5 text-xs font-mono bg-surface-2 border border-border-strong rounded shadow-sm"
         >
           {k}
         </kbd>

@@ -10,10 +10,10 @@ import CourseNav from '../components/CourseNav';
 /* ─── Constants ─── */
 
 const STATUSES = [
-  { key: 'present', label: 'Present', color: 'bg-green-500', hoverColor: 'hover:bg-green-600', lightBg: 'bg-green-50', textColor: 'text-green-700', borderColor: 'border-green-200' },
-  { key: 'absent', label: 'Absent', color: 'bg-red-500', hoverColor: 'hover:bg-red-600', lightBg: 'bg-red-50', textColor: 'text-red-700', borderColor: 'border-red-200' },
-  { key: 'tardy', label: 'Tardy', color: 'bg-yellow-500', hoverColor: 'hover:bg-yellow-600', lightBg: 'bg-yellow-50', textColor: 'text-yellow-700', borderColor: 'border-yellow-200' },
-  { key: 'excused', label: 'Excused', color: 'bg-blue-500', hoverColor: 'hover:bg-blue-600', lightBg: 'bg-blue-50', textColor: 'text-blue-700', borderColor: 'border-blue-200' },
+  { key: 'present', label: 'Present', color: 'bg-accent-success', hoverColor: 'hover:bg-accent-success', lightBg: 'bg-accent-success/10', textColor: 'text-accent-success', borderColor: 'border-accent-success/30' },
+  { key: 'absent', label: 'Absent', color: 'bg-accent-danger', hoverColor: 'hover:bg-accent-danger', lightBg: 'bg-accent-danger/10', textColor: 'text-accent-danger', borderColor: 'border-accent-danger/30' },
+  { key: 'tardy', label: 'Tardy', color: 'bg-accent-warning', hoverColor: 'hover:bg-yellow-600', lightBg: 'bg-accent-warning/10', textColor: 'text-accent-warning', borderColor: 'border-accent-warning/30' },
+  { key: 'excused', label: 'Excused', color: 'bg-brand-500', hoverColor: 'hover:bg-brand-600', lightBg: 'bg-brand-50', textColor: 'text-brand-700', borderColor: 'border-blue-200' },
 ];
 
 const STATUS_MAP = Object.fromEntries(STATUSES.map((s) => [s.key, s]));
@@ -60,28 +60,28 @@ const SummaryBar = ({ records }) => {
   }
   return (
     <div className="flex flex-wrap items-center gap-4 text-sm" role="status" aria-label="Attendance summary">
-      <span className="font-medium text-gray-700">
+      <span className="font-medium text-text-secondary">
         <Users className="w-4 h-4 inline-block mr-1" aria-hidden="true" />
         {total} students
       </span>
-      <span className="text-green-700">
-        <span className="inline-block w-2.5 h-2.5 rounded-full bg-green-500 mr-1" aria-hidden="true" />
+      <span className="text-accent-success">
+        <span className="inline-block w-2.5 h-2.5 rounded-full bg-accent-success mr-1" aria-hidden="true" />
         {counts.present} Present
       </span>
-      <span className="text-red-700">
-        <span className="inline-block w-2.5 h-2.5 rounded-full bg-red-500 mr-1" aria-hidden="true" />
+      <span className="text-accent-danger">
+        <span className="inline-block w-2.5 h-2.5 rounded-full bg-accent-danger mr-1" aria-hidden="true" />
         {counts.absent} Absent
       </span>
-      <span className="text-yellow-700">
-        <span className="inline-block w-2.5 h-2.5 rounded-full bg-yellow-500 mr-1" aria-hidden="true" />
+      <span className="text-accent-warning">
+        <span className="inline-block w-2.5 h-2.5 rounded-full bg-accent-warning mr-1" aria-hidden="true" />
         {counts.tardy} Tardy
       </span>
-      <span className="text-blue-700">
-        <span className="inline-block w-2.5 h-2.5 rounded-full bg-blue-500 mr-1" aria-hidden="true" />
+      <span className="text-brand-700">
+        <span className="inline-block w-2.5 h-2.5 rounded-full bg-brand-500 mr-1" aria-hidden="true" />
         {counts.excused} Excused
       </span>
       {counts.unmarked > 0 && (
-        <span className="text-gray-500">
+        <span className="text-text-tertiary">
           <span className="inline-block w-2.5 h-2.5 rounded-full bg-gray-300 mr-1" aria-hidden="true" />
           {counts.unmarked} Unmarked
         </span>
@@ -107,13 +107,13 @@ const StudentRow = ({ record, onStatusChange, onNoteChange, saving }) => {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-surface-0 border border-border-default rounded-lg p-4">
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         {/* Student Name */}
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-gray-900 truncate">{record.student_name || `Student ${record.user_id}`}</p>
+          <p className="font-medium text-text-primary truncate">{record.student_name || `Student ${record.user_id}`}</p>
           {record.status && (
-            <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full ${STATUS_MAP[record.status]?.lightBg || 'bg-gray-100'} ${STATUS_MAP[record.status]?.textColor || 'text-gray-600'}`}>
+            <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full ${STATUS_MAP[record.status]?.lightBg || 'bg-surface-2'} ${STATUS_MAP[record.status]?.textColor || 'text-text-secondary'}`}>
               {STATUS_MAP[record.status]?.label || record.status}
             </span>
           )}
@@ -134,10 +134,10 @@ const StudentRow = ({ record, onStatusChange, onNoteChange, saving }) => {
                 disabled={saving}
                 className={`
                   px-3 py-1.5 rounded-lg text-xs font-medium transition-all
-                  focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500
+                  focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-brand-500
                   ${isActive
                     ? `${status.color} text-white shadow-sm`
-                    : `bg-gray-100 text-gray-600 hover:bg-gray-200`
+                    : `bg-surface-2 text-text-secondary hover:bg-border-default`
                   }
                   disabled:opacity-50 disabled:cursor-not-allowed
                 `}
@@ -152,7 +152,7 @@ const StudentRow = ({ record, onStatusChange, onNoteChange, saving }) => {
         <button
           type="button"
           onClick={() => setShowNotes(!showNotes)}
-          className="text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600 p-1"
+          className="text-text-disabled hover:text-text-secondary focus:outline-none focus:text-text-secondary p-1"
           aria-label={showNotes ? 'Hide notes' : 'Show notes'}
           aria-expanded={showNotes}
         >
@@ -162,7 +162,7 @@ const StudentRow = ({ record, onStatusChange, onNoteChange, saving }) => {
 
       {/* Notes Field */}
       {showNotes && (
-        <div className="mt-3 pt-3 border-t border-gray-100">
+        <div className="mt-3 pt-3 border-t border-border-subtle">
           <label htmlFor={`note-${record.user_id}`} className="sr-only">
             Notes for {record.student_name}
           </label>
@@ -172,7 +172,7 @@ const StudentRow = ({ record, onStatusChange, onNoteChange, saving }) => {
             onChange={(e) => setNote(e.target.value)}
             onBlur={handleNoteBlur}
             placeholder="Add notes (e.g., left early, arrived at 9:15)..."
-            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
+            className="w-full text-sm border border-border-default rounded-lg px-3 py-2 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 resize-none"
             rows={2}
           />
         </div>
@@ -226,7 +226,7 @@ const CalendarHeatmap = ({ courseId }) => {
   const getHeatColor = (day) => {
     const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const dayData = monthData[dateKey];
-    if (!dayData) return 'bg-gray-50 text-gray-400';
+    if (!dayData) return 'bg-surface-1 text-text-disabled';
     const rate = dayData.total > 0 ? dayData.present / dayData.total : 0;
     if (rate >= 0.95) return 'bg-green-400 text-white';
     if (rate >= 0.85) return 'bg-green-300 text-green-900';
@@ -245,22 +245,22 @@ const CalendarHeatmap = ({ courseId }) => {
   const monthLabel = calDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6">
+    <div className="bg-surface-0 border border-border-default rounded-lg p-6">
       {/* Month Navigation */}
       <div className="flex items-center justify-between mb-4">
         <button
           type="button"
           onClick={prevMonth}
-          className="p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="p-2 rounded-lg hover:bg-surface-2 focus:outline-none focus:ring-2 focus:ring-brand-500"
           aria-label="Previous month"
         >
           <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
         </button>
-        <h3 className="text-lg font-semibold text-gray-900">{monthLabel}</h3>
+        <h3 className="text-lg font-semibold text-text-primary">{monthLabel}</h3>
         <button
           type="button"
           onClick={nextMonth}
-          className="p-2 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="p-2 rounded-lg hover:bg-surface-2 focus:outline-none focus:ring-2 focus:ring-brand-500"
           aria-label="Next month"
         >
           <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>
@@ -269,7 +269,7 @@ const CalendarHeatmap = ({ courseId }) => {
 
       {calLoading && (
         <div className="flex justify-center py-8">
-          <div className="h-6 w-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" role="status" aria-label="Loading calendar data" />
+          <div className="h-6 w-6 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" role="status" aria-label="Loading calendar data" />
         </div>
       )}
 
@@ -278,7 +278,7 @@ const CalendarHeatmap = ({ courseId }) => {
           {/* Day headers */}
           <div className="grid grid-cols-7 gap-1 mb-1">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
-              <div key={d} className="text-center text-xs font-medium text-gray-500 py-1">{d}</div>
+              <div key={d} className="text-center text-xs font-medium text-text-tertiary py-1">{d}</div>
             ))}
           </div>
 
@@ -306,7 +306,7 @@ const CalendarHeatmap = ({ courseId }) => {
           </div>
 
           {/* Legend */}
-          <div className="flex items-center justify-center gap-2 mt-4 text-xs text-gray-500">
+          <div className="flex items-center justify-center gap-2 mt-4 text-xs text-text-tertiary">
             <span>Low</span>
             <div className="w-4 h-4 rounded bg-red-400" aria-hidden="true" />
             <div className="w-4 h-4 rounded bg-orange-300" aria-hidden="true" />
@@ -347,14 +347,14 @@ const StudentAttendanceView = ({ courseId, userId }) => {
   if (loading) {
     return (
       <div className="flex justify-center py-12">
-        <div className="h-8 w-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" role="status" aria-label="Loading attendance" />
+        <div className="h-8 w-8 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" role="status" aria-label="Loading attendance" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm" role="alert">{error}</div>
+      <div className="bg-accent-danger/10 border border-accent-danger/30 rounded-lg p-4 text-accent-danger text-sm" role="alert">{error}</div>
     );
   }
 
@@ -364,33 +364,33 @@ const StudentAttendanceView = ({ courseId, userId }) => {
       {summary && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { label: 'Present', value: summary.present || 0, color: 'text-green-600', bg: 'bg-green-50' },
-            { label: 'Absent', value: summary.absent || 0, color: 'text-red-600', bg: 'bg-red-50' },
-            { label: 'Tardy', value: summary.tardy || 0, color: 'text-yellow-600', bg: 'bg-yellow-50' },
-            { label: 'Excused', value: summary.excused || 0, color: 'text-blue-600', bg: 'bg-blue-50' },
+            { label: 'Present', value: summary.present || 0, color: 'text-accent-success', bg: 'bg-accent-success/10' },
+            { label: 'Absent', value: summary.absent || 0, color: 'text-accent-danger', bg: 'bg-accent-danger/10' },
+            { label: 'Tardy', value: summary.tardy || 0, color: 'text-accent-warning', bg: 'bg-accent-warning/10' },
+            { label: 'Excused', value: summary.excused || 0, color: 'text-brand-600', bg: 'bg-brand-50' },
           ].map((stat) => (
             <div key={stat.label} className={`${stat.bg} rounded-lg p-4 text-center`}>
               <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
-              <p className="text-sm text-gray-600">{stat.label}</p>
+              <p className="text-sm text-text-secondary">{stat.label}</p>
             </div>
           ))}
         </div>
       )}
 
       {/* Record List */}
-      <div className="bg-white border border-gray-200 rounded-lg divide-y divide-gray-100">
+      <div className="bg-surface-0 border border-border-default rounded-lg divide-y divide-gray-100">
         {records.length === 0 ? (
-          <p className="p-6 text-center text-gray-500">No attendance records found.</p>
+          <p className="p-6 text-center text-text-tertiary">No attendance records found.</p>
         ) : (
           records.map((r, i) => (
             <div key={i} className="flex items-center justify-between px-4 py-3">
-              <span className="text-sm text-gray-700">{formatDate(r.date)}</span>
+              <span className="text-sm text-text-secondary">{formatDate(r.date)}</span>
               {r.status ? (
-                <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_MAP[r.status]?.lightBg || 'bg-gray-100'} ${STATUS_MAP[r.status]?.textColor || 'text-gray-600'}`}>
+                <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_MAP[r.status]?.lightBg || 'bg-surface-2'} ${STATUS_MAP[r.status]?.textColor || 'text-text-secondary'}`}>
                   {STATUS_MAP[r.status]?.label || r.status}
                 </span>
               ) : (
-                <span className="text-xs text-gray-400">No record</span>
+                <span className="text-xs text-text-disabled">No record</span>
               )}
             </div>
           ))
@@ -513,7 +513,7 @@ const AttendancePage = () => {
     }
   };
 
-  if (isTeacher === null) return <Layout><div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+  if (isTeacher === null) return <Layout><div className="flex items-center justify-center py-12 gap-2 text-text-tertiary">
   <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
   Loading...
 </div></Layout>;
@@ -524,11 +524,11 @@ const AttendancePage = () => {
       <Layout>
         <main id="main-content" className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-6">
-            <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm flex items-center gap-1 mb-2">
+            <Link to={`/courses/${courseId}`} className="text-brand-600 hover:underline text-sm flex items-center gap-1 mb-2">
               <ArrowLeft className="w-4 h-4" aria-hidden="true" />
               Back to Course
             </Link>
-            <h1 className="text-2xl font-bold text-gray-900">My Attendance</h1>
+            <h1 className="text-2xl font-bold text-text-primary">My Attendance</h1>
           </div>
           <StudentAttendanceView courseId={courseId} userId={user?.id} />
         </main>
@@ -543,28 +543,28 @@ const AttendancePage = () => {
       <main id="main-content" className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-6">
-          <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm flex items-center gap-1 mb-2">
+          <Link to={`/courses/${courseId}`} className="text-brand-600 hover:underline text-sm flex items-center gap-1 mb-2">
             <ArrowLeft className="w-4 h-4" aria-hidden="true" />
             Back to Course
           </Link>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold text-text-primary">
                 Attendance {course ? `- ${course.name}` : ''}
               </h1>
-              <p className="text-sm text-gray-500 mt-1">{formatDate(date)}</p>
+              <p className="text-sm text-text-tertiary mt-1">{formatDate(date)}</p>
             </div>
             <div className="flex items-center gap-2">
               {/* View Toggle */}
-              <div className="flex rounded-lg border border-gray-200 overflow-hidden" role="tablist" aria-label="Attendance view">
+              <div className="flex rounded-lg border border-border-default overflow-hidden" role="tablist" aria-label="Attendance view">
                 <button
                   type="button"
                   role="tab"
                   aria-selected={view === 'roster'}
                   aria-controls="roster-panel"
                   onClick={() => setView('roster')}
-                  className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 ${
-                    view === 'roster' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
+                  className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-500 ${
+                    view === 'roster' ? 'bg-brand-600 text-white' : 'bg-surface-0 text-text-secondary hover:bg-surface-1'
                   }`}
                 >
                   <List className="w-4 h-4" aria-hidden="true" />
@@ -576,8 +576,8 @@ const AttendancePage = () => {
                   aria-selected={view === 'calendar'}
                   aria-controls="calendar-panel"
                   onClick={() => setView('calendar')}
-                  className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 ${
-                    view === 'calendar' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
+                  className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-500 ${
+                    view === 'calendar' ? 'bg-brand-600 text-white' : 'bg-surface-0 text-text-secondary hover:bg-surface-1'
                   }`}
                 >
                   <Calendar className="w-4 h-4" aria-hidden="true" />
@@ -588,7 +588,7 @@ const AttendancePage = () => {
               <button
                 type="button"
                 onClick={handleExportCSV}
-                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-text-secondary bg-surface-0 border border-border-default rounded-lg hover:bg-surface-1 focus:outline-none focus:ring-2 focus:ring-brand-500"
                 aria-label="Export attendance to CSV"
               >
                 <Download className="w-4 h-4" aria-hidden="true" />
@@ -600,7 +600,7 @@ const AttendancePage = () => {
 
         {/* Error */}
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm" role="alert">
+          <div className="mb-4 p-3 bg-accent-danger/10 border border-accent-danger/30 rounded-lg text-accent-danger text-sm" role="alert">
             {error}
           </div>
         )}
@@ -618,20 +618,20 @@ const AttendancePage = () => {
             {/* Date Picker + Bulk Actions */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
               <div className="flex items-center gap-3">
-                <label htmlFor="attendance-date" className="text-sm font-medium text-gray-700">Date:</label>
+                <label htmlFor="attendance-date" className="text-sm font-medium text-text-secondary">Date:</label>
                 <input
                   id="attendance-date"
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  className="border border-border-strong rounded-lg px-3 py-2 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                 />
               </div>
               <button
                 type="button"
                 onClick={handleMarkAllPresent}
                 disabled={saving || loading}
-                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
+                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-accent-success bg-accent-success/10 border border-accent-success/30 rounded-lg hover:bg-accent-success/20 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
               >
                 <CheckCircle className="w-4 h-4" aria-hidden="true" />
                 Mark All Present
@@ -640,7 +640,7 @@ const AttendancePage = () => {
 
             {/* Summary */}
             {!loading && records.length > 0 && (
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
+              <div className="bg-surface-1 border border-border-default rounded-lg p-3 mb-4">
                 <SummaryBar records={records} />
               </div>
             )}
@@ -648,7 +648,7 @@ const AttendancePage = () => {
             {/* Loading */}
             {loading && (
               <div className="flex justify-center py-12">
-                <div className="h-8 w-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" role="status" aria-label="Loading roster" />
+                <div className="h-8 w-8 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" role="status" aria-label="Loading roster" />
               </div>
             )}
 
@@ -656,7 +656,7 @@ const AttendancePage = () => {
             {!loading && records.length === 0 && (
               <div className="text-center py-12">
                 <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" aria-hidden="true" />
-                <p className="text-gray-500">No students enrolled in this course.</p>
+                <p className="text-text-tertiary">No students enrolled in this course.</p>
               </div>
             )}
 
@@ -677,7 +677,7 @@ const AttendancePage = () => {
 
             {/* Saving Indicator */}
             {saving && (
-              <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm flex items-center gap-2" role="status" aria-live="polite">
+              <div className="fixed bottom-4 right-4 bg-brand-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm flex items-center gap-2" role="status" aria-live="polite">
                 <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" aria-hidden="true" />
                 Saving...
               </div>

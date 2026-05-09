@@ -26,12 +26,12 @@ const AdminNav = () => {
 
   return (
     <aside
-      className="fixed inset-y-0 left-16 z-20 w-[216px] bg-white border-r border-gray-200 overflow-y-auto"
+      className="fixed inset-y-0 left-16 z-20 w-[216px] bg-surface-0 border-r border-border-default overflow-y-auto"
       role="navigation"
       aria-label="Admin navigation"
     >
-      <div className="px-4 py-4 border-b border-gray-200">
-        <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Admin</h2>
+      <div className="px-4 py-4 border-b border-border-default">
+        <h2 className="text-sm font-semibold text-text-primary uppercase tracking-wider">Admin</h2>
       </div>
       <nav className="py-2">
         {adminLinks.map(({ to, icon: Icon, label }) => (
@@ -40,8 +40,8 @@ const AdminNav = () => {
             to={to}
             className={`flex items-center gap-3 px-4 py-2 text-sm transition-colors
               ${isActive(to)
-                ? 'border-l-3 border-blue-600 bg-blue-50 text-blue-700 font-semibold'
-                : 'border-l-3 border-transparent text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                ? 'border-l-3 border-brand-600 bg-brand-50 text-brand-700 font-semibold'
+                : 'border-l-3 border-transparent text-text-secondary hover:bg-surface-1 hover:text-text-primary'
               }
             `}
           >

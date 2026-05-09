@@ -47,14 +47,14 @@ const CourseDetail = ({ courseId }) => {
   };
 
   if (loading) return <div className="p-4">Loading course...</div>;
-  if (error) return <div className="p-4 text-red-600">{error}</div>;
+  if (error) return <div className="p-4 text-accent-danger">{error}</div>;
   if (!course) return <div className="p-4">Course not found</div>;
 
   return (
-    <div className="bg-white rounded-lg shadow">
+    <div className="bg-surface-0 rounded-lg shadow">
       <div className="p-6 border-b">
         <h1 className="text-2xl font-bold">{course.name}</h1>
-        <p className="text-gray-600">{course.code}</p>
+        <p className="text-text-secondary">{course.code}</p>
         <p className="mt-2">{course.description}</p>
       </div>
 
@@ -64,7 +64,7 @@ const CourseDetail = ({ courseId }) => {
           {modules.map((module) => (
             <div key={module.id} className="border rounded-lg">
               <button
-                className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50"
+                className="w-full px-4 py-3 flex items-center justify-between hover:bg-surface-1"
                 onClick={() => toggleModule(module.id)}
               >
                 <span className="font-medium">{module.title}</span>
@@ -80,7 +80,7 @@ const CourseDetail = ({ courseId }) => {
                   {module.items.map((item) => (
                     <div
                       key={item.id}
-                      className="flex items-center space-x-2 py-2 px-4 hover:bg-gray-50 rounded"
+                      className="flex items-center space-x-2 py-2 px-4 hover:bg-surface-1 rounded"
                     >
                       {getItemIcon(item.type)}
                       <span>{item.title}</span>

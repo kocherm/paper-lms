@@ -45,9 +45,9 @@ const QuizSubmissionsPage = () => {
 
   const stateIcon = (state) => {
     switch (state) {
-      case 'complete': return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'pending_review': return <AlertCircle className="w-4 h-4 text-yellow-500" />;
-      default: return <Clock className="w-4 h-4 text-gray-400" />;
+      case 'complete': return <CheckCircle className="w-4 h-4 text-accent-success" />;
+      case 'pending_review': return <AlertCircle className="w-4 h-4 text-accent-warning" />;
+      default: return <Clock className="w-4 h-4 text-text-disabled" />;
     }
   };
 
@@ -64,15 +64,15 @@ const QuizSubmissionsPage = () => {
   };
 
   if (loading) {
-    return <Layout><div className="flex items-center justify-center py-12 gap-2 text-gray-500">
+    return <Layout><div className="flex items-center justify-center py-12 gap-2 text-text-tertiary">
   <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" /></svg>
   Loading submissions...
 </div></Layout>;
   }
   if (error) {
     return <Layout><div className="text-center py-12">
-  <p className="text-red-600 mb-3">{error}</p>
-  <button onClick={() => window.location.reload()} className="text-blue-600 hover:text-blue-800 text-sm font-medium">Try Again</button>
+  <p className="text-accent-danger mb-3">{error}</p>
+  <button onClick={() => window.location.reload()} className="text-brand-600 hover:text-brand-800 text-sm font-medium">Try Again</button>
 </div></Layout>;
   }
 
@@ -80,18 +80,18 @@ const QuizSubmissionsPage = () => {
     <Layout>
       <CourseNav />
       <div className="mb-6">
-        <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm">← Back to Course</Link>
+        <Link to={`/courses/${courseId}`} className="text-brand-600 hover:underline text-sm">← Back to Course</Link>
         <h2 className="text-2xl font-bold mt-2">{quiz?.title} - Submissions</h2>
-        <p className="text-gray-500">
+        <p className="text-text-tertiary">
           {quiz?.points_possible ? `${quiz.points_possible} points` : 'Ungraded'}
           {quiz?.time_limit ? ` · ${quiz.time_limit} min time limit` : ''}
         </p>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-surface-0 rounded-lg shadow">
         <table className="w-full">
           <thead>
-            <tr className="border-b text-left text-sm text-gray-500">
+            <tr className="border-b text-left text-sm text-text-tertiary">
               <th className="px-4 py-3">User</th>
               <th className="px-4 py-3">Attempt</th>
               <th className="px-4 py-3">Status</th>
@@ -104,11 +104,11 @@ const QuizSubmissionsPage = () => {
           <tbody className="divide-y">
             {submissions.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-500">No submissions yet.</td>
+                <td colSpan={7} className="px-4 py-8 text-center text-text-tertiary">No submissions yet.</td>
               </tr>
             ) : (
               submissions.map(sub => (
-                <tr key={sub.id} className="hover:bg-gray-50">
+                <tr key={sub.id} className="hover:bg-surface-1">
                   <td className="px-4 py-3 text-sm">{userNames[sub.user_id] || `User #${sub.user_id}`}</td>
                   <td className="px-4 py-3 text-sm">{sub.attempt}</td>
                   <td className="px-4 py-3">
@@ -121,9 +121,9 @@ const QuizSubmissionsPage = () => {
                     {sub.score !== null && sub.score !== undefined ? sub.score : '-'}
                     {sub.score !== null && quiz?.points_possible ? ` / ${quiz.points_possible}` : ''}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-500">{formatDate(sub.started_at)}</td>
-                  <td className="px-4 py-3 text-sm text-gray-500">{formatDate(sub.finished_at)}</td>
-                  <td className="px-4 py-3 text-sm text-gray-500">{formatDuration(sub.time_spent)}</td>
+                  <td className="px-4 py-3 text-sm text-text-tertiary">{formatDate(sub.started_at)}</td>
+                  <td className="px-4 py-3 text-sm text-text-tertiary">{formatDate(sub.finished_at)}</td>
+                  <td className="px-4 py-3 text-sm text-text-tertiary">{formatDuration(sub.time_spent)}</td>
                 </tr>
               ))
             )}

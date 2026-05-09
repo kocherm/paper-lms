@@ -33,34 +33,34 @@ const OverrideEditor = ({ courseId, overrides, setOverrides }) => {
     <div className="space-y-4">
       <div className="space-y-2">
         {overrides.map(ov => (
-          <div key={ov.id} className="flex items-center gap-3 p-3 border rounded-lg bg-gray-50">
+          <div key={ov.id} className="flex items-center gap-3 p-3 border rounded-lg bg-surface-1">
             <div className="flex-1">
               <div className="font-medium text-sm">{ov.date?.split('T')[0] || ov.date}</div>
-              <div className="text-xs text-gray-500">{ov.label || ov.link_type} {ov.link_id ? `#${ov.link_id}` : ''}</div>
+              <div className="text-xs text-text-tertiary">{ov.label || ov.link_type} {ov.link_id ? `#${ov.link_id}` : ''}</div>
             </div>
-            <button onClick={() => handleDelete(ov.id)} className="text-red-500 hover:text-red-700 p-1">
+            <button onClick={() => handleDelete(ov.id)} className="text-accent-danger hover:text-accent-danger p-1">
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
         ))}
-        {overrides.length === 0 && <p className="text-sm text-gray-500">No overrides configured.</p>}
+        {overrides.length === 0 && <p className="text-sm text-text-tertiary">No overrides configured.</p>}
       </div>
 
       <div className="border-t pt-4">
-        <h4 className="text-sm font-medium text-gray-700 mb-2">Add Override</h4>
+        <h4 className="text-sm font-medium text-text-secondary mb-2">Add Override</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Date</label>
+            <label className="block text-xs text-text-tertiary mb-1">Date</label>
             <input type="date" className="w-full border rounded px-3 py-1.5 text-sm" value={form.date}
               onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Label</label>
+            <label className="block text-xs text-text-tertiary mb-1">Label</label>
             <input type="text" className="w-full border rounded px-3 py-1.5 text-sm" value={form.label}
               placeholder="e.g. Unit 3 Review" onChange={e => setForm(f => ({ ...f, label: e.target.value }))} />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Link Type</label>
+            <label className="block text-xs text-text-tertiary mb-1">Link Type</label>
             <select className="w-full border rounded px-3 py-1.5 text-sm" value={form.link_type}
               onChange={e => setForm(f => ({ ...f, link_type: e.target.value }))}>
               <option value="module">Module</option>
@@ -71,7 +71,7 @@ const OverrideEditor = ({ courseId, overrides, setOverrides }) => {
             </select>
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">{form.link_type === 'external_url' ? 'URL' : 'Content ID'}</label>
+            <label className="block text-xs text-text-tertiary mb-1">{form.link_type === 'external_url' ? 'URL' : 'Content ID'}</label>
             {form.link_type === 'external_url' ? (
               <input type="text" className="w-full border rounded px-3 py-1.5 text-sm" value={form.link_url}
                 onChange={e => setForm(f => ({ ...f, link_url: e.target.value }))} />
@@ -81,7 +81,7 @@ const OverrideEditor = ({ courseId, overrides, setOverrides }) => {
             )}
           </div>
         </div>
-        <button onClick={handleAdd} className="mt-3 flex items-center gap-1 bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700">
+        <button onClick={handleAdd} className="mt-3 flex items-center gap-1 bg-brand-600 text-white px-4 py-1.5 rounded text-sm hover:bg-brand-700">
           <Plus className="w-4 h-4" /> Add Override
         </button>
       </div>

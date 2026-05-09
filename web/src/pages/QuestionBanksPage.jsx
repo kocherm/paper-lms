@@ -20,8 +20,8 @@ const formatQuestionType = (type) => {
 };
 
 const LoadingSpinner = ({ size = 'h-8 w-8', message }) => (
-  <div className="flex items-center justify-center py-12 gap-3 text-gray-500">
-    <svg className={`animate-spin ${size} text-blue-600`} viewBox="0 0 24 24" fill="none">
+  <div className="flex items-center justify-center py-12 gap-3 text-text-tertiary">
+    <svg className={`animate-spin ${size} text-brand-600`} viewBox="0 0 24 24" fill="none">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
     </svg>
@@ -100,40 +100,40 @@ const PullToQuizModal = ({ courseId, bankId, questions, onClose, onSuccess }) =>
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
       <div
-        className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[80vh] flex flex-col"
+        className="bg-surface-0 rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[80vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-4 border-b">
           <h3 className="text-lg font-semibold">Pull Questions to Quiz</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+          <button onClick={onClose} className="text-text-disabled hover:text-text-secondary text-xl leading-none">&times;</button>
         </div>
 
         <div className="p-4 overflow-y-auto flex-1 space-y-4">
           {error && (
-            <div className="bg-red-50 text-red-700 p-3 rounded text-sm">{error}</div>
+            <div className="bg-accent-danger/10 text-accent-danger p-3 rounded text-sm">{error}</div>
           )}
 
           {/* Quiz selector */}
           <div>
-            <label htmlFor="pull-quiz-select" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="pull-quiz-select" className="block text-sm font-medium text-text-secondary mb-1">
               Destination Quiz
             </label>
             {loadingQuizzes ? (
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <svg className="animate-spin h-4 w-4 text-blue-600" viewBox="0 0 24 24" fill="none">
+              <div className="flex items-center gap-2 text-sm text-text-tertiary">
+                <svg className="animate-spin h-4 w-4 text-brand-600" viewBox="0 0 24 24" fill="none">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                 </svg>
                 Loading quizzes...
               </div>
             ) : quizzes.length === 0 ? (
-              <p className="text-sm text-gray-500">No quizzes found. Create a quiz first.</p>
+              <p className="text-sm text-text-tertiary">No quizzes found. Create a quiz first.</p>
             ) : (
               <select
                 id="pull-quiz-select"
                 value={selectedQuizId}
                 onChange={(e) => setSelectedQuizId(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                className="w-full border border-border-strong rounded-md px-3 py-2 text-sm"
               >
                 <option value="">Select a quiz...</option>
                 {quizzes.map((q) => (
@@ -146,31 +146,31 @@ const PullToQuizModal = ({ courseId, bankId, questions, onClose, onSuccess }) =>
           {/* Question checkboxes */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-text-secondary">
                 Questions ({selectedQuestionIds.length}/{questions.length} selected)
               </span>
               <button
                 type="button"
                 onClick={toggleAll}
-                className="text-xs text-blue-600 hover:text-blue-800"
+                className="text-xs text-brand-600 hover:text-brand-800"
               >
                 {selectedQuestionIds.length === questions.length ? 'Deselect All' : 'Select All'}
               </button>
             </div>
-            <div className="border border-gray-200 rounded-md max-h-48 overflow-y-auto divide-y">
+            <div className="border border-border-default rounded-md max-h-48 overflow-y-auto divide-y">
               {questions.map((q) => (
-                <label key={q.id} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 cursor-pointer">
+                <label key={q.id} className="flex items-center gap-3 px-3 py-2 hover:bg-surface-1 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={selectedQuestionIds.includes(q.id)}
                     onChange={() => toggleQuestion(q.id)}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="rounded border-border-strong text-brand-600 focus:ring-brand-500"
                   />
                   <div className="min-w-0 flex-1">
-                    <span className="text-sm text-gray-900 truncate block">
+                    <span className="text-sm text-text-primary truncate block">
                       {q.question_name || 'Untitled Question'}
                     </span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-text-tertiary">
                       {formatQuestionType(q.question_type)} &middot; {q.points_possible ?? 0} pts
                     </span>
                   </div>
@@ -184,7 +184,7 @@ const PullToQuizModal = ({ courseId, bankId, questions, onClose, onSuccess }) =>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+            className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary"
           >
             Cancel
           </button>
@@ -192,7 +192,7 @@ const PullToQuizModal = ({ courseId, bankId, questions, onClose, onSuccess }) =>
             type="button"
             onClick={handlePull}
             disabled={pulling || !selectedQuizId || selectedQuestionIds.length === 0}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium disabled:opacity-50"
+            className="inline-flex items-center px-4 py-2 bg-brand-600 text-white rounded-md hover:bg-brand-700 text-sm font-medium disabled:opacity-50"
           >
             {pulling ? (
               <>
@@ -267,23 +267,23 @@ const QuestionForm = ({ initial, onSave, onCancel, saving }) => {
   const showAnswers = form.question_type === 'multiple_choice' || form.question_type === 'true_false';
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 bg-gray-50 rounded-md p-4 border border-gray-200">
+    <form onSubmit={handleSubmit} className="space-y-4 bg-surface-1 rounded-md p-4 border border-border-default">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="q-name" className="block text-sm font-medium text-gray-700 mb-1">Question Name</label>
+          <label htmlFor="q-name" className="block text-sm font-medium text-text-secondary mb-1">Question Name</label>
           <input
             id="q-name"
             type="text"
             required
             value={form.question_name}
             onChange={(e) => update('question_name', e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+            className="w-full border border-border-strong rounded-md px-3 py-2 text-sm"
             placeholder="e.g. Question 1"
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor="q-type" className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+            <label htmlFor="q-type" className="block text-sm font-medium text-text-secondary mb-1">Type</label>
             <select
               id="q-type"
               value={form.question_type}
@@ -302,7 +302,7 @@ const QuestionForm = ({ initial, onSave, onCancel, saving }) => {
                   }));
                 }
               }}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              className="w-full border border-border-strong rounded-md px-3 py-2 text-sm"
             >
               {QUESTION_TYPES.map((t) => (
                 <option key={t.value} value={t.value}>{t.label}</option>
@@ -310,7 +310,7 @@ const QuestionForm = ({ initial, onSave, onCancel, saving }) => {
             </select>
           </div>
           <div>
-            <label htmlFor="q-points" className="block text-sm font-medium text-gray-700 mb-1">Points</label>
+            <label htmlFor="q-points" className="block text-sm font-medium text-text-secondary mb-1">Points</label>
             <input
               id="q-points"
               type="number"
@@ -318,21 +318,21 @@ const QuestionForm = ({ initial, onSave, onCancel, saving }) => {
               step="0.5"
               value={form.points_possible}
               onChange={(e) => update('points_possible', e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              className="w-full border border-border-strong rounded-md px-3 py-2 text-sm"
             />
           </div>
         </div>
       </div>
 
       <div>
-        <label htmlFor="q-text" className="block text-sm font-medium text-gray-700 mb-1">Question Text</label>
+        <label htmlFor="q-text" className="block text-sm font-medium text-text-secondary mb-1">Question Text</label>
         <textarea
           id="q-text"
           required
           rows={3}
           value={form.question_text}
           onChange={(e) => update('question_text', e.target.value)}
-          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+          className="w-full border border-border-strong rounded-md px-3 py-2 text-sm"
           placeholder="Enter the question text..."
         />
       </div>
@@ -340,7 +340,7 @@ const QuestionForm = ({ initial, onSave, onCancel, saving }) => {
       {/* Answers section for MC / TF */}
       {showAnswers && (
         <div>
-          <span className="block text-sm font-medium text-gray-700 mb-2">
+          <span className="block text-sm font-medium text-text-secondary mb-2">
             Answers {form.question_type === 'true_false' ? '' : '(click radio to mark correct)'}
           </span>
           <div className="space-y-2">
@@ -351,7 +351,7 @@ const QuestionForm = ({ initial, onSave, onCancel, saving }) => {
                   name="correct-answer"
                   checked={ans.weight === 100}
                   onChange={() => markCorrect(idx)}
-                  className="text-blue-600 focus:ring-blue-500"
+                  className="text-brand-600 focus:ring-brand-500"
                   title="Mark as correct answer"
                   disabled={form.question_type === 'true_false'}
                 />
@@ -359,7 +359,7 @@ const QuestionForm = ({ initial, onSave, onCancel, saving }) => {
                   type="text"
                   value={ans.text}
                   onChange={(e) => updateAnswer(idx, 'text', e.target.value)}
-                  className="flex-1 border border-gray-300 rounded-md px-3 py-1.5 text-sm"
+                  className="flex-1 border border-border-strong rounded-md px-3 py-1.5 text-sm"
                   placeholder={`Answer ${idx + 1}`}
                   required
                   readOnly={form.question_type === 'true_false'}
@@ -368,7 +368,7 @@ const QuestionForm = ({ initial, onSave, onCancel, saving }) => {
                   <button
                     type="button"
                     onClick={() => removeAnswer(idx)}
-                    className="text-gray-400 hover:text-red-500"
+                    className="text-text-disabled hover:text-accent-danger"
                     title="Remove answer"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -381,7 +381,7 @@ const QuestionForm = ({ initial, onSave, onCancel, saving }) => {
             <button
               type="button"
               onClick={addAnswer}
-              className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+              className="mt-2 text-sm text-brand-600 hover:text-brand-800"
             >
               + Add Answer
             </button>
@@ -390,13 +390,13 @@ const QuestionForm = ({ initial, onSave, onCancel, saving }) => {
       )}
 
       <div>
-        <label htmlFor="q-feedback" className="block text-sm font-medium text-gray-700 mb-1">Feedback (optional)</label>
+        <label htmlFor="q-feedback" className="block text-sm font-medium text-text-secondary mb-1">Feedback (optional)</label>
         <textarea
           id="q-feedback"
           rows={2}
           value={form.feedback || ''}
           onChange={(e) => update('feedback', e.target.value)}
-          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+          className="w-full border border-border-strong rounded-md px-3 py-2 text-sm"
           placeholder="Shown to student after grading..."
         />
       </div>
@@ -405,14 +405,14 @@ const QuestionForm = ({ initial, onSave, onCancel, saving }) => {
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+          className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={saving}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium disabled:opacity-50"
+          className="px-4 py-2 bg-brand-600 text-white rounded-md hover:bg-brand-700 text-sm font-medium disabled:opacity-50"
         >
           {saving ? 'Saving...' : 'Save Question'}
         </button>
@@ -520,10 +520,10 @@ const BankCard = ({ bank, courseId, isTeacher, onDelete, onUpdate }) => {
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-surface-0 rounded-lg shadow">
         {/* Bank header */}
         <div
-          className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
+          className="flex items-center justify-between p-4 cursor-pointer hover:bg-surface-1"
           onClick={handleExpand}
           role="button"
           aria-expanded={expanded}
@@ -532,11 +532,11 @@ const BankCard = ({ bank, courseId, isTeacher, onDelete, onUpdate }) => {
         >
           <div className="flex items-center gap-3 min-w-0 flex-1">
             {expanded ? (
-              <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
+              <ChevronDown className="w-5 h-5 text-text-disabled flex-shrink-0" />
             ) : (
-              <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+              <ChevronRight className="w-5 h-5 text-text-disabled flex-shrink-0" />
             )}
-            <BookOpen className="w-5 h-5 text-blue-500 flex-shrink-0" />
+            <BookOpen className="w-5 h-5 text-brand-500 flex-shrink-0" />
             {editingTitle && isTeacher ? (
               <input
                 type="text"
@@ -548,13 +548,13 @@ const BankCard = ({ bank, courseId, isTeacher, onDelete, onUpdate }) => {
                   if (e.key === 'Escape') { setEditingTitle(false); setTitleDraft(bank.title); }
                 }}
                 onClick={(e) => e.stopPropagation()}
-                className="border border-blue-300 rounded px-2 py-1 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="border border-brand-300 rounded px-2 py-1 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500"
                 autoFocus
               />
             ) : (
               <div className="min-w-0">
-                <span className="font-medium text-gray-900 truncate block">{bank.title}</span>
-                <span className="text-xs text-gray-500">
+                <span className="font-medium text-text-primary truncate block">{bank.title}</span>
+                <span className="text-xs text-text-tertiary">
                   {questions.length > 0
                     ? `${questions.length} question${questions.length !== 1 ? 's' : ''} \u00b7 ${totalPoints} pts`
                     : expanded && !loadingQuestions ? '0 questions' : ''}
@@ -565,14 +565,14 @@ const BankCard = ({ bank, courseId, isTeacher, onDelete, onUpdate }) => {
 
           <div className="flex items-center gap-2 flex-shrink-0 ms-3" onClick={(e) => e.stopPropagation()}>
             {pullSuccess && (
-              <span className="text-xs text-green-700 bg-green-50 px-2 py-1 rounded-full whitespace-nowrap">
+              <span className="text-xs text-accent-success bg-accent-success/10 px-2 py-1 rounded-full whitespace-nowrap">
                 Pulled {pullSuccess} question{pullSuccess !== 1 ? 's' : ''}
               </span>
             )}
             {isTeacher && expanded && questions.length > 0 && (
               <button
                 onClick={() => setShowPullModal(true)}
-                className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-50"
+                className="inline-flex items-center text-xs text-brand-600 hover:text-brand-800 px-2 py-1 rounded hover:bg-brand-50"
                 title="Pull questions to a quiz"
               >
                 <Download className="w-3.5 h-3.5 me-1" />
@@ -583,14 +583,14 @@ const BankCard = ({ bank, courseId, isTeacher, onDelete, onUpdate }) => {
               <>
                 <button
                   onClick={() => { setEditingTitle(true); setTitleDraft(bank.title); }}
-                  className="text-gray-400 hover:text-blue-600 p-1"
+                  className="text-text-disabled hover:text-brand-600 p-1"
                   title="Edit bank title"
                 >
                   <Edit2 className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => onDelete(bank.id)}
-                  className="text-gray-400 hover:text-red-500 p-1"
+                  className="text-text-disabled hover:text-accent-danger p-1"
                   title="Delete question bank"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -604,11 +604,11 @@ const BankCard = ({ bank, courseId, isTeacher, onDelete, onUpdate }) => {
         {expanded && (
           <div className="border-t px-4 pb-4">
             {questionsError && (
-              <div className="bg-red-50 text-red-700 p-3 rounded text-sm mt-3 flex items-center justify-between">
+              <div className="bg-accent-danger/10 text-accent-danger p-3 rounded text-sm mt-3 flex items-center justify-between">
                 <span>{questionsError}</span>
                 <button
                   onClick={fetchQuestions}
-                  className="text-red-800 hover:text-red-900 text-xs font-medium ms-3 whitespace-nowrap"
+                  className="text-accent-danger hover:text-accent-danger text-xs font-medium ms-3 whitespace-nowrap"
                 >
                   Try Again
                 </button>
@@ -616,8 +616,8 @@ const BankCard = ({ bank, courseId, isTeacher, onDelete, onUpdate }) => {
             )}
 
             {loadingQuestions ? (
-              <div className="flex items-center justify-center py-6 gap-2 text-gray-500">
-                <svg className="animate-spin h-5 w-5 text-blue-600" viewBox="0 0 24 24" fill="none">
+              <div className="flex items-center justify-center py-6 gap-2 text-text-tertiary">
+                <svg className="animate-spin h-5 w-5 text-brand-600" viewBox="0 0 24 24" fill="none">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                 </svg>
@@ -626,8 +626,8 @@ const BankCard = ({ bank, courseId, isTeacher, onDelete, onUpdate }) => {
             ) : (
               <>
                 {questions.length === 0 && !questionsError && (
-                  <div className="text-center text-gray-500 text-sm py-6">
-                    <HelpCircle className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                  <div className="text-center text-text-tertiary text-sm py-6">
+                    <HelpCircle className="w-8 h-8 mx-auto mb-2 text-text-disabled" />
                     No questions in this bank yet.
                   </div>
                 )}
@@ -656,25 +656,25 @@ const BankCard = ({ bank, courseId, isTeacher, onDelete, onUpdate }) => {
                         <div key={q.id} className="py-3 flex items-start justify-between gap-3">
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-medium text-sm text-gray-900">
+                              <span className="font-medium text-sm text-text-primary">
                                 {q.question_name || 'Untitled Question'}
                               </span>
-                              <span className="inline-flex items-center text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                              <span className="inline-flex items-center text-xs bg-surface-2 text-text-secondary px-2 py-0.5 rounded-full">
                                 {formatQuestionType(q.question_type)}
                               </span>
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-text-tertiary">
                                 {q.points_possible ?? 0} pt{(q.points_possible ?? 0) !== 1 ? 's' : ''}
                               </span>
                             </div>
-                            <p className="text-sm text-gray-600 mt-1 line-clamp-2">{q.question_text}</p>
+                            <p className="text-sm text-text-secondary mt-1 line-clamp-2">{q.question_text}</p>
                             {/* Show answers for MC / TF in read-only view */}
                             {(q.question_type === 'multiple_choice' || q.question_type === 'true_false') &&
                               Array.isArray(q.answers) && q.answers.length > 0 && (
                                 <div className="mt-2 space-y-1">
                                   {q.answers.map((a, aIdx) => (
                                     <div key={aIdx} className="flex items-center gap-1.5 text-xs">
-                                      <span className={`w-3 h-3 rounded-full border ${a.weight === 100 ? 'bg-green-500 border-green-600' : 'border-gray-300'}`} />
-                                      <span className={a.weight === 100 ? 'text-green-700 font-medium' : 'text-gray-600'}>
+                                      <span className={`w-3 h-3 rounded-full border ${a.weight === 100 ? 'bg-accent-success border-accent-success' : 'border-border-strong'}`} />
+                                      <span className={a.weight === 100 ? 'text-accent-success font-medium' : 'text-text-secondary'}>
                                         {a.text}
                                       </span>
                                     </div>
@@ -682,21 +682,21 @@ const BankCard = ({ bank, courseId, isTeacher, onDelete, onUpdate }) => {
                                 </div>
                               )}
                             {q.feedback && (
-                              <p className="text-xs text-gray-400 mt-1 italic">Feedback: {q.feedback}</p>
+                              <p className="text-xs text-text-disabled mt-1 italic">Feedback: {q.feedback}</p>
                             )}
                           </div>
                           {isTeacher && (
                             <div className="flex items-center gap-1 flex-shrink-0 pt-0.5">
                               <button
                                 onClick={() => setEditingQuestionId(q.id)}
-                                className="text-gray-400 hover:text-blue-600 p-1"
+                                className="text-text-disabled hover:text-brand-600 p-1"
                                 title="Edit question"
                               >
                                 <Edit2 className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() => handleDeleteQuestion(q.id)}
-                                className="text-gray-400 hover:text-red-500 p-1"
+                                className="text-text-disabled hover:text-accent-danger p-1"
                                 title="Delete question"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -721,7 +721,7 @@ const BankCard = ({ bank, courseId, isTeacher, onDelete, onUpdate }) => {
                     ) : (
                       <button
                         onClick={() => setShowAddQuestion(true)}
-                        className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 font-medium"
+                        className="inline-flex items-center text-sm text-brand-600 hover:text-brand-800 font-medium"
                       >
                         <Plus className="w-4 h-4 me-1" />
                         Add Question
@@ -831,10 +831,10 @@ const QuestionBanksPage = () => {
     return (
       <Layout>
         <div className="text-center py-12">
-          <p className="text-red-600 mb-3">{error}</p>
+          <p className="text-accent-danger mb-3">{error}</p>
           <button
             onClick={fetchBanks}
-            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            className="text-brand-600 hover:text-brand-800 text-sm font-medium"
           >
             Try Again
           </button>
@@ -847,15 +847,15 @@ const QuestionBanksPage = () => {
     <Layout>
       <CourseNav />
       <div className="mb-6">
-        <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm">
+        <Link to={`/courses/${courseId}`} className="text-brand-600 hover:underline text-sm">
           &larr; Back to Course
         </Link>
         <div className="flex items-center justify-between mt-2">
-          <h2 className="text-2xl font-bold text-gray-900">Question Banks</h2>
+          <h2 className="text-2xl font-bold text-text-primary">Question Banks</h2>
           {isTeacher && (
             <button
               onClick={() => setShowCreate(!showCreate)}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium"
+              className="inline-flex items-center px-4 py-2 bg-brand-600 text-white rounded-md hover:bg-brand-700 text-sm font-medium"
             >
               <Plus className="w-4 h-4 me-1" />
               New Bank
@@ -865,16 +865,16 @@ const QuestionBanksPage = () => {
       </div>
 
       {error && (
-        <div className="bg-red-50 text-red-700 p-3 rounded mb-4 flex items-center justify-between">
+        <div className="bg-accent-danger/10 text-accent-danger p-3 rounded mb-4 flex items-center justify-between">
           <span className="text-sm">{error}</span>
-          <button onClick={() => setError(null)} className="text-red-800 hover:text-red-900 text-xs font-medium ms-3">
+          <button onClick={() => setError(null)} className="text-accent-danger hover:text-accent-danger text-xs font-medium ms-3">
             Dismiss
           </button>
         </div>
       )}
 
       {showCreate && (
-        <form onSubmit={handleCreate} className="bg-white rounded-lg shadow p-6 mb-6">
+        <form onSubmit={handleCreate} className="bg-surface-0 rounded-lg shadow p-6 mb-6">
           <h3 className="font-semibold mb-3">Create Question Bank</h3>
           <div className="flex gap-3">
             <input
@@ -882,21 +882,21 @@ const QuestionBanksPage = () => {
               required
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
-              className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm"
+              className="flex-1 border border-border-strong rounded-md px-3 py-2 text-sm"
               placeholder="Bank title"
               autoFocus
             />
             <button
               type="submit"
               disabled={creating}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium disabled:opacity-50"
+              className="px-4 py-2 bg-brand-600 text-white rounded-md hover:bg-brand-700 text-sm font-medium disabled:opacity-50"
             >
               {creating ? 'Creating...' : 'Create'}
             </button>
             <button
               type="button"
               onClick={() => { setShowCreate(false); setNewTitle(''); }}
-              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+              className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary"
             >
               Cancel
             </button>
@@ -905,9 +905,9 @@ const QuestionBanksPage = () => {
       )}
 
       {banks.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
-          <BookOpen className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-          <p className="text-lg font-medium text-gray-700 mb-1">No question banks yet</p>
+        <div className="bg-surface-0 rounded-lg shadow p-8 text-center text-text-tertiary">
+          <BookOpen className="w-12 h-12 mx-auto mb-3 text-text-disabled" />
+          <p className="text-lg font-medium text-text-secondary mb-1">No question banks yet</p>
           <p className="text-sm">
             {isTeacher
               ? 'Create a question bank to organize and reuse questions across quizzes.'

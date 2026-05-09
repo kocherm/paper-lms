@@ -209,7 +209,7 @@ const InboxPage = () => {
   return (
     <Layout>
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+        <h2 className="text-2xl font-bold text-text-primary flex items-center gap-2">
           <Mail className="w-6 h-6" />
           Inbox
         </h2>
@@ -218,7 +218,7 @@ const InboxPage = () => {
             if (showNewForm) resetNewForm();
             else setShowNewForm(true);
           }}
-          className="inline-flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium"
+          className="inline-flex items-center space-x-2 bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 text-sm font-medium"
           aria-label="Compose message"
         >
           {showNewForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
@@ -227,11 +227,11 @@ const InboxPage = () => {
       </div>
 
       {error && (
-        <div className="bg-red-50 text-red-600 rounded-md p-3 mb-4 text-sm flex items-center justify-between">
+        <div className="bg-accent-danger/10 text-accent-danger rounded-md p-3 mb-4 text-sm flex items-center justify-between">
           <span>{error}</span>
           <button
             onClick={() => { setError(null); setLoading(true); fetchConversations(); }}
-            className="ml-3 text-red-700 hover:text-red-900 font-medium underline text-sm flex-shrink-0"
+            className="ml-3 text-accent-danger hover:text-red-900 font-medium underline text-sm flex-shrink-0"
           >
             Retry
           </button>
@@ -239,23 +239,23 @@ const InboxPage = () => {
       )}
 
       {showNewForm && (
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-surface-0 rounded-lg shadow p-6 mb-6">
           <h3 className="font-semibold mb-4">New Conversation</h3>
           <form onSubmit={handleCreateConversation} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">To</label>
-              <div className="border border-gray-300 rounded-md px-2 py-1.5 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500">
+              <label className="block text-sm font-medium text-text-secondary mb-1">To</label>
+              <div className="border border-border-strong rounded-md px-2 py-1.5 focus-within:ring-2 focus-within:ring-brand-500 focus-within:border-brand-500">
                 <div className="flex flex-wrap gap-1.5 items-center">
                   {selectedRecipients.map((r) => (
                     <span
                       key={r.id}
-                      className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full"
+                      className="inline-flex items-center gap-1 bg-brand-100 text-brand-800 text-xs font-medium px-2 py-1 rounded-full"
                     >
                       {r.name}
                       <button
                         type="button"
                         onClick={() => removeRecipient(r.id)}
-                        className="text-blue-600 hover:text-blue-800"
+                        className="text-brand-600 hover:text-brand-800"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -268,30 +268,37 @@ const InboxPage = () => {
                       value={recipientSearch}
                       onChange={(e) => setRecipientSearch(e.target.value)}
                       onFocus={() => { if (searchResults.length > 0) setShowDropdown(true); }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          e.stopPropagation();
+                          setShowDropdown(false);
+                        }
+                      }}
                       className="w-full border-0 px-1 py-0.5 text-sm focus:outline-none focus:ring-0"
                       placeholder={selectedRecipients.length === 0 ? 'Search by name or email...' : 'Add more...'}
                     />
                     {showDropdown && (
                       <div
                         ref={dropdownRef}
-                        className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto"
+                        className="absolute z-10 mt-1 w-full bg-surface-0 border border-border-default rounded-md shadow-lg max-h-48 overflow-y-auto"
                       >
                         {searching ? (
-                          <div className="px-3 py-2 text-sm text-gray-500">Searching...</div>
+                          <div className="px-3 py-2 text-sm text-text-tertiary">Searching...</div>
                         ) : (
                           searchResults.map((u) => (
                             <button
                               key={u.id}
                               type="button"
+                              onMouseDown={(e) => e.preventDefault()}
                               onClick={() => addRecipient(u)}
-                              className="w-full text-left px-3 py-2 hover:bg-blue-50 flex items-center gap-2 text-sm"
+                              className="w-full text-left px-3 py-2 hover:bg-brand-50 flex items-center gap-2 text-sm"
                             >
-                              <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600 flex-shrink-0">
+                              <div className="w-7 h-7 rounded-full bg-border-default flex items-center justify-center text-xs font-medium text-text-secondary flex-shrink-0">
                                 {(u.name || '?')[0].toUpperCase()}
                               </div>
                               <div className="min-w-0">
-                                <p className="font-medium text-gray-900 truncate">{u.name}</p>
-                                <p className="text-xs text-gray-500 truncate">{u.email}</p>
+                                <p className="font-medium text-text-primary truncate">{u.name}</p>
+                                <p className="text-xs text-text-tertiary truncate">{u.email}</p>
                               </div>
                             </button>
                           ))
@@ -302,26 +309,26 @@ const InboxPage = () => {
                 </div>
               </div>
               {selectedRecipients.length === 0 && (
-                <p className="text-xs text-gray-500 mt-1">Type at least 2 characters to search</p>
+                <p className="text-xs text-text-tertiary mt-1">Type at least 2 characters to search</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Subject</label>
               <input
                 type="text"
                 value={newSubject}
                 onChange={(e) => setNewSubject(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 required
                 placeholder="Conversation subject"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Message</label>
               <textarea
                 value={newBody}
                 onChange={(e) => setNewBody(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 rows={3}
                 placeholder="Write your message..."
               />
@@ -330,7 +337,7 @@ const InboxPage = () => {
               <button
                 type="submit"
                 disabled={creating || selectedRecipients.length === 0}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium disabled:opacity-50"
+                className="bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 text-sm font-medium disabled:opacity-50"
               >
                 {creating ? 'Sending...' : 'Send Message'}
               </button>
@@ -339,11 +346,11 @@ const InboxPage = () => {
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row bg-white rounded-lg shadow overflow-hidden" style={{ minHeight: '500px' }}>
+      <div className="flex flex-col md:flex-row bg-surface-0 rounded-lg shadow overflow-hidden" style={{ minHeight: '500px' }}>
         {/* Left panel - conversation list */}
-        <div className={`w-full md:w-1/3 border-r border-gray-200 overflow-y-auto ${selectedConv ? 'hidden md:block' : 'block'}`}>
+        <div className={`w-full md:w-1/3 border-r border-border-default overflow-y-auto ${selectedConv ? 'hidden md:block' : 'block'}`}>
           {conversations.length === 0 ? (
-            <div className="p-6 text-center text-gray-500 text-sm">
+            <div className="p-6 text-center text-text-tertiary text-sm">
               <MessageSquare className="w-8 h-8 mx-auto mb-2 text-gray-300" />
               No conversations yet.
             </div>
@@ -353,22 +360,22 @@ const InboxPage = () => {
                 <button
                   key={conv.id}
                   onClick={() => selectConversation(conv)}
-                  className={`w-full text-left p-4 hover:bg-gray-50 transition-colors ${
-                    selectedConv?.id === conv.id ? 'bg-blue-50 border-l-2 border-blue-600' : ''
+                  className={`w-full text-left p-4 hover:bg-surface-1 transition-colors ${
+                    selectedConv?.id === conv.id ? 'bg-brand-50 border-l-2 border-brand-600' : ''
                   }`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                      <p className="text-sm font-medium text-text-primary truncate">
                         {conv.subject || '(No subject)'}
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-text-tertiary mt-1">
                         {conv.participants?.length
                           ? conv.participants.map((p) => p.name || `User #${p.id}`).join(', ')
                           : `From user #${conv.created_by_user_id}`}
                       </p>
                     </div>
-                    <span className="text-xs text-gray-400 ml-2 flex-shrink-0">
+                    <span className="text-xs text-text-disabled ml-2 flex-shrink-0">
                       {formatDate(conv.last_message_at)}
                     </span>
                   </div>
@@ -383,18 +390,18 @@ const InboxPage = () => {
           {selectedConv ? (
             <>
               {/* Thread header */}
-              <div className="p-4 border-b border-gray-200 bg-gray-50">
+              <div className="p-4 border-b border-border-default bg-surface-1">
                 <button
                   onClick={() => setSelectedConv(null)}
-                  className="md:hidden flex items-center text-sm text-blue-600 hover:text-blue-800 mb-2"
+                  className="md:hidden flex items-center text-sm text-brand-600 hover:text-brand-800 mb-2"
                 >
                   <ArrowLeft className="w-4 h-4 mr-1" />
                   Back to conversations
                 </button>
-                <h3 className="font-semibold text-gray-900">
+                <h3 className="font-semibold text-text-primary">
                   {selectedConv.subject || '(No subject)'}
                 </h3>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-text-tertiary mt-1">
                   {selectedConv.participants?.length
                     ? selectedConv.participants.map((p) => p.name || `User #${p.id}`).join(', ')
                     : `Started by user #${selectedConv.created_by_user_id}`}
@@ -404,12 +411,12 @@ const InboxPage = () => {
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {messagesLoading ? (
-                  <div className="flex items-center justify-center text-gray-500 py-8 text-sm">
+                  <div className="flex items-center justify-center text-text-tertiary py-8 text-sm">
                     <Loader2 className="w-5 h-5 animate-spin mr-2" />
                     <span>Loading messages...</span>
                   </div>
                 ) : messages.length === 0 ? (
-                  <div className="text-center text-gray-400 py-8 text-sm">
+                  <div className="text-center text-text-disabled py-8 text-sm">
                     No messages yet. Start the conversation!
                   </div>
                 ) : (
@@ -423,19 +430,19 @@ const InboxPage = () => {
                         <div
                           className={`max-w-[70%] rounded-lg px-4 py-2 ${
                             isOwn
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-100 text-gray-900'
+                              ? 'bg-brand-600 text-white'
+                              : 'bg-surface-2 text-text-primary'
                           }`}
                         >
                           {!isOwn && (
-                            <p className="text-xs font-medium text-gray-500 mb-1">
+                            <p className="text-xs font-medium text-text-tertiary mb-1">
                               {msg.user_name || msg.author_name || `User #${msg.user_id}`}
                             </p>
                           )}
                           <p className="text-sm whitespace-pre-wrap">{msg.body}</p>
                           <p
                             className={`text-xs mt-1 ${
-                              isOwn ? 'text-blue-200' : 'text-gray-400'
+                              isOwn ? 'text-blue-200' : 'text-text-disabled'
                             }`}
                           >
                             {formatDate(msg.created_at)}
@@ -448,13 +455,13 @@ const InboxPage = () => {
               </div>
 
               {/* Reply area */}
-              <div className="border-t border-gray-200 p-4">
+              <div className="border-t border-border-default p-4">
                 <form onSubmit={handleSendReply} className="flex items-end space-x-2">
                   <textarea
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
                     placeholder="Type a message..."
-                    className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    className="flex-1 border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
                     rows={2}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
@@ -466,7 +473,7 @@ const InboxPage = () => {
                   <button
                     type="submit"
                     disabled={sending || !replyText.trim()}
-                    className="bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                    className="bg-brand-600 text-white p-2 rounded-md hover:bg-brand-700 disabled:opacity-50"
                     title="Send message"
                   >
                     <Send className="w-5 h-5" />
@@ -475,7 +482,7 @@ const InboxPage = () => {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
+            <div className="flex-1 flex flex-col items-center justify-center text-text-disabled">
               <Mail className="w-12 h-12 mb-3" />
               <p className="text-sm">Select a conversation to view messages</p>
             </div>

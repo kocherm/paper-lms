@@ -219,9 +219,9 @@ const AnnouncementsPage = () => {
 
   const getPriorityStyles = (priority) => {
     if (priority === 'urgent') {
-      return 'border-l-4 border-red-500 bg-red-50';
+      return 'border-l-4 border-accent-danger bg-accent-danger/10';
     }
-    return 'border-l-4 border-blue-500 bg-white';
+    return 'border-l-4 border-brand-500 bg-surface-0';
   };
 
   if (loading) {
@@ -243,8 +243,8 @@ const AnnouncementsPage = () => {
     return (
       <Layout>
         <div className="text-center py-12" role="alert">
-          <p className="text-red-600 mb-3">{error}</p>
-          <button onClick={() => window.location.reload()} className="text-blue-600 hover:text-blue-800 text-sm font-medium">Try Again</button>
+          <p className="text-accent-danger mb-3">{error}</p>
+          <button onClick={() => window.location.reload()} className="text-brand-600 hover:text-brand-800 text-sm font-medium">Try Again</button>
         </div>
       </Layout>
     );
@@ -254,13 +254,13 @@ const AnnouncementsPage = () => {
     <Layout>
       <CourseNav />
       <div className="mb-6">
-        <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm">
+        <Link to={`/courses/${courseId}`} className="text-brand-600 hover:underline text-sm">
           &larr; Back to Course
         </Link>
         <div className="flex items-center justify-between mt-2">
           <div className="flex items-center space-x-2">
-            <Megaphone className="w-6 h-6 text-gray-700" aria-hidden="true" />
-            <h2 className="text-2xl font-bold text-gray-900">Announcements</h2>
+            <Megaphone className="w-6 h-6 text-text-secondary" aria-hidden="true" />
+            <h2 className="text-2xl font-bold text-text-primary">Announcements</h2>
           </div>
           {isInstructor && (
             <button
@@ -270,7 +270,7 @@ const AnnouncementsPage = () => {
                 }
                 setShowForm(!showForm);
               }}
-              className="inline-flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium"
+              className="inline-flex items-center space-x-2 bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 text-sm font-medium"
               aria-expanded={showForm}
               aria-controls="announcement-form"
             >
@@ -282,23 +282,23 @@ const AnnouncementsPage = () => {
       </div>
 
       {showForm && (
-        <div id="announcement-form" className="bg-white rounded-lg shadow p-6 mb-6" role="form" aria-label={editingId ? 'Edit Announcement' : 'Create Announcement'}>
+        <div id="announcement-form" className="bg-surface-0 rounded-lg shadow p-6 mb-6" role="form" aria-label={editingId ? 'Edit Announcement' : 'Create Announcement'}>
           <h3 className="font-semibold mb-4">{editingId ? 'Edit Announcement' : 'Create Announcement'}</h3>
           <form onSubmit={handleCreate} className="space-y-4">
             <div>
-              <label htmlFor="ann-title" className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+              <label htmlFor="ann-title" className="block text-sm font-medium text-text-secondary mb-1">Title</label>
               <input
                 id="ann-title"
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 required
                 aria-required="true"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Message</label>
               <RichContentEditorV2
                 value={formData.message}
                 onChange={(html) => setFormData((prev) => ({ ...prev, message: html }))}
@@ -310,24 +310,24 @@ const AnnouncementsPage = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="ann-priority" className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                <label htmlFor="ann-priority" className="block text-sm font-medium text-text-secondary mb-1">Priority</label>
                 <select
                   id="ann-priority"
                   value={formData.priority}
                   onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 >
                   <option value="normal">Normal</option>
                   <option value="urgent">Urgent</option>
                 </select>
               </div>
               <div>
-                <label htmlFor="ann-audience" className="block text-sm font-medium text-gray-700 mb-1">Audience</label>
+                <label htmlFor="ann-audience" className="block text-sm font-medium text-text-secondary mb-1">Audience</label>
                 <select
                   id="ann-audience"
                   value={formData.target_audience}
                   onChange={(e) => setFormData({ ...formData, target_audience: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 >
                   <option value="all">All</option>
                   <option value="students">Students Only</option>
@@ -344,9 +344,9 @@ const AnnouncementsPage = () => {
                   id="ann-schedule"
                   checked={formData.schedule}
                   onChange={(e) => setFormData({ ...formData, schedule: e.target.checked })}
-                  className="rounded border-gray-300"
+                  className="rounded border-border-strong"
                 />
-                <label htmlFor="ann-schedule" className="text-sm text-gray-700">Schedule for later</label>
+                <label htmlFor="ann-schedule" className="text-sm text-text-secondary">Schedule for later</label>
               </div>
               <div className="flex items-center space-x-2">
                 <input
@@ -354,9 +354,9 @@ const AnnouncementsPage = () => {
                   id="ann-require-ack"
                   checked={formData.require_acknowledgement}
                   onChange={(e) => setFormData({ ...formData, require_acknowledgement: e.target.checked })}
-                  className="rounded border-gray-300"
+                  className="rounded border-border-strong"
                 />
-                <label htmlFor="ann-require-ack" className="text-sm text-gray-700">Require Acknowledgement</label>
+                <label htmlFor="ann-require-ack" className="text-sm text-text-secondary">Require Acknowledgement</label>
               </div>
               <div className="flex items-center space-x-2">
                 <input
@@ -364,15 +364,15 @@ const AnnouncementsPage = () => {
                   id="ann-allow-comments"
                   checked={formData.allow_comments}
                   onChange={(e) => setFormData({ ...formData, allow_comments: e.target.checked })}
-                  className="rounded border-gray-300"
+                  className="rounded border-border-strong"
                 />
-                <label htmlFor="ann-allow-comments" className="text-sm text-gray-700">Allow Comments</label>
+                <label htmlFor="ann-allow-comments" className="text-sm text-text-secondary">Allow Comments</label>
               </div>
             </div>
 
             {formData.schedule && (
               <div>
-                <label htmlFor="ann-delayed-post" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="ann-delayed-post" className="block text-sm font-medium text-text-secondary mb-1">
                   <Clock className="w-4 h-4 inline mr-1" aria-hidden="true" />
                   Scheduled Post Date
                 </label>
@@ -381,7 +381,7 @@ const AnnouncementsPage = () => {
                   type="datetime-local"
                   value={formData.delayed_post_at}
                   onChange={(e) => setFormData({ ...formData, delayed_post_at: e.target.value })}
-                  className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="border border-border-strong rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   required={formData.schedule}
                   aria-required={formData.schedule}
                 />
@@ -395,14 +395,14 @@ const AnnouncementsPage = () => {
                   resetForm();
                   setShowForm(false);
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="px-4 py-2 border border-border-strong rounded-md text-sm font-medium text-text-secondary hover:bg-surface-1"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={creating}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium disabled:opacity-50"
+                className="bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 text-sm font-medium disabled:opacity-50"
               >
                 {creating ? 'Saving...' : editingId ? 'Update Announcement' : 'Post Announcement'}
               </button>
@@ -413,7 +413,7 @@ const AnnouncementsPage = () => {
 
       {/* Urgent announcements banner */}
       {announcements.filter((a) => a.priority === 'urgent' && !a.is_read).length > 0 && (
-        <div className="bg-red-600 text-white rounded-lg p-4 mb-6 flex items-center space-x-3" role="alert" aria-live="assertive">
+        <div className="bg-accent-danger text-white rounded-lg p-4 mb-6 flex items-center space-x-3" role="alert" aria-live="assertive">
           <AlertTriangle className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
           <div>
             <strong>Urgent Announcements:</strong>{' '}
@@ -425,7 +425,7 @@ const AnnouncementsPage = () => {
       {/* Announcements list */}
       <div className="space-y-4" role="feed" aria-label="Announcements list">
         {announcements.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
+          <div className="bg-surface-0 rounded-lg shadow p-6 text-center text-text-tertiary">
             No announcements yet.
           </div>
         ) : (
@@ -437,7 +437,7 @@ const AnnouncementsPage = () => {
             >
               {/* Unread badge */}
               {!announcement.is_read && (
-                <span className="absolute top-3 right-3 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800" aria-label="Unread">
+                <span className="absolute top-3 right-3 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-brand-100 text-brand-800" aria-label="Unread">
                   New
                 </span>
               )}
@@ -447,11 +447,11 @@ const AnnouncementsPage = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2 mb-1">
                       {announcement.priority === 'urgent' && (
-                        <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0" aria-label="Urgent" />
+                        <AlertTriangle className="w-4 h-4 text-accent-danger flex-shrink-0" aria-label="Urgent" />
                       )}
-                      <h3 className="text-lg font-semibold text-gray-900 truncate">{announcement.title}</h3>
+                      <h3 className="text-lg font-semibold text-text-primary truncate">{announcement.title}</h3>
                       {announcement.workflow_state === 'scheduled' && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-accent-warning/20 text-accent-warning">
                           <Clock className="w-3 h-3 mr-1" aria-hidden="true" />
                           Scheduled
                         </span>
@@ -463,9 +463,9 @@ const AnnouncementsPage = () => {
                       )}
                     </div>
 
-                    <p className="text-gray-600 text-sm mt-2 whitespace-pre-wrap">{announcement.message}</p>
+                    <p className="text-text-secondary text-sm mt-2 whitespace-pre-wrap">{announcement.message}</p>
 
-                    <div className="flex items-center space-x-4 mt-3 text-xs text-gray-400">
+                    <div className="flex items-center space-x-4 mt-3 text-xs text-text-disabled">
                       <span>
                         {announcement.posted_at
                           ? `Posted ${formatDate(announcement.posted_at)}`
@@ -480,12 +480,12 @@ const AnnouncementsPage = () => {
                 </div>
 
                 {/* Action buttons */}
-                <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-200">
+                <div className="flex items-center justify-between mt-4 pt-3 border-t border-border-default">
                   <div className="flex items-center space-x-3">
                     {!announcement.is_read && (
                       <button
                         onClick={() => handleMarkRead(announcement.id)}
-                        className="inline-flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-800"
+                        className="inline-flex items-center space-x-1 text-sm text-brand-600 hover:text-brand-800"
                         aria-label={`Mark "${announcement.title}" as read`}
                       >
                         <Eye className="w-4 h-4" aria-hidden="true" />
@@ -493,7 +493,7 @@ const AnnouncementsPage = () => {
                       </button>
                     )}
                     {announcement.is_read && (
-                      <span className="inline-flex items-center space-x-1 text-sm text-green-600">
+                      <span className="inline-flex items-center space-x-1 text-sm text-accent-success">
                         <CheckCircle className="w-4 h-4" aria-hidden="true" />
                         <span>Read</span>
                       </span>
@@ -522,7 +522,7 @@ const AnnouncementsPage = () => {
                       <>
                         <button
                           onClick={() => toggleReceipts(announcement.id)}
-                          className="inline-flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700"
+                          className="inline-flex items-center space-x-1 text-sm text-text-tertiary hover:text-text-secondary"
                           aria-expanded={expandedReceipts[announcement.id] || false}
                           aria-controls={`receipts-${announcement.id}`}
                           aria-label={`View read receipts for "${announcement.title}"`}
@@ -537,14 +537,14 @@ const AnnouncementsPage = () => {
                         </button>
                         <button
                           onClick={() => handleEdit(announcement)}
-                          className="text-gray-400 hover:text-gray-600"
+                          className="text-text-disabled hover:text-text-secondary"
                           aria-label={`Edit "${announcement.title}"`}
                         >
                           <Edit2 className="w-4 h-4" aria-hidden="true" />
                         </button>
                         <button
                           onClick={() => handleDelete(announcement.id)}
-                          className="text-gray-400 hover:text-red-600"
+                          className="text-text-disabled hover:text-accent-danger"
                           aria-label={`Delete "${announcement.title}"`}
                         >
                           <Trash2 className="w-4 h-4" aria-hidden="true" />
@@ -558,12 +558,12 @@ const AnnouncementsPage = () => {
                 {isInstructor && expandedReceipts[announcement.id] && receiptData[announcement.id] && (
                   <div
                     id={`receipts-${announcement.id}`}
-                    className="mt-4 pt-3 border-t border-gray-200"
+                    className="mt-4 pt-3 border-t border-border-default"
                     role="region"
                     aria-label={`Read receipts for "${announcement.title}"`}
                   >
                     <div className="flex items-center space-x-4 mb-3">
-                      <div className="text-sm font-medium text-gray-700">
+                      <div className="text-sm font-medium text-text-secondary">
                         Read: {receiptData[announcement.id].stats?.read_count || 0} / {receiptData[announcement.id].stats?.total_audience || 0}
                       </div>
                       {announcement.require_acknowledgement && (
@@ -574,31 +574,31 @@ const AnnouncementsPage = () => {
                     </div>
 
                     {receiptData[announcement.id].receipts && receiptData[announcement.id].receipts.length > 0 ? (
-                      <div className="bg-gray-50 rounded-md overflow-hidden">
+                      <div className="bg-surface-1 rounded-md overflow-hidden">
                         <table className="w-full text-sm" aria-label="Read receipt details">
                           <thead>
-                            <tr className="border-b border-gray-200">
-                              <th className="text-left px-3 py-2 font-medium text-gray-600" scope="col">Student</th>
-                              <th className="text-left px-3 py-2 font-medium text-gray-600" scope="col">Read At</th>
+                            <tr className="border-b border-border-default">
+                              <th className="text-left px-3 py-2 font-medium text-text-secondary" scope="col">Student</th>
+                              <th className="text-left px-3 py-2 font-medium text-text-secondary" scope="col">Read At</th>
                               {announcement.require_acknowledgement && (
-                                <th className="text-left px-3 py-2 font-medium text-gray-600" scope="col">Acknowledged</th>
+                                <th className="text-left px-3 py-2 font-medium text-text-secondary" scope="col">Acknowledged</th>
                               )}
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-gray-200">
+                          <tbody className="divide-y divide-border-default">
                             {receiptData[announcement.id].receipts.map((receipt) => (
                               <tr key={receipt.id}>
-                                <td className="px-3 py-2 text-gray-900">{userNames[receipt.user_id] || `User #${receipt.user_id}`}</td>
-                                <td className="px-3 py-2 text-gray-500">{formatDate(receipt.read_at)}</td>
+                                <td className="px-3 py-2 text-text-primary">{userNames[receipt.user_id] || `User #${receipt.user_id}`}</td>
+                                <td className="px-3 py-2 text-text-tertiary">{formatDate(receipt.read_at)}</td>
                                 {announcement.require_acknowledgement && (
                                   <td className="px-3 py-2">
                                     {receipt.acknowledged ? (
-                                      <span className="inline-flex items-center text-green-600">
+                                      <span className="inline-flex items-center text-accent-success">
                                         <CheckCircle className="w-3.5 h-3.5 mr-1" aria-hidden="true" />
                                         {formatDate(receipt.acknowledged_at)}
                                       </span>
                                     ) : (
-                                      <span className="text-gray-400">Not yet</span>
+                                      <span className="text-text-disabled">Not yet</span>
                                     )}
                                   </td>
                                 )}
@@ -608,7 +608,7 @@ const AnnouncementsPage = () => {
                         </table>
                       </div>
                     ) : (
-                      <p className="text-sm text-gray-500">No one has read this announcement yet.</p>
+                      <p className="text-sm text-text-tertiary">No one has read this announcement yet.</p>
                     )}
                   </div>
                 )}

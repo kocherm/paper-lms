@@ -163,30 +163,30 @@ const FilesPage = () => {
     <Layout>
       <CourseNav />
       <div className="mb-6">
-        <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm">&larr; Back to Course</Link>
-        <h2 className="text-2xl font-bold text-gray-900 mt-2">Files</h2>
+        <Link to={`/courses/${courseId}`} className="text-brand-600 hover:underline text-sm">&larr; Back to Course</Link>
+        <h2 className="text-2xl font-bold text-text-primary mt-2">Files</h2>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+        <div className="bg-accent-danger/10 border border-accent-danger/30 text-accent-danger px-4 py-3 rounded mb-4">
           {error}
         </div>
       )}
 
       {/* Breadcrumbs */}
-      <div className="flex items-center space-x-1 text-sm text-gray-600 mb-4">
+      <div className="flex items-center space-x-1 text-sm text-text-secondary mb-4">
         <button
           onClick={() => navigateToBreadcrumb(-1)}
-          className="hover:text-blue-600 font-medium"
+          className="hover:text-brand-600 font-medium"
         >
           Files
         </button>
         {breadcrumbs.map((crumb, index) => (
           <React.Fragment key={crumb.id}>
-            <ChevronRight className="w-4 h-4 text-gray-400" />
+            <ChevronRight className="w-4 h-4 text-text-disabled" />
             <button
               onClick={() => navigateToBreadcrumb(index)}
-              className="hover:text-blue-600 font-medium"
+              className="hover:text-brand-600 font-medium"
             >
               {crumb.name}
             </button>
@@ -199,12 +199,12 @@ const FilesPage = () => {
         <div className="flex items-center space-x-3 mb-4">
           <button
             onClick={() => setShowNewFolder(true)}
-            className="inline-flex items-center space-x-1 bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-md hover:bg-gray-50 text-sm font-medium shadow-sm"
+            className="inline-flex items-center space-x-1 bg-surface-0 border border-border-strong text-text-secondary px-3 py-2 rounded-md hover:bg-surface-1 text-sm font-medium shadow-sm"
           >
             <Plus className="w-4 h-4" />
             <span>New Folder</span>
           </button>
-          <label className="inline-flex items-center space-x-1 bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 text-sm font-medium shadow-sm cursor-pointer">
+          <label className="inline-flex items-center space-x-1 bg-brand-600 text-white px-3 py-2 rounded-md hover:bg-brand-700 text-sm font-medium shadow-sm cursor-pointer">
             <Upload className="w-4 h-4" />
             <span>{uploading ? 'Uploading...' : 'Upload File'}</span>
             <input
@@ -219,27 +219,27 @@ const FilesPage = () => {
 
       {/* New folder form */}
       {showNewFolder && (
-        <div className="bg-white rounded-lg shadow p-4 mb-4">
+        <div className="bg-surface-0 rounded-lg shadow p-4 mb-4">
           <form onSubmit={handleCreateFolder} className="flex items-center space-x-3">
-            <Folder className="w-5 h-5 text-gray-400" />
+            <Folder className="w-5 h-5 text-text-disabled" />
             <input
               type="text"
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
               placeholder="Folder name"
-              className="flex-1 border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 border border-border-strong rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               autoFocus
             />
             <button
               type="submit"
-              className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm hover:bg-blue-700"
+              className="bg-brand-600 text-white px-3 py-1.5 rounded-md text-sm hover:bg-brand-700"
             >
               Create
             </button>
             <button
               type="button"
               onClick={() => { setShowNewFolder(false); setNewFolderName(''); }}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-text-disabled hover:text-text-secondary"
             >
               <X className="w-5 h-5" />
             </button>
@@ -248,28 +248,28 @@ const FilesPage = () => {
       )}
 
       {/* Content list */}
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-surface-0 rounded-lg shadow">
         {folders.length === 0 && files.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">No files or folders yet.</div>
+          <div className="p-6 text-center text-text-tertiary">No files or folders yet.</div>
         ) : (
           <div className="divide-y">
             {/* Folders */}
             {folders.map((folder) => (
               <div
                 key={`folder-${folder.id}`}
-                className="flex items-center justify-between px-4 py-3 hover:bg-gray-50"
+                className="flex items-center justify-between px-4 py-3 hover:bg-surface-1"
               >
                 <button
                   onClick={() => navigateToFolder(folder.id, folder.name)}
                   className="flex items-center space-x-3 flex-1 text-left"
                 >
-                  <Folder className="w-5 h-5 text-blue-500" />
-                  <span className="text-sm font-medium text-gray-900">{folder.name}</span>
+                  <Folder className="w-5 h-5 text-brand-500" />
+                  <span className="text-sm font-medium text-text-primary">{folder.name}</span>
                 </button>
                 {isTeacher && (
                   <button
                     onClick={() => handleDeleteFolder(folder.id)}
-                    className="text-gray-400 hover:text-red-600 p-1"
+                    className="text-text-disabled hover:text-accent-danger p-1"
                     title="Delete folder"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -282,13 +282,13 @@ const FilesPage = () => {
             {files.map((file) => (
               <div
                 key={`file-${file.id}`}
-                className="flex items-center justify-between px-4 py-3 hover:bg-gray-50"
+                className="flex items-center justify-between px-4 py-3 hover:bg-surface-1"
               >
                 <div className="flex items-center space-x-3 flex-1">
-                  <File className="w-5 h-5 text-gray-400" />
+                  <File className="w-5 h-5 text-text-disabled" />
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{file.display_name}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-sm font-medium text-text-primary">{file.display_name}</p>
+                    <p className="text-xs text-text-tertiary">
                       {formatFileSize(file.size)} &middot; {file.content_type}
                     </p>
                   </div>
@@ -296,7 +296,7 @@ const FilesPage = () => {
                 <div className="flex items-center space-x-2">
                   <a
                     href={file.url}
-                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    className="text-brand-600 hover:text-brand-800 text-sm font-medium"
                     download
                   >
                     Download
@@ -304,7 +304,7 @@ const FilesPage = () => {
                   {isTeacher && (
                     <button
                       onClick={() => handleDeleteFile(file.id)}
-                      className="text-gray-400 hover:text-red-600 p-1"
+                      className="text-text-disabled hover:text-accent-danger p-1"
                       title="Delete file"
                     >
                       <Trash2 className="w-4 h-4" />

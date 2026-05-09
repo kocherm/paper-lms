@@ -38,22 +38,22 @@ const SortableAssignmentChip = ({ assignment, onRemove }) => {
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-md shadow-sm"
+      className="flex items-center gap-2 px-3 py-2 bg-surface-0 border border-border-default rounded-md shadow-sm"
     >
       <button
         type="button"
-        className="text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing"
+        className="text-text-disabled hover:text-text-secondary cursor-grab active:cursor-grabbing"
         aria-label="Drag to reorder"
         {...attributes}
         {...listeners}
       >
         <GripVertical size={14} />
       </button>
-      <span className="flex-1 text-sm text-gray-800 truncate">{assignment.name}</span>
+      <span className="flex-1 text-sm text-text-primary truncate">{assignment.name}</span>
       <button
         type="button"
         onClick={() => onRemove(assignment.id)}
-        className="text-gray-400 hover:text-red-600"
+        className="text-text-disabled hover:text-accent-danger"
         aria-label={`Remove ${assignment.name}`}
       >
         <Trash2 size={14} />
@@ -110,11 +110,11 @@ const ScoreRangeRow = ({
   };
 
   return (
-    <Card className="p-4 bg-gray-50 border border-gray-200">
+    <Card className="p-4 bg-surface-1 border border-border-default">
       <div className="flex items-start justify-between gap-4 mb-3">
         <div>
-          <h3 className="font-semibold text-gray-900">Range {index + 1}</h3>
-          <p className="text-xs text-gray-500">
+          <h3 className="font-semibold text-text-primary">Range {index + 1}</h3>
+          <p className="text-xs text-text-tertiary">
             Students whose score falls in this band will be assigned the work below.
           </p>
         </div>
@@ -133,7 +133,7 @@ const ScoreRangeRow = ({
 
       <div className="flex items-center gap-2 mb-4">
         <div className="flex-1">
-          <label className="block text-xs text-gray-600 mb-1">Lower %</label>
+          <label className="block text-xs text-text-secondary mb-1">Lower %</label>
           <Input
             type="number"
             min="0"
@@ -145,9 +145,9 @@ const ScoreRangeRow = ({
             }
           />
         </div>
-        <div className="text-gray-400 mt-5">→</div>
+        <div className="text-text-disabled mt-5">→</div>
         <div className="flex-1">
-          <label className="block text-xs text-gray-600 mb-1">Upper %</label>
+          <label className="block text-xs text-text-secondary mb-1">Upper %</label>
           <Input
             type="number"
             min="0"
@@ -172,7 +172,7 @@ const ScoreRangeRow = ({
             strategy={verticalListSortingStrategy}
           >
             {selected.length === 0 && (
-              <p className="text-sm text-gray-400 italic">
+              <p className="text-sm text-text-disabled italic">
                 No assignments yet — add one below.
               </p>
             )}
@@ -191,7 +191,7 @@ const ScoreRangeRow = ({
         <select
           value={picker}
           onChange={(e) => setPicker(e.target.value)}
-          className="flex-1 border border-gray-300 rounded-md px-2 py-2 text-sm"
+          className="flex-1 border border-border-strong rounded-md px-2 py-2 text-sm"
         >
           <option value="">Select an assignment to add…</option>
           {available.map((a) => (

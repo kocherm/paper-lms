@@ -19,10 +19,10 @@ const QuizTimer = ({ timeLeft }) => {
       aria-label={`Time remaining: ${formatTime(timeLeft)}`}
       className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-mono font-semibold tabular-nums ${
         danger
-          ? 'bg-red-100 text-red-700 ring-1 ring-red-300'
+          ? 'bg-accent-danger/20 text-accent-danger ring-1 ring-red-300'
           : warning
-          ? 'bg-amber-100 text-amber-800'
-          : 'bg-gray-100 text-gray-700'
+          ? 'bg-accent-warning/20 text-amber-800'
+          : 'bg-surface-2 text-text-secondary'
       }`}
     >
       <Clock className="w-4 h-4" aria-hidden="true" />

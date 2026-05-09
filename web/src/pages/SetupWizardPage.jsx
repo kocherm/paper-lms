@@ -4,7 +4,7 @@ import { api } from '../services/api';
 
 const PaperLogo = () => (
   <div className="flex flex-col items-center mb-2">
-    <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mb-3 shadow-lg">
+    <div className="w-16 h-16 bg-brand-600 rounded-2xl flex items-center justify-center mb-3 shadow-lg">
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path d="M4 4h16v16H4z" fill="rgba(255,255,255,0.2)" rx="2" />
         <path d="M7 8h10M7 12h7M7 16h5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
@@ -21,7 +21,7 @@ const Spinner = () => (
 );
 
 const CheckIcon = () => (
-  <svg className="w-16 h-16 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+  <svg className="w-16 h-16 text-accent-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" aria-hidden="true">
     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
   </svg>
 );
@@ -33,10 +33,10 @@ const StepIndicator = ({ currentStep }) => (
         <div
           className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
             step === currentStep
-              ? 'bg-blue-600 text-white'
+              ? 'bg-brand-600 text-white'
               : step < currentStep
-              ? 'bg-green-500 text-white'
-              : 'bg-gray-200 text-gray-500'
+              ? 'bg-accent-success text-white'
+              : 'bg-border-default text-text-tertiary'
           }`}
         >
           {step < currentStep ? (
@@ -46,7 +46,7 @@ const StepIndicator = ({ currentStep }) => (
           )}
         </div>
         {step < 3 && (
-          <div className={`w-12 h-0.5 ${step < currentStep ? 'bg-green-500' : 'bg-gray-200'}`} />
+          <div className={`w-12 h-0.5 ${step < currentStep ? 'bg-accent-success' : 'bg-border-default'}`} />
         )}
       </React.Fragment>
     ))}
@@ -114,20 +114,20 @@ const SetupWizardPage = ({ onSetupComplete }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-surface-0 rounded-2xl shadow-xl p-8">
           <PaperLogo />
           <StepIndicator currentStep={step} />
 
           {/* Step 1: Welcome */}
           {step === 1 && (
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to Paper LMS</h2>
-              <p className="text-gray-600 mb-6">
+              <h2 className="text-2xl font-bold text-text-primary mb-2">Welcome to Paper LMS</h2>
+              <p className="text-text-secondary mb-6">
                 Let's set up your instance in a few quick steps. You'll create an administrator account and name your instance.
               </p>
               <button
                 onClick={() => setStep(2)}
-                className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="w-full py-3 bg-brand-600 text-white rounded-lg font-medium hover:bg-brand-700 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
               >
                 Get Started
               </button>
@@ -137,18 +137,18 @@ const SetupWizardPage = ({ onSetupComplete }) => {
           {/* Step 2: Create Admin Account */}
           {step === 2 && (
             <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-1 text-center">Create Admin Account</h2>
-              <p className="text-sm text-gray-500 mb-5 text-center">This will be the primary administrator for your instance.</p>
+              <h2 className="text-xl font-bold text-text-primary mb-1 text-center">Create Admin Account</h2>
+              <p className="text-sm text-text-tertiary mb-5 text-center">This will be the primary administrator for your instance.</p>
 
               {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                <div className="mb-4 p-3 bg-accent-danger/10 border border-accent-danger/30 rounded-lg text-accent-danger text-sm">
                   {error}
                 </div>
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label htmlFor="admin_name" className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                  <label htmlFor="admin_name" className="block text-sm font-medium text-text-secondary mb-1">Full Name</label>
                   <input
                     id="admin_name"
                     name="admin_name"
@@ -156,12 +156,12 @@ const SetupWizardPage = ({ onSetupComplete }) => {
                     required
                     value={formData.admin_name}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-border-strong rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                     placeholder="Jane Smith"
                   />
                 </div>
                 <div>
-                  <label htmlFor="admin_email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <label htmlFor="admin_email" className="block text-sm font-medium text-text-secondary mb-1">Email</label>
                   <input
                     id="admin_email"
                     name="admin_email"
@@ -169,12 +169,12 @@ const SetupWizardPage = ({ onSetupComplete }) => {
                     required
                     value={formData.admin_email}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-border-strong rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                     placeholder="admin@school.edu"
                   />
                 </div>
                 <div>
-                  <label htmlFor="admin_password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                  <label htmlFor="admin_password" className="block text-sm font-medium text-text-secondary mb-1">Password</label>
                   <input
                     id="admin_password"
                     name="admin_password"
@@ -183,12 +183,12 @@ const SetupWizardPage = ({ onSetupComplete }) => {
                     minLength={8}
                     value={formData.admin_password}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-border-strong rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                     placeholder="Minimum 8 characters"
                   />
                 </div>
                 <div>
-                  <label htmlFor="confirm_password" className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                  <label htmlFor="confirm_password" className="block text-sm font-medium text-text-secondary mb-1">Confirm Password</label>
                   <input
                     id="confirm_password"
                     name="confirm_password"
@@ -197,36 +197,36 @@ const SetupWizardPage = ({ onSetupComplete }) => {
                     minLength={8}
                     value={formData.confirm_password}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-border-strong rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                     placeholder="Re-enter password"
                   />
                 </div>
                 <div>
-                  <label htmlFor="instance_name" className="block text-sm font-medium text-gray-700 mb-1">Instance Name</label>
+                  <label htmlFor="instance_name" className="block text-sm font-medium text-text-secondary mb-1">Instance Name</label>
                   <input
                     id="instance_name"
                     name="instance_name"
                     type="text"
                     value={formData.instance_name}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-border-strong rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                     placeholder="Paper LMS"
                   />
-                  <p className="text-xs text-gray-400 mt-1">The name displayed across your LMS instance.</p>
+                  <p className="text-xs text-text-disabled mt-1">The name displayed across your LMS instance.</p>
                 </div>
 
                 <div className="flex space-x-3 pt-2">
                   <button
                     type="button"
                     onClick={() => { setStep(1); setError(null); }}
-                    className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300"
+                    className="flex-1 py-3 border border-border-strong text-text-secondary rounded-lg font-medium hover:bg-surface-1 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300"
                   >
                     Back
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex-1 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    className="flex-1 py-3 bg-brand-600 text-white rounded-lg font-medium hover:bg-brand-700 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   >
                     {loading ? <Spinner /> : 'Complete Setup'}
                   </button>
@@ -241,29 +241,29 @@ const SetupWizardPage = ({ onSetupComplete }) => {
               <div className="flex justify-center mb-4">
                 <CheckIcon />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Setup Complete!</h2>
-              <p className="text-gray-600 mb-6">Your Paper LMS instance is ready to use.</p>
+              <h2 className="text-2xl font-bold text-text-primary mb-2">Setup Complete!</h2>
+              <p className="text-text-secondary mb-6">Your Paper LMS instance is ready to use.</p>
 
-              <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+              <div className="bg-surface-1 rounded-lg p-4 mb-6 text-left">
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Admin Email</span>
-                    <span className="font-medium text-gray-900">{createdUser?.email || formData.admin_email}</span>
+                    <span className="text-text-tertiary">Admin Email</span>
+                    <span className="font-medium text-text-primary">{createdUser?.email || formData.admin_email}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Instance Name</span>
-                    <span className="font-medium text-gray-900">{formData.instance_name || 'Paper LMS'}</span>
+                    <span className="text-text-tertiary">Instance Name</span>
+                    <span className="font-medium text-text-primary">{formData.instance_name || 'Paper LMS'}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Role</span>
-                    <span className="font-medium text-gray-900">Administrator</span>
+                    <span className="text-text-tertiary">Role</span>
+                    <span className="font-medium text-text-primary">Administrator</span>
                   </div>
                 </div>
               </div>
 
               <button
                 onClick={handleGoToLogin}
-                className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="w-full py-3 bg-brand-600 text-white rounded-lg font-medium hover:bg-brand-700 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
               >
                 Go to Login
               </button>
@@ -271,7 +271,7 @@ const SetupWizardPage = ({ onSetupComplete }) => {
           )}
         </div>
 
-        <p className="text-center text-xs text-gray-400 mt-6">Paper LMS &mdash; Open-source learning management</p>
+        <p className="text-center text-xs text-text-disabled mt-6">Paper LMS &mdash; Open-source learning management</p>
       </div>
     </div>
   );

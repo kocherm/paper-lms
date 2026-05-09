@@ -8,7 +8,7 @@ import CourseNav from '../components/CourseNav';
 import SlotPicker from '../components/appointments/SlotPicker';
 
 const Spinner = () => (
-  <svg className="h-6 w-6 animate-spin text-blue-500" viewBox="0 0 24 24" fill="none">
+  <svg className="h-6 w-6 animate-spin text-brand-500" viewBox="0 0 24 24" fill="none">
     <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
     <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="3" className="opacity-75" />
   </svg>
@@ -119,11 +119,11 @@ const AppointmentGroupsPage = () => {
       <CourseNav courseId={courseId} />
       <div className="mx-auto max-w-5xl p-6">
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-gray-900">Appointment Groups</h1>
+          <h1 className="text-2xl font-semibold text-text-primary">Appointment Groups</h1>
           {isTeacher && (
             <Link
               to={`/courses/${courseId}/appointment_groups/new`}
-              className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="inline-flex items-center gap-1 rounded-md bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700"
             >
               <Plus className="h-4 w-4" /> New Group
             </Link>
@@ -131,18 +131,18 @@ const AppointmentGroupsPage = () => {
         </div>
 
         {!isTeacher && (
-          <div className="mb-4 inline-flex rounded-md border bg-white text-sm">
+          <div className="mb-4 inline-flex rounded-md border bg-surface-0 text-sm">
             <button
               type="button"
               onClick={() => setFilter('available')}
-              className={`px-3 py-1.5 ${filter === 'available' ? 'bg-blue-50 text-blue-700' : 'text-gray-600'}`}
+              className={`px-3 py-1.5 ${filter === 'available' ? 'bg-brand-50 text-brand-700' : 'text-text-secondary'}`}
             >
               Available
             </button>
             <button
               type="button"
               onClick={() => setFilter('all')}
-              className={`px-3 py-1.5 ${filter === 'all' ? 'bg-blue-50 text-blue-700' : 'text-gray-600'}`}
+              className={`px-3 py-1.5 ${filter === 'all' ? 'bg-brand-50 text-brand-700' : 'text-text-secondary'}`}
             >
               All
             </button>
@@ -150,13 +150,13 @@ const AppointmentGroupsPage = () => {
         )}
 
         {loading && (
-          <div className="flex items-center gap-2 text-gray-500">
+          <div className="flex items-center gap-2 text-text-tertiary">
             <Spinner /> Loading appointment groups…
           </div>
         )}
 
         {error && (
-          <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <div className="mb-4 rounded-md border border-accent-danger/30 bg-accent-danger/10 p-3 text-sm text-accent-danger">
             {error}{' '}
             <button onClick={fetchGroups} className="ml-2 underline">
               Try Again
@@ -165,7 +165,7 @@ const AppointmentGroupsPage = () => {
         )}
 
         {!loading && !groups.length && (
-          <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-6 py-10 text-center text-gray-500">
+          <div className="rounded-lg border border-dashed border-border-strong bg-surface-1 px-6 py-10 text-center text-text-tertiary">
             <Calendar className="mx-auto mb-2 h-6 w-6 opacity-50" />
             No appointment groups have been created yet.
           </div>
@@ -173,17 +173,17 @@ const AppointmentGroupsPage = () => {
 
         <div className="space-y-3">
           {groups.map((group) => (
-            <div key={group.id} className="rounded-lg border border-gray-200 bg-white">
+            <div key={group.id} className="rounded-lg border border-border-default bg-surface-0">
               <div
-                className="flex cursor-pointer items-center justify-between p-4 hover:bg-gray-50"
+                className="flex cursor-pointer items-center justify-between p-4 hover:bg-surface-1"
                 onClick={() => toggle(group.id)}
               >
                 <div>
-                  <div className="text-base font-medium text-gray-900">{group.title}</div>
+                  <div className="text-base font-medium text-text-primary">{group.title}</div>
                   {group.description && (
-                    <div className="mt-0.5 line-clamp-1 text-sm text-gray-500">{group.description}</div>
+                    <div className="mt-0.5 line-clamp-1 text-sm text-text-tertiary">{group.description}</div>
                   )}
-                  <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                  <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-text-tertiary">
                     {group.location_name && (
                       <span className="inline-flex items-center gap-1">
                         <MapPin className="h-3 w-3" /> {group.location_name}
@@ -198,7 +198,7 @@ const AppointmentGroupsPage = () => {
                   <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     <Link
                       to={`/courses/${courseId}/appointment_groups/${group.id}/edit`}
-                      className="rounded-md p-2 text-gray-500 hover:bg-gray-100"
+                      className="rounded-md p-2 text-text-tertiary hover:bg-surface-2"
                       title="Edit"
                     >
                       <Pencil className="h-4 w-4" />
@@ -206,7 +206,7 @@ const AppointmentGroupsPage = () => {
                     <button
                       type="button"
                       onClick={() => handleDelete(group)}
-                      className="rounded-md p-2 text-gray-500 hover:bg-red-50 hover:text-red-600"
+                      className="rounded-md p-2 text-text-tertiary hover:bg-accent-danger/10 hover:text-accent-danger"
                       title="Delete"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -216,7 +216,7 @@ const AppointmentGroupsPage = () => {
               </div>
 
               {expandedId === group.id && (
-                <div className="border-t border-gray-100 p-4">
+                <div className="border-t border-border-subtle p-4">
                   <SlotPicker
                     slots={slotsByGroup[group.id] || []}
                     reservedIds={reservedSlotIds}

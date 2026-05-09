@@ -149,15 +149,15 @@ export default function CustomColumns({ courseId, open, onClose, onColumnsChange
       aria-labelledby="custom-cols-title"
       onClick={(e) => { if (e.target === e.currentTarget) onClose?.(); }}
     >
-      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg bg-white shadow-xl dark:bg-gray-800">
-        <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
-          <h2 id="custom-cols-title" className="text-lg font-semibold text-gray-900 dark:text-white">
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg bg-surface-0 shadow-xl dark:bg-gray-800">
+        <div className="flex items-center justify-between border-b border-border-default p-4 dark:border-gray-700">
+          <h2 id="custom-cols-title" className="text-lg font-semibold text-text-primary dark:text-white">
             Custom Gradebook Columns
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded p-1 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="rounded p-1 text-text-tertiary hover:bg-surface-2 dark:hover:bg-gray-700"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
@@ -166,7 +166,7 @@ export default function CustomColumns({ courseId, open, onClose, onColumnsChange
 
         <div className="space-y-4 p-4">
           {error && (
-            <div className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800 dark:border-red-700 dark:bg-red-900/30 dark:text-red-200">
+            <div className="rounded border border-red-300 bg-accent-danger/10 p-3 text-sm text-accent-danger dark:border-red-700 dark:bg-red-900/30 dark:text-red-200">
               {error}
             </div>
           )}
@@ -178,12 +178,12 @@ export default function CustomColumns({ courseId, open, onClose, onColumnsChange
               onChange={(e) => setNewTitle(e.target.value)}
               placeholder="New column title (e.g., Notes, Effort)"
               maxLength={255}
-              className="flex-1 rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              className="flex-1 rounded border border-border-strong px-3 py-2 text-sm focus:border-brand-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
             <button
               type="submit"
               disabled={saving || !newTitle.trim()}
-              className="inline-flex items-center gap-1 rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              className="inline-flex items-center gap-1 rounded bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
             >
               <Plus className="h-4 w-4" /> Add
             </button>
@@ -191,13 +191,13 @@ export default function CustomColumns({ courseId, open, onClose, onColumnsChange
 
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <svg className="h-6 w-6 animate-spin text-blue-600" viewBox="0 0 24 24" fill="none">
+              <svg className="h-6 w-6 animate-spin text-brand-600" viewBox="0 0 24 24" fill="none">
                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
                 <path fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" className="opacity-75" />
               </svg>
             </div>
           ) : columns.length === 0 ? (
-            <div className="rounded border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500 dark:border-gray-600 dark:text-gray-400">
+            <div className="rounded border border-dashed border-border-strong p-6 text-center text-sm text-text-tertiary dark:border-gray-600 dark:text-text-disabled">
               No custom columns yet. Add one above to get started.
             </div>
           ) : (
@@ -229,11 +229,11 @@ export default function CustomColumns({ courseId, open, onClose, onColumnsChange
           )}
         </div>
 
-        <div className="flex justify-end border-t border-gray-200 p-4 dark:border-gray-700">
+        <div className="flex justify-end border-t border-border-default p-4 dark:border-gray-700">
           <button
             type="button"
             onClick={onClose}
-            className="rounded bg-gray-200 px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+            className="rounded bg-border-default px-4 py-2 text-sm font-medium text-text-primary hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
           >
             Done
           </button>
@@ -266,11 +266,11 @@ function SortableRow({
     <li
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-2 rounded border border-gray-200 bg-white p-2 dark:border-gray-700 dark:bg-gray-900"
+      className="flex items-center gap-2 rounded border border-border-default bg-surface-0 p-2 dark:border-gray-700 dark:bg-gray-900"
     >
       <button
         type="button"
-        className="cursor-grab touch-none rounded p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+        className="cursor-grab touch-none rounded p-1 text-text-disabled hover:bg-surface-2 dark:hover:bg-gray-700"
         aria-label={`Drag to reorder ${col.title}`}
         {...attributes}
         {...listeners}
@@ -289,10 +289,10 @@ function SortableRow({
           }}
           autoFocus
           maxLength={255}
-          className="flex-1 rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+          className="flex-1 rounded border border-border-strong px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
         />
       ) : (
-        <span className="flex-1 truncate text-sm text-gray-900 dark:text-white">
+        <span className="flex-1 truncate text-sm text-text-primary dark:text-white">
           {col.title}
           {col.teacher_notes && (
             <span className="ml-2 inline-block rounded bg-purple-100 px-1.5 py-0.5 text-xs text-purple-800 dark:bg-purple-900/40 dark:text-purple-200">
@@ -309,7 +309,7 @@ function SortableRow({
               type="button"
               onClick={onSaveTitle}
               disabled={saving}
-              className="rounded p-1 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30"
+              className="rounded p-1 text-accent-success hover:bg-accent-success/10 dark:hover:bg-green-900/30"
               aria-label="Save"
             >
               <Save className="h-4 w-4" />
@@ -317,7 +317,7 @@ function SortableRow({
             <button
               type="button"
               onClick={onCancelEdit}
-              className="rounded p-1 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="rounded p-1 text-text-tertiary hover:bg-surface-2 dark:hover:bg-gray-700"
               aria-label="Cancel"
             >
               <X className="h-4 w-4" />
@@ -329,7 +329,7 @@ function SortableRow({
               type="button"
               onClick={() => onToggle('hidden')}
               disabled={saving}
-              className="rounded p-1 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="rounded p-1 text-text-tertiary hover:bg-surface-2 dark:hover:bg-gray-700"
               aria-label={col.hidden ? 'Show column' : 'Hide column'}
               title={col.hidden ? 'Hidden' : 'Visible'}
             >
@@ -339,7 +339,7 @@ function SortableRow({
               type="button"
               onClick={() => onToggle('read_only')}
               disabled={saving}
-              className="rounded p-1 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="rounded p-1 text-text-tertiary hover:bg-surface-2 dark:hover:bg-gray-700"
               aria-label={col.read_only ? 'Make editable' : 'Make read-only'}
               title={col.read_only ? 'Read-only' : 'Editable'}
             >
@@ -349,7 +349,7 @@ function SortableRow({
               type="button"
               onClick={onStartEdit}
               disabled={saving}
-              className="rounded p-1 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="rounded p-1 text-text-tertiary hover:bg-surface-2 dark:hover:bg-gray-700"
               aria-label="Rename column"
             >
               <Pencil className="h-4 w-4" />
@@ -358,7 +358,7 @@ function SortableRow({
               type="button"
               onClick={onDelete}
               disabled={saving}
-              className="rounded p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30"
+              className="rounded p-1 text-accent-danger hover:bg-accent-danger/10 dark:hover:bg-red-900/30"
               aria-label="Delete column"
             >
               <Trash2 className="h-4 w-4" />

@@ -77,15 +77,15 @@ const GenerateCodeDialog = ({ open, onClose, onGenerated }) => {
       aria-modal="true"
       aria-labelledby="pairing-code-title"
     >
-      <div className="relative w-full max-w-md rounded-xl bg-white shadow-xl">
-        <div className="flex items-start justify-between border-b border-gray-200 px-6 py-4">
-          <h2 id="pairing-code-title" className="text-lg font-semibold text-gray-900">
+      <div className="relative w-full max-w-md rounded-xl bg-surface-0 shadow-xl">
+        <div className="flex items-start justify-between border-b border-border-default px-6 py-4">
+          <h2 id="pairing-code-title" className="text-lg font-semibold text-text-primary">
             Generate a parent pairing code
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+            className="rounded-md p-1 text-text-disabled hover:bg-surface-2 hover:text-text-secondary"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
@@ -96,7 +96,7 @@ const GenerateCodeDialog = ({ open, onClose, onGenerated }) => {
           {loading && !pairingCode && (
             <div className="flex items-center justify-center py-8">
               <svg
-                className="h-8 w-8 animate-spin text-blue-600"
+                className="h-8 w-8 animate-spin text-brand-600"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -112,12 +112,12 @@ const GenerateCodeDialog = ({ open, onClose, onGenerated }) => {
           )}
 
           {error && (
-            <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="mb-4 rounded-md border border-accent-danger/30 bg-accent-danger/10 px-4 py-3 text-sm text-accent-danger">
               <p className="mb-2">{error}</p>
               <button
                 type="button"
                 onClick={generate}
-                className="inline-flex items-center gap-1 text-sm font-medium text-red-700 underline hover:text-red-900"
+                className="inline-flex items-center gap-1 text-sm font-medium text-accent-danger underline hover:text-red-900"
               >
                 <RefreshCw className="h-3 w-3" /> Try Again
               </button>
@@ -126,17 +126,17 @@ const GenerateCodeDialog = ({ open, onClose, onGenerated }) => {
 
           {pairingCode && (
             <div>
-              <p className="mb-3 text-sm text-gray-600">
+              <p className="mb-3 text-sm text-text-secondary">
                 Share this code with your parent. They will use it to link their account to yours.
               </p>
-              <div className="my-4 flex items-center justify-between gap-3 rounded-lg border-2 border-blue-200 bg-blue-50 px-4 py-5">
+              <div className="my-4 flex items-center justify-between gap-3 rounded-lg border-2 border-blue-200 bg-brand-50 px-4 py-5">
                 <span className="select-all font-mono text-3xl font-bold tracking-widest text-blue-900">
                   {pairingCode.code}
                 </span>
                 <button
                   type="button"
                   onClick={handleCopy}
-                  className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  className="inline-flex items-center gap-1 rounded-md bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700"
                 >
                   {copied ? (
                     <>
@@ -149,10 +149,10 @@ const GenerateCodeDialog = ({ open, onClose, onGenerated }) => {
                   )}
                 </button>
               </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-text-tertiary">
                 Expires: <span className="font-medium">{formatExpiry(pairingCode.expires_at)}</span>
               </p>
-              <div className="mt-4 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              <div className="mt-4 flex items-start gap-2 rounded-md border border-accent-warning/30 bg-accent-warning/10 px-3 py-2 text-xs text-amber-800">
                 <ShieldAlert className="mt-0.5 h-4 w-4 flex-shrink-0" />
                 <p>
                   Share this code with your parent only. Anyone with this code can link their
@@ -164,14 +164,14 @@ const GenerateCodeDialog = ({ open, onClose, onGenerated }) => {
                   type="button"
                   onClick={generate}
                   disabled={loading}
-                  className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                  className="rounded-md border border-border-strong bg-surface-0 px-4 py-2 text-sm font-medium text-text-secondary hover:bg-surface-1 disabled:opacity-50"
                 >
                   {loading ? 'Generating…' : 'Generate another'}
                 </button>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  className="rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
                 >
                   Done
                 </button>

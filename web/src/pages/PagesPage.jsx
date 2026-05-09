@@ -84,8 +84,8 @@ const PagesPage = () => {
   }
   if (error) {
     return <Layout><div className="text-center py-12">
-  <p className="text-red-600 mb-3">{error}</p>
-  <button onClick={() => window.location.reload()} className="text-blue-600 hover:text-blue-800 text-sm font-medium">Try Again</button>
+  <p className="text-accent-danger mb-3">{error}</p>
+  <button onClick={() => window.location.reload()} className="text-brand-600 hover:text-brand-800 text-sm font-medium">Try Again</button>
 </div></Layout>;
   }
 
@@ -93,15 +93,15 @@ const PagesPage = () => {
     <Layout>
       <CourseNav />
       <div className="mb-6">
-        <Link to={`/courses/${courseId}`} className="text-blue-600 hover:underline text-sm">
+        <Link to={`/courses/${courseId}`} className="text-brand-600 hover:underline text-sm">
           &larr; Back to Course
         </Link>
         <div className="flex items-center justify-between mt-2">
-          <h2 className="text-2xl font-bold text-gray-900">Pages</h2>
+          <h2 className="text-2xl font-bold text-text-primary">Pages</h2>
           {isTeacher && (
             <button
               onClick={() => setShowCreate(!showCreate)}
-              className="inline-flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium"
+              className="inline-flex items-center space-x-2 bg-brand-600 text-white px-4 py-2 rounded-md hover:bg-brand-700 text-sm font-medium"
             >
               <Plus className="w-4 h-4" />
               <span>Page</span>
@@ -111,20 +111,20 @@ const PagesPage = () => {
       </div>
 
       {showCreate && (
-        <form onSubmit={handleCreate} className="bg-white rounded-lg shadow p-6 mb-6 space-y-4">
+        <form onSubmit={handleCreate} className="bg-surface-0 rounded-lg shadow p-6 mb-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Title</label>
             <input
               type="text"
               required
               value={newPage.title}
               onChange={(e) => setNewPage({ ...newPage, title: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              className="w-full border border-border-strong rounded-md px-3 py-2 text-sm"
               placeholder="Page title"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
+            <label className="block text-sm font-medium text-text-secondary mb-1">Content</label>
             <RichContentEditorV2
               value={newPage.body}
               onChange={(html) => setNewPage((prev) => ({ ...prev, body: html }))}
@@ -140,41 +140,41 @@ const PagesPage = () => {
               id="page-published"
               checked={newPage.published}
               onChange={(e) => setNewPage({ ...newPage, published: e.target.checked })}
-              className="rounded border-gray-300"
+              className="rounded border-border-strong"
             />
-            <label htmlFor="page-published" className="text-sm text-gray-700">Publish immediately</label>
+            <label htmlFor="page-published" className="text-sm text-text-secondary">Publish immediately</label>
           </div>
           <div className="flex justify-end space-x-3">
-            <button type="button" onClick={() => setShowCreate(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">
+            <button type="button" onClick={() => setShowCreate(false)} className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary">
               Cancel
             </button>
-            <button type="submit" disabled={creating} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium disabled:opacity-50">
+            <button type="submit" disabled={creating} className="px-4 py-2 bg-brand-600 text-white rounded-md hover:bg-brand-700 text-sm font-medium disabled:opacity-50">
               {creating ? 'Creating...' : 'Create Page'}
             </button>
           </div>
         </form>
       )}
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-surface-0 rounded-lg shadow">
         <div className="p-4 border-b">
           <h3 className="font-semibold">All Pages</h3>
         </div>
         {pages.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">No pages yet.</div>
+          <div className="p-6 text-center text-text-tertiary">No pages yet.</div>
         ) : (
           <div className="divide-y">
             {pages.map((page) => (
               <Link
                 key={page.page_id || page.url}
                 to={`/courses/${courseId}/pages/${page.url}`}
-                className="flex items-center justify-between p-4 hover:bg-gray-50"
+                className="flex items-center justify-between p-4 hover:bg-surface-1"
               >
                 <div className="flex items-center space-x-3 min-w-0">
-                  <FileText className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                  <FileText className="w-5 h-5 text-text-disabled flex-shrink-0" />
                   <div className="min-w-0">
-                    <span className="font-medium text-gray-900 truncate block">{page.title}</span>
+                    <span className="font-medium text-text-primary truncate block">{page.title}</span>
                     {page.updated_at && (
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-text-disabled">
                         Last edited {formatDate(page.updated_at)}
                       </span>
                     )}
@@ -183,12 +183,12 @@ const PagesPage = () => {
                 {isTeacher && (
                   <div className="flex items-center space-x-3 flex-shrink-0 ml-4">
                     {page.published ? (
-                      <span className="inline-flex items-center space-x-1 text-xs text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
+                      <span className="inline-flex items-center space-x-1 text-xs text-accent-success bg-accent-success/10 px-2 py-0.5 rounded-full">
                         <Eye className="w-3 h-3" />
                         <span>Published</span>
                       </span>
                     ) : (
-                      <span className="inline-flex items-center space-x-1 text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                      <span className="inline-flex items-center space-x-1 text-xs text-text-tertiary bg-surface-2 px-2 py-0.5 rounded-full">
                         <EyeOff className="w-3 h-3" />
                         <span>Unpublished</span>
                       </span>

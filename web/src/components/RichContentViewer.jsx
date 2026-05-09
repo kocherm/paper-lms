@@ -179,21 +179,21 @@ export default function RichContentViewer({ content, className }) {
           // Tailwind prose for beautiful typography
           'prose prose-sm sm:prose-base max-w-none',
           // Headings
-          'prose-headings:font-semibold prose-headings:text-gray-900',
+          'prose-headings:font-semibold prose-headings:text-text-primary',
           // Links
-          'prose-a:text-blue-600 prose-a:underline hover:prose-a:text-blue-800',
+          'prose-a:text-brand-600 prose-a:underline hover:prose-a:text-brand-800',
           // Images
           'prose-img:rounded-lg prose-img:shadow-sm',
           // Tables
           'prose-table:border-collapse',
-          'prose-th:border prose-th:border-gray-300 prose-th:bg-gray-50 prose-th:px-3 prose-th:py-2 prose-th:text-left prose-th:text-sm prose-th:font-medium prose-th:text-gray-700',
-          'prose-td:border prose-td:border-gray-300 prose-td:px-3 prose-td:py-2 prose-td:text-sm',
+          'prose-th:border prose-th:border-border-strong prose-th:bg-surface-1 prose-th:px-3 prose-th:py-2 prose-th:text-left prose-th:text-sm prose-th:font-medium prose-th:text-text-secondary',
+          'prose-td:border prose-td:border-border-strong prose-td:px-3 prose-td:py-2 prose-td:text-sm',
           // Blockquotes
-          'prose-blockquote:border-l-4 prose-blockquote:border-blue-300 prose-blockquote:bg-blue-50 prose-blockquote:py-1 prose-blockquote:pl-4 prose-blockquote:not-italic',
+          'prose-blockquote:border-l-4 prose-blockquote:border-blue-300 prose-blockquote:bg-brand-50 prose-blockquote:py-1 prose-blockquote:pl-4 prose-blockquote:not-italic',
           // Code
-          'prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:font-mono',
+          'prose-code:bg-surface-2 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:font-mono',
           // HR
-          'prose-hr:border-gray-300',
+          'prose-hr:border-border-strong',
           // Custom class
           className,
         ].filter(Boolean).join(' ')}

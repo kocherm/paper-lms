@@ -62,8 +62,8 @@ const GradeInput = ({ value, pointsPossible, onSave, studentName }) => {
   };
 
   const feedbackClasses = {
-    success: 'ring-2 ring-green-400 bg-green-50',
-    error: 'ring-2 ring-red-400 bg-red-50',
+    success: 'ring-2 ring-green-400 bg-accent-success/10',
+    error: 'ring-2 ring-red-400 bg-accent-danger/10',
   };
 
   if (editing) {
@@ -79,9 +79,9 @@ const GradeInput = ({ value, pointsPossible, onSave, studentName }) => {
           onChange={(e) => setInputValue(e.target.value)}
           onBlur={handleSave}
           onKeyDown={handleKeyDown}
-          className="w-16 text-sm border border-blue-400 rounded px-1.5 py-0.5 text-center focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          className="w-16 text-sm border border-blue-400 rounded px-1.5 py-0.5 text-center focus:ring-2 focus:ring-brand-500 focus:outline-none"
         />
-        <span className="text-xs text-gray-400">/{pointsPossible}</span>
+        <span className="text-xs text-text-disabled">/{pointsPossible}</span>
       </div>
     );
   }
@@ -95,15 +95,15 @@ const GradeInput = ({ value, pointsPossible, onSave, studentName }) => {
       disabled={saving}
       aria-label={triggerLabel}
       title={triggerLabel}
-      className={`appearance-none border-0 bg-transparent text-left w-full flex items-center space-x-1 cursor-pointer rounded px-1.5 py-0.5 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
-        feedback ? feedbackClasses[feedback] : 'hover:bg-gray-100'
+      className={`appearance-none border-0 bg-transparent text-left w-full flex items-center space-x-1 cursor-pointer rounded px-1.5 py-0.5 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+        feedback ? feedbackClasses[feedback] : 'hover:bg-surface-2'
       }`}
       onClick={() => !saving && setEditing(true)}
     >
-      <span className={`text-sm ${value !== null && value !== undefined ? 'font-medium' : 'text-gray-400'}`}>
+      <span className={`text-sm ${value !== null && value !== undefined ? 'font-medium' : 'text-text-disabled'}`}>
         {saving ? '...' : (value !== null && value !== undefined ? value : '-')}
       </span>
-      <span className="text-xs text-gray-400">/{pointsPossible}</span>
+      <span className="text-xs text-text-disabled">/{pointsPossible}</span>
     </button>
   );
 };

@@ -54,16 +54,16 @@ const SubmissionComments = ({ courseId, assignmentId, userId, isTeacher }) => {
   return (
     <div className="space-y-4">
       <div className="flex items-center space-x-2">
-        <MessageSquare className="w-5 h-5 text-gray-500" />
-        <h4 className="font-semibold text-gray-900">Comments</h4>
+        <MessageSquare className="w-5 h-5 text-text-tertiary" />
+        <h4 className="font-semibold text-text-primary">Comments</h4>
       </div>
 
       {loading ? (
-        <div className="text-sm text-gray-500 py-2">Loading comments...</div>
+        <div className="text-sm text-text-tertiary py-2">Loading comments...</div>
       ) : error ? (
-        <div className="text-sm text-red-600 py-2">{error}</div>
+        <div className="text-sm text-accent-danger py-2">{error}</div>
       ) : comments.length === 0 ? (
-        <div className="text-sm text-gray-400 py-2">No comments yet.</div>
+        <div className="text-sm text-text-disabled py-2">No comments yet.</div>
       ) : (
         <div className="space-y-3">
           {comments.map((comment) => (
@@ -71,26 +71,26 @@ const SubmissionComments = ({ courseId, assignmentId, userId, isTeacher }) => {
               key={comment.id}
               className={`rounded-lg p-3 text-sm ${
                 comment.draft
-                  ? 'bg-yellow-50 border border-yellow-200'
-                  : 'bg-gray-50 border border-gray-200'
+                  ? 'bg-accent-warning/10 border border-accent-warning/30'
+                  : 'bg-surface-1 border border-border-default'
               }`}
             >
               <div className="flex items-center justify-between mb-1">
-                <span className="font-medium text-gray-800">
+                <span className="font-medium text-text-primary">
                   {comment.author_name || comment.author?.display_name || 'Unknown'}
                 </span>
                 <div className="flex items-center space-x-2">
                   {comment.draft && (
-                    <span className="text-xs bg-yellow-200 text-yellow-800 px-1.5 py-0.5 rounded">
+                    <span className="text-xs bg-yellow-200 text-accent-warning px-1.5 py-0.5 rounded">
                       Draft
                     </span>
                   )}
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-text-disabled">
                     {formatDate(comment.created_at)}
                   </span>
                 </div>
               </div>
-              <p className="text-gray-700">{comment.comment || comment.text_comment}</p>
+              <p className="text-text-secondary">{comment.comment || comment.text_comment}</p>
             </div>
           ))}
         </div>
@@ -103,13 +103,13 @@ const SubmissionComments = ({ courseId, assignmentId, userId, isTeacher }) => {
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             placeholder="Add a comment..."
-            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="flex-1 border border-border-strong rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
             disabled={submitting}
           />
           <button
             type="submit"
             disabled={submitting || !newComment.trim()}
-            className="inline-flex items-center space-x-1 bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            className="inline-flex items-center space-x-1 bg-brand-600 text-white px-3 py-2 rounded-lg hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
             <Send className="w-4 h-4" />
           </button>
@@ -121,8 +121,8 @@ const SubmissionComments = ({ courseId, assignmentId, userId, isTeacher }) => {
               onClick={() => setIsDraft(!isDraft)}
               className={`inline-flex items-center space-x-1 text-xs px-2 py-1 rounded ${
                 isDraft
-                  ? 'bg-yellow-100 text-yellow-800 border border-yellow-300'
-                  : 'bg-gray-100 text-gray-600 border border-gray-200'
+                  ? 'bg-accent-warning/20 text-accent-warning border border-yellow-300'
+                  : 'bg-surface-2 text-text-secondary border border-border-default'
               }`}
             >
               {isDraft ? (

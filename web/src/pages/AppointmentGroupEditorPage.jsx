@@ -119,7 +119,7 @@ const AppointmentGroupEditorPage = () => {
     return (
       <Layout>
         <CourseNav courseId={courseId} />
-        <div className="p-6 text-gray-500">Loading…</div>
+        <div className="p-6 text-text-tertiary">Loading…</div>
       </Layout>
     );
   }
@@ -131,143 +131,143 @@ const AppointmentGroupEditorPage = () => {
         <button
           type="button"
           onClick={() => navigate(`/courses/${courseId}/appointment_groups`)}
-          className="mb-4 inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
+          className="mb-4 inline-flex items-center gap-1 text-sm text-text-secondary hover:text-text-primary"
         >
           <ArrowLeft className="h-4 w-4" /> Back
         </button>
 
-        <h1 className="mb-6 text-2xl font-semibold text-gray-900">
+        <h1 className="mb-6 text-2xl font-semibold text-text-primary">
           {isEditing ? 'Edit Appointment Group' : 'New Appointment Group'}
         </h1>
 
         {error && (
-          <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>
+          <div className="mb-4 rounded-md border border-accent-danger/30 bg-accent-danger/10 p-3 text-sm text-accent-danger">{error}</div>
         )}
 
-        <form onSubmit={submit} className="space-y-6 rounded-lg border border-gray-200 bg-white p-6">
+        <form onSubmit={submit} className="space-y-6 rounded-lg border border-border-default bg-surface-0 p-6">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Title</label>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">Title</label>
             <input
               type="text"
               required
               value={form.title}
               onChange={onChange('title')}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-md border border-border-strong px-3 py-2 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Description</label>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">Description</label>
             <textarea
               rows={3}
               value={form.description}
               onChange={onChange('description')}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-md border border-border-strong px-3 py-2 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Location name</label>
+              <label className="mb-1 block text-sm font-medium text-text-secondary">Location name</label>
               <input
                 type="text"
                 value={form.location_name}
                 onChange={onChange('location_name')}
-                className="w-full rounded-md border border-gray-300 px-3 py-2"
+                className="w-full rounded-md border border-border-strong px-3 py-2"
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Location address</label>
+              <label className="mb-1 block text-sm font-medium text-text-secondary">Location address</label>
               <input
                 type="text"
                 value={form.location_address}
                 onChange={onChange('location_address')}
-                className="w-full rounded-md border border-gray-300 px-3 py-2"
+                className="w-full rounded-md border border-border-strong px-3 py-2"
               />
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Participants per slot</label>
+              <label className="mb-1 block text-sm font-medium text-text-secondary">Participants per slot</label>
               <input
                 type="number"
                 min={1}
                 value={form.participants_per_appointment}
                 onChange={onChange('participants_per_appointment')}
-                className="w-full rounded-md border border-gray-300 px-3 py-2"
+                className="w-full rounded-md border border-border-strong px-3 py-2"
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Max per student</label>
+              <label className="mb-1 block text-sm font-medium text-text-secondary">Max per student</label>
               <input
                 type="number"
                 min={1}
                 value={form.max_appointments_per_participant}
                 onChange={onChange('max_appointments_per_participant')}
-                className="w-full rounded-md border border-gray-300 px-3 py-2"
+                className="w-full rounded-md border border-border-strong px-3 py-2"
               />
             </div>
           </div>
 
           {!isEditing && (
-            <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
-              <h2 className="mb-3 text-sm font-semibold text-gray-700">Generate slots</h2>
+            <div className="rounded-md border border-border-default bg-surface-1 p-4">
+              <h2 className="mb-3 text-sm font-semibold text-text-secondary">Generate slots</h2>
               <div className="grid gap-3 sm:grid-cols-4">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-600">Date</label>
+                  <label className="mb-1 block text-xs font-medium text-text-secondary">Date</label>
                   <input
                     type="date"
                     value={genDate}
                     onChange={(e) => setGenDate(e.target.value)}
-                    className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                    className="w-full rounded-md border border-border-strong px-2 py-1.5 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-600">Start</label>
+                  <label className="mb-1 block text-xs font-medium text-text-secondary">Start</label>
                   <input
                     type="time"
                     value={genStart}
                     onChange={(e) => setGenStart(e.target.value)}
-                    className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                    className="w-full rounded-md border border-border-strong px-2 py-1.5 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-600">End</label>
+                  <label className="mb-1 block text-xs font-medium text-text-secondary">End</label>
                   <input
                     type="time"
                     value={genEnd}
                     onChange={(e) => setGenEnd(e.target.value)}
-                    className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                    className="w-full rounded-md border border-border-strong px-2 py-1.5 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-600">Duration (min)</label>
+                  <label className="mb-1 block text-xs font-medium text-text-secondary">Duration (min)</label>
                   <input
                     type="number"
                     min={1}
                     value={genDuration}
                     onChange={(e) => setGenDuration(e.target.value)}
-                    className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                    className="w-full rounded-md border border-border-strong px-2 py-1.5 text-sm"
                   />
                 </div>
               </div>
               <div className="mt-3 flex items-center justify-between">
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-text-tertiary">
                   {generated.length} slot{generated.length === 1 ? '' : 's'} preview
                 </span>
                 <button
                   type="button"
                   onClick={addGenerated}
                   disabled={!generated.length}
-                  className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                  className="inline-flex items-center gap-1 rounded-md bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
                 >
                   <Plus className="h-4 w-4" /> Add to group
                 </button>
               </div>
 
               {pendingSlots.length > 0 && (
-                <ul className="mt-4 space-y-1 max-h-60 overflow-auto rounded-md border border-gray-200 bg-white p-2 text-sm">
+                <ul className="mt-4 space-y-1 max-h-60 overflow-auto rounded-md border border-border-default bg-surface-0 p-2 text-sm">
                   {pendingSlots.map((s, idx) => (
                     <li key={`${s.start_at}-${idx}`} className="flex items-center justify-between px-2 py-1">
                       <span>
@@ -276,7 +276,7 @@ const AppointmentGroupEditorPage = () => {
                       <button
                         type="button"
                         onClick={() => removeSlot(idx)}
-                        className="text-gray-400 hover:text-red-600"
+                        className="text-text-disabled hover:text-accent-danger"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -291,14 +291,14 @@ const AppointmentGroupEditorPage = () => {
             <button
               type="button"
               onClick={() => navigate(`/courses/${courseId}/appointment_groups`)}
-              className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="rounded-md border border-border-strong bg-surface-0 px-4 py-2 text-sm font-medium text-text-secondary hover:bg-surface-1"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              className="rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
             >
               {saving ? 'Saving…' : isEditing ? 'Save Changes' : 'Create Group'}
             </button>

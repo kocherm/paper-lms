@@ -128,7 +128,7 @@ export default function ReadingPreferencesPage() {
                     prefs.noItalic ? 'bg-primary' : 'bg-muted',
                   ].join(' ')}
                 >
-                  <span className={['absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform', prefs.noItalic ? 'translate-x-5' : 'translate-x-0.5'].join(' ')} />
+                  <span className={['absolute top-0.5 h-5 w-5 rounded-full bg-surface-0 shadow transition-transform', prefs.noItalic ? 'translate-x-5' : 'translate-x-0.5'].join(' ')} />
                 </button>
               </div>
             </CardContent>
@@ -202,7 +202,7 @@ export default function ReadingPreferencesPage() {
                     prefs.ttsEnabled ? 'bg-primary' : 'bg-muted',
                   ].join(' ')}
                 >
-                  <span className={['absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform', prefs.ttsEnabled ? 'translate-x-5' : 'translate-x-0.5'].join(' ')} />
+                  <span className={['absolute top-0.5 h-5 w-5 rounded-full bg-surface-0 shadow transition-transform', prefs.ttsEnabled ? 'translate-x-5' : 'translate-x-0.5'].join(' ')} />
                 </button>
               </div>
             </CardContent>
