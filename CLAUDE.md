@@ -360,5 +360,21 @@ Agents should ONLY create new files. All shared file edits happen in the main th
 - Single-tenant architecture (no multi-tenancy)
 - Backend requires restart for Go changes (Vite HMR works for frontend)
 
+## Future Features
+
+### Gamification engine (planned)
+A trigger-driven gamification layer modeled after WordPress plugins like GamiPress and myCred. Goals:
+- **Points / XP**: multiple named point types per account (e.g., XP, Coins, Reputation), per-user balances, full transaction ledger.
+- **Badges / achievements**: definitions with icon, title, criteria; awards table tracks who earned what and when.
+- **Leaderboards**: course-scoped, account-scoped, and global; configurable point type and time window (all-time, term, week).
+- **Triggers**: declarative rules wired to existing domain events — assignment submitted, quiz passed (≥ score), discussion replied, module completed, attendance streak, peer review submitted, mastery target hit. Each trigger can grant points, award a badge, or fire a webhook.
+- **Manual awards**: instructor/admin UI to grant points or badges, with reason and audit log.
+- **Rules engine**: composable conditions (AND/OR), cooldowns, and per-user/per-course caps to prevent farming.
+- **Notifications**: tie into existing notification system so award events surface in the bell + email/SMS prefs.
+- **Student-facing**: profile widget showing balance, recent awards, and progress toward next badge; opt-out per user (FERPA-conscious — leaderboard display name controls).
+- **API parity**: Canvas doesn't have direct equivalents, so design fresh `/api/v1/gamification/*` endpoints with full pagination + Link headers.
+
+Implementation sketch (when picked up): new domain models (`PointType`, `PointTransaction`, `Badge`, `BadgeAward`, `Trigger`, `TriggerRule`, `LeaderboardSnapshot`), a trigger dispatcher hooked into the service layer (publish events from Submission, Quiz, Discussion, Module, Attendance services), and a React Gamification page set under both teacher and student nav.
+
 ## Implementation History
 See [CHANGELOG.md](./CHANGELOG.md) for the full 30-phase development history.

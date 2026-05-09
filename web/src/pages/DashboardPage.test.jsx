@@ -8,6 +8,16 @@ vi.mock('../services/api', () => ({
   api: { getCourses: vi.fn() },
 }));
 
+vi.mock('../contexts/AuthContext', () => ({
+  useAuth: () => ({
+    user: { id: 1, name: 'Test User', email: 'test@example.com' },
+    loading: false,
+    login: vi.fn(),
+    logout: vi.fn(),
+    refreshUser: vi.fn(),
+  }),
+}));
+
 vi.mock('../components/Layout', () => ({
   default: ({ children }) => <div>{children}</div>,
 }));
@@ -29,12 +39,13 @@ describe('DashboardPage', () => {
     vi.clearAllMocks();
   });
 
-  test('shows loading state while courses are being fetched', () => {
+  test('shows loading skeleton while courses are being fetched', () => {
     // Keep the promise pending so loading state persists
     api.getCourses.mockReturnValue(new Promise(() => {}));
-    renderDashboard();
+    const { container } = renderDashboard();
 
-    expect(screen.getByText('Loading courses...')).toBeInTheDocument();
+    expect(container.querySelector('.animate-pulse')).toBeInTheDocument();
+    expect(screen.queryByText('Welcome to Paper LMS')).not.toBeInTheDocument();
   });
 
   test('renders courses after successful fetch', async () => {
@@ -61,9 +72,12 @@ describe('DashboardPage', () => {
     renderDashboard();
 
     await waitFor(() => {
-      expect(screen.getByText('No courses yet.')).toBeInTheDocument();
+      expect(screen.getByText('Welcome to Paper LMS')).toBeInTheDocument();
     });
 
+    expect(
+      screen.getByText(/You are not enrolled in any courses yet/i),
+    ).toBeInTheDocument();
     expect(screen.queryByText('Loading courses...')).not.toBeInTheDocument();
   });
 
@@ -75,6 +89,7 @@ describe('DashboardPage', () => {
       expect(screen.getByText('Network error')).toBeInTheDocument();
     });
 
+    expect(screen.getByRole('button', { name: /Try Again/i })).toBeInTheDocument();
     expect(screen.queryByText('Loading courses...')).not.toBeInTheDocument();
   });
 });
